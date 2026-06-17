@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WordFlow</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg:        #0f0f14;
+  --surface:   #18181f;
+  --surface2:  #22222c;
+  --border:    rgba(255,255,255,0.07);
+  --border2:   rgba(255,255,255,0.13);
+  --text:      #e8e8f0;
+  --text-soft: #7878a0;
+  --text-dim:  #4a4a68;
+  --accent:    #7c6aff;
+  --accent2:   #a594ff;
+  --glow:      rgba(124,106,255,0.22);
+  --green:     #3ecf8e;
+  --yellow:    #f5c842;
+  --red:       #ff6b6b;
+  --orange:    #ff9f43;
+  --r: 16px;
+  --r-sm: 10px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── LAYOUT ── */
+.app { display: flex; min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 220px; flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 24px 0;
+  display: flex; flex-direction: column;
+  position: fixed; top: 0; left: 0; bottom: 0;
+  z-index: 50;
+}
+.logo {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.5rem; color: var(--text);
+  padding: 0 20px 24px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+.logo em { color: var(--accent); font-style: italic; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 20px; cursor: pointer;
+  font-size: 0.88rem; font-weight: 500;
+  color: var(--text-soft);
+  border-left: 3px solid transparent;
+  transition: all 0.15s;
+  user-select: none;
+}
+.nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.nav-item.active { color: var(--accent2); border-left-color: var(--accent); background: var(--glow); }
+.nav-item .icon { font-size: 1.1rem; width: 20px; text-align: center; }
+.nav-badge {
+  margin-left: auto; background: var(--accent);
+  color: #fff; font-size: 0.68rem; font-weight: 700;
+  padding: 2px 7px; border-radius: 50px; min-width: 20px; text-align: center;
+}
+
+.sidebar-footer {
+  margin-top: auto; padding: 16px 20px;
+  font-size: 0.72rem; color: var(--text-dim); line-height: 1.6;
+  border-top: 1px solid var(--border);
+}
+
+/* ── CONTENT ── */
+.content {
+  margin-left: 220px;
+  flex: 1; padding: 32px 36px;
+  max-width: calc(100vw - 220px);
+}
+
+/* ── PAGE TITLE ── */
+.page-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.9rem; margin-bottom: 6px;
+  line-height: 1.1;
+}
+.page-sub { color: var(--text-soft); font-size: 0.88rem; margin-bottom: 28px; }
+
+/* ── VIEWS ── */
+.view { display: none; }
+.view.active { display: block; }
+
+/* ── STATS ROW ── */
+.stats-row { display: flex; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; }
+.stat-box {
+  flex: 1; min-width: 110px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 16px 18px;
+}
+.stat-box .sv { font-family: 'DM Serif Display', serif; font-size: 2rem; color: var(--accent2); line-height:1; }
+.stat-box .sl { font-size: 0.7rem; color: var(--text-soft); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.8px; }
+
+/* ── DUE BANNER ── */
+.due-banner {
+  background: linear-gradient(135deg, var(--accent) 0%, #9b8fff 100%);
+  border-radius: var(--r-sm);
+  padding: 14px 20px;
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 24px; cursor: pointer;
+  transition: opacity 0.2s;
+}
+.due-banner:hover { opacity: 0.9; }
+.due-banner .db-count { font-family: 'DM Serif Display', serif; font-size: 1.6rem; color: #fff; line-height: 1; }
+.due-banner .db-text { font-size: 0.85rem; color: rgba(255,255,255,0.85); }
+.due-banner .db-arrow { margin-left: auto; color: rgba(255,255,255,0.7); font-size: 1.2rem; }
+
+/* ── CALENDAR ── */
+.calendar-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; margin-bottom: 24px; }
+.cal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.cal-header .cal-title { font-family: 'DM Serif Display', serif; font-size: 1.1rem; }
+.cal-nav { background: none; border: 1px solid var(--border2); color: var(--text); border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 0.85rem; transition: all 0.15s; }
+.cal-nav:hover { background: var(--surface2); }
+.cal-grid { padding: 16px 20px 20px; }
+.cal-weekdays {
+  display: grid; grid-template-columns: repeat(7,1fr);
+  text-align: center; margin-bottom: 6px;
+}
+.cal-weekdays span { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.6px; padding: 4px 0; }
+.cal-days { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; }
+.cal-day {
+  aspect-ratio: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  border-radius: 8px; cursor: pointer;
+  font-size: 0.82rem; font-weight: 500;
+  color: var(--text-soft); position: relative;
+  transition: all 0.15s; user-select: none;
+  border: 1.5px solid transparent;
+}
+.cal-day:hover { background: var(--surface2); color: var(--text); }
+.cal-day.empty { cursor: default; pointer-events: none; }
+.cal-day.has-cards { color: var(--text); }
+.cal-day.has-cards::after {
+  content: ''; position: absolute; bottom: 4px;
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--accent);
+}
+.cal-day.selected {
+  background: var(--glow);
+  border-color: var(--accent);
+  color: var(--accent2);
+}
+.cal-day.today { color: var(--yellow); font-weight: 700; }
+.cal-day.today.selected { color: var(--accent2); }
+.cal-day .day-count {
+  font-size: 0.58rem; color: var(--accent2);
+  font-weight: 600; line-height: 1; margin-top: 1px;
+}
+
+/* ── SELECTION INFO ── */
+.selection-bar {
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: var(--r-sm); padding: 12px 18px;
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 20px; flex-wrap: wrap;
+}
+.selection-bar .sel-info { font-size: 0.85rem; color: var(--text-soft); flex: 1; }
+.selection-bar .sel-info strong { color: var(--text); }
+.sel-clear { background: none; border: 1px solid var(--border2); color: var(--text-soft); border-radius: 50px; padding: 5px 14px; font-size: 0.78rem; cursor: pointer; transition: all 0.15s; }
+.sel-clear:hover { color: var(--text); border-color: var(--text-soft); }
+.btn-study-sel {
+  background: var(--accent); color: #fff; border: none;
+  border-radius: 50px; padding: 8px 20px;
+  font-size: 0.85rem; font-weight: 600; cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-study-sel:hover { background: var(--accent2); box-shadow: 0 4px 16px var(--glow); transform: translateY(-1px); }
+.btn-study-sel:disabled { opacity: 0.4; cursor: default; transform: none; box-shadow: none; }
+
+/* ── FOLDER / DAY CARDS ── */
+.folder-section { margin-bottom: 28px; }
+.folder-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 12px;
+}
+.folder-label {
+  font-size: 0.78rem; font-weight: 600; color: var(--text-soft);
+  text-transform: uppercase; letter-spacing: 0.8px;
+}
+.folder-date { font-family: 'DM Serif Display', serif; font-size: 1.05rem; color: var(--text); }
+.folder-cnt { font-size: 0.75rem; color: var(--text-dim); background: var(--surface2); padding: 2px 9px; border-radius: 50px; }
+.cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.mini-card {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 4px;
+  transition: border-color 0.15s;
+}
+.mini-card:hover { border-color: var(--border2); }
+.mini-card .mc-en { font-weight: 600; font-size: 0.95rem; }
+.mini-card .mc-vi { font-size: 0.8rem; color: var(--text-soft); }
+.mini-card .mc-type { font-size: 0.65rem; color: var(--accent2); font-weight: 600; margin-top: 4px; }
+.mini-card .mc-sr {
+  font-size: 0.65rem; color: var(--text-dim); margin-top: 2px;
+  display: flex; align-items: center; gap: 4px;
+}
+.sr-dot { width: 5px; height: 5px; border-radius: 50%; display: inline-block; }
+
+/* ── ADD FORM ── */
+.form-wrap { max-width: 600px; }
+.form-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 28px 30px; margin-bottom: 16px;
+}
+.field-row { display: flex; gap: 12px; margin-bottom: 14px; }
+.field { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+label { font-size: 0.72rem; font-weight: 600; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.7px; }
+input, textarea, select {
+  background: var(--surface2); border: 1.5px solid var(--border2);
+  border-radius: var(--r-sm); padding: 10px 14px;
+  font-size: 0.92rem; font-family: 'DM Sans', sans-serif;
+  color: var(--text); outline: none; resize: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--glow);
+}
+select option { background: var(--surface2); }
+textarea { min-height: 72px; }
+.btn-add {
+  background: var(--accent); color: #fff; border: none;
+  border-radius: 50px; padding: 11px 28px;
+  font-size: 0.9rem; font-weight: 600; cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-add:hover { background: var(--accent2); box-shadow: 0 4px 20px var(--glow); transform: translateY(-1px); }
+.toast {
+  background: var(--green); color: #0a2a1a;
+  border-radius: var(--r-sm); padding: 12px 18px;
+  font-size: 0.88rem; font-weight: 600;
+  display: none; margin-top: 12px;
+}
+.toast.show { display: block; }
+
+/* ── STUDY / FLIP CARD ── */
+#study-view { max-width: 640px; }
+.study-top { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+.study-back { background: none; border: 1px solid var(--border2); color: var(--text-soft); border-radius: 8px; padding: 6px 14px; font-size: 0.82rem; cursor: pointer; transition: all 0.15s; }
+.study-back:hover { color: var(--text); }
+.study-info { font-size: 0.82rem; color: var(--text-soft); }
+.study-mode-badge { margin-left: auto; font-size: 0.72rem; color: var(--accent2); background: var(--glow); border-radius: 50px; padding: 3px 12px; font-weight: 600; }
+.prog-bar-wrap { height: 4px; background: var(--border); border-radius: 50px; margin-bottom: 28px; overflow: hidden; }
+.prog-bar { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 50px; transition: width 0.4s; }
+
+.flip-wrap { perspective: 1200px; height: 280px; margin-bottom: 20px; cursor: pointer; }
+.flip-inner { width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.55s cubic-bezier(0.4,0,0.2,1); position: relative; }
+.flip-wrap.flipped .flip-inner { transform: rotateY(180deg); }
+.flip-face {
+  position: absolute; width: 100%; height: 100%;
+  backface-visibility: hidden; border-radius: var(--r);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 32px;
+}
+.flip-front {
+  background: linear-gradient(145deg, #2d2060 0%, #1a1040 60%, #0f0a2a 100%);
+  border: 1px solid rgba(124,106,255,0.3);
+  box-shadow: 0 0 40px rgba(124,106,255,0.15);
+}
+.flip-back {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  transform: rotateY(180deg);
+}
+.card-word { font-family: 'DM Serif Display', serif; font-size: 2.8rem; color: #fff; letter-spacing: -1px; margin-bottom: 8px; text-align: center; line-height: 1.1; }
+.card-phonetic { font-size: 0.95rem; color: var(--accent2); margin-bottom: 10px; }
+.card-type-pill { background: rgba(124,106,255,0.2); color: var(--accent2); border-radius: 50px; padding: 4px 14px; font-size: 0.72rem; font-weight: 600; }
+.card-hint { font-size: 0.78rem; color: rgba(255,255,255,0.3); margin-top: 18px; }
+.card-meaning { font-size: 1.25rem; font-weight: 600; color: var(--text); margin-bottom: 8px; text-align: center; }
+.card-example { font-size: 0.85rem; color: var(--text-soft); font-style: italic; text-align: center; line-height: 1.6; max-width: 380px; }
+.card-word-back { font-family: 'DM Serif Display', serif; font-size: 1.5rem; color: var(--accent2); margin-bottom: 10px; }
+
+.rating-wrap { margin-top: 6px; }
+.rating-label { text-align: center; font-size: 0.78rem; color: var(--text-dim); margin-bottom: 12px; }
+.rating-btns { display: flex; gap: 10px; }
+.r-btn {
+  flex: 1; padding: 12px 8px; border: none; border-radius: var(--r-sm);
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  transition: all 0.15s; font-size: 0.78rem;
+}
+.r-btn .ri { font-size: 1.3rem; }
+.r-btn .rl { font-weight: 600; }
+.r-btn .rn { font-size: 0.65rem; opacity: 0.7; }
+.r-again  { background: rgba(255,107,107,0.12); color: var(--red); }
+.r-again:hover  { background: var(--red); color: #fff; transform: translateY(-2px); }
+.r-hard   { background: rgba(255,159,67,0.12); color: var(--orange); }
+.r-hard:hover   { background: var(--orange); color: #fff; transform: translateY(-2px); }
+.r-good   { background: rgba(62,207,142,0.12); color: var(--green); }
+.r-good:hover   { background: var(--green); color: #0a2a1a; transform: translateY(-2px); }
+.r-easy   { background: rgba(124,106,255,0.12); color: var(--accent2); }
+.r-easy:hover   { background: var(--accent); color: #fff; transform: translateY(-2px); }
+
+.flip-hint-row { text-align: center; font-size: 0.78rem; color: var(--text-dim); margin-bottom: 10px; }
+
+/* manual mode — no SR rating */
+.manual-rating-wrap { text-align: center; margin-top: 16px; }
+.btn-next-manual {
+  background: var(--surface2); border: 1px solid var(--border2); color: var(--text);
+  border-radius: 50px; padding: 10px 28px; font-size: 0.88rem; font-weight: 600;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-next-manual:hover { background: var(--surface); border-color: var(--accent); color: var(--accent2); }
+
+/* done state */
+.done-wrap { text-align: center; padding: 48px 20px; }
+.done-wrap .done-emoji { font-size: 4rem; margin-bottom: 16px; }
+.done-wrap h3 { font-family: 'DM Serif Display', serif; font-size: 1.9rem; margin-bottom: 8px; }
+.done-wrap p { color: var(--text-soft); font-size: 0.9rem; margin-bottom: 24px; }
+.btn-done { background: var(--accent); color: #fff; border: none; border-radius: 50px; padding: 12px 28px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+.btn-done:hover { background: var(--accent2); }
+
+/* empty */
+.empty-state { text-align: center; padding: 50px 20px; color: var(--text-soft); }
+.empty-state .ee { font-size: 3rem; margin-bottom: 14px; }
+.empty-state p { margin-bottom: 18px; }
+.btn-goto { background: var(--accent); color: #fff; border: none; border-radius: 50px; padding: 10px 24px; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+.btn-goto:hover { background: var(--accent2); }
+
+/* modal */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+  z-index: 200; display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
+.modal-overlay.show { opacity: 1; pointer-events: all; }
+.modal-box {
+  background: var(--surface); border: 1px solid var(--border2); border-radius: var(--r);
+  padding: 32px; max-width: 400px; width: 90%;
+  transform: scale(0.93); transition: transform 0.22s;
+}
+.modal-overlay.show .modal-box { transform: scale(1); }
+.modal-box h3 { font-family: 'DM Serif Display', serif; font-size: 1.4rem; margin-bottom: 10px; }
+.modal-box p { color: var(--text-soft); font-size: 0.88rem; line-height: 1.6; margin-bottom: 20px; }
+.modal-box .btn-ok { background: var(--accent); color: #fff; border: none; border-radius: 50px; padding: 10px 24px; font-size: 0.88rem; font-weight: 600; cursor: pointer; }
+
+/* delete btn */
+.btn-del {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-dim); font-size: 0.8rem; margin-top: 4px;
+  transition: color 0.15s; text-align: left;
+}
+.btn-del:hover { color: var(--red); }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
+
+@media (max-width: 680px) {
+  .sidebar { display: none; }
+  .content { margin-left: 0; padding: 20px 14px; max-width: 100vw; }
+  .mobile-nav {
+    display: flex; background: var(--surface); border-bottom: 1px solid var(--border);
+    overflow-x: auto; position: sticky; top: 0; z-index: 50;
+  }
+  .mobile-nav .nav-item { flex-shrink: 0; border-left: none; border-bottom: 3px solid transparent; }
+  .mobile-nav .nav-item.active { border-bottom-color: var(--accent); }
+}
+@media (min-width: 681px) { .mobile-nav { display: none; } }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">Word<em>Flow</em></div>
+    <div class="nav-item active" data-view="home">
+      <span class="icon">🏠</span> Tổng quan
+    </div>
+    <div class="nav-item" data-view="calendar">
+      <span class="icon">📅</span> Lịch thẻ
+    </div>
+    <div class="nav-item" data-view="sr">
+      <span class="icon">🔁</span> Ôn SR
+      <span class="nav-badge" id="sr-badge">0</span>
+    </div>
+    <div class="nav-item" data-view="add">
+      <span class="icon">＋</span> Thêm thẻ
+    </div>
+    <div class="sidebar-footer">
+      Dữ liệu lưu trên trình duyệt này.<br>Không cần đăng nhập.
+    </div>
+  </aside>
+
+  <!-- MOBILE NAV -->
+  <div class="mobile-nav">
+    <div class="nav-item active" data-view="home"><span class="icon">🏠</span> Home</div>
+    <div class="nav-item" data-view="calendar"><span class="icon">📅</span> Lịch</div>
+    <div class="nav-item" data-view="sr"><span class="icon">🔁</span> SR <span class="nav-badge" id="sr-badge-m">0</span></div>
+    <div class="nav-item" data-view="add"><span class="icon">＋</span> Thêm</div>
+  </div>
+
+  <!-- CONTENT -->
+  <main class="content">
+
+    <!-- HOME -->
+    <div class="view active" id="home-view">
+      <div class="page-title">Xin chào 👋</div>
+      <div class="page-sub" id="home-sub">Hôm nay bạn học được gì mới?</div>
+      <div class="stats-row" id="home-stats"></div>
+      <div id="home-due"></div>
+      <div id="home-recent"></div>
+    </div>
+
+    <!-- CALENDAR -->
+    <div class="view" id="calendar-view">
+      <div class="page-title">Lịch thẻ</div>
+      <div class="page-sub">Thẻ nhóm theo ngày tạo. Chọn nhiều ngày để ôn tập thủ công.</div>
+      <div class="calendar-wrap">
+        <div class="cal-header">
+          <button class="cal-nav" id="cal-prev">‹ Trước</button>
+          <div class="cal-title" id="cal-title"></div>
+          <button class="cal-nav" id="cal-next">Sau ›</button>
+        </div>
+        <div class="cal-grid">
+          <div class="cal-weekdays">
+            <span>CN</span><span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span>
+          </div>
+          <div class="cal-days" id="cal-days"></div>
+        </div>
+      </div>
+
+      <div class="selection-bar" id="sel-bar" style="display:none">
+        <div class="sel-info" id="sel-info"></div>
+        <button class="sel-clear" onclick="clearSelection()">Bỏ chọn</button>
+        <button class="btn-study-sel" id="btn-study-sel" onclick="startManualStudy()">Ôn tập ngay →</button>
+      </div>
+
+      <div id="cal-folder-view"></div>
+    </div>
+
+    <!-- SR STUDY -->
+    <div class="view" id="sr-view">
+      <div class="page-title">Ôn tập SR</div>
+      <div class="page-sub">Spaced Repetition — hệ thống tự chọn thẻ cần ôn hôm nay.</div>
+      <div id="sr-content"></div>
+    </div>
+
+    <!-- STUDY (manual or sr session) -->
+    <div class="view" id="study-view">
+      <div id="study-content"></div>
+    </div>
+
+    <!-- ADD -->
+    <div class="view" id="add-view">
+      <div class="page-title">Thêm thẻ mới</div>
+      <div class="page-sub">Từ sẽ được lưu vào thư mục ngày hôm nay.</div>
+      <div class="form-wrap">
+        <div class="form-card">
+          <div class="field-row">
+            <div class="field">
+              <label>Từ tiếng Anh *</label>
+              <input id="f-en" type="text" placeholder="e.g. meticulous">
+            </div>
+            <div class="field">
+              <label>Phiên âm</label>
+              <input id="f-ph" type="text" placeholder="e.g. /məˈtɪk.jə.ləs/">
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Loại từ</label>
+              <select id="f-type">
+                <option value="adj">Tính từ (adj)</option>
+                <option value="n">Danh từ (n)</option>
+                <option value="v">Động từ (v)</option>
+                <option value="adv">Trạng từ (adv)</option>
+                <option value="phrase">Cụm từ</option>
+                <option value="other">Khác</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Nghĩa tiếng Việt *</label>
+              <input id="f-vi" type="text" placeholder="e.g. cẩn thận, tỉ mỉ">
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:18px">
+            <label>Ví dụ (tuỳ chọn)</label>
+            <textarea id="f-ex" placeholder="e.g. She is meticulous about her work."></textarea>
+          </div>
+          <button class="btn-add" onclick="addCard()">✦ Lưu thẻ hôm nay</button>
+        </div>
+        <div class="toast" id="add-toast"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal-box">
+    <h3 id="m-title"></h3>
+    <p id="m-body"></p>
+    <button class="btn-ok" onclick="closeModal()">OK</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════
+const CARDS_KEY = 'wf2_cards';
+const META_KEY  = 'wf2_meta';
+
+const loadCards = () => { try { return JSON.parse(localStorage.getItem(CARDS_KEY)) || []; } catch { return []; } };
+const saveCards = c => localStorage.setItem(CARDS_KEY, JSON.stringify(c));
+const loadMeta  = () => { try { return JSON.parse(localStorage.getItem(META_KEY))  || {}; } catch { return {}; } };
+const saveMeta  = m => localStorage.setItem(META_KEY, JSON.stringify(m));
+
+// ═══════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════
+const toDateStr = ms => {
+  const d = new Date(ms);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+};
+const todayStr = () => toDateStr(Date.now());
+
+const formatDateLabel = str => {
+  const [y,m,d] = str.split('-').map(Number);
+  const date = new Date(y, m-1, d);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const diff = Math.round((date - today) / 86400000);
+  const days = ['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
+  const months = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
+  let prefix = diff === 0 ? 'Hôm nay' : diff === -1 ? 'Hôm qua' : days[date.getDay()];
+  return `${prefix}, ${d} ${months[m-1]} ${y}`;
+};
+
+const isDue = c => !c.nextReview || Date.now() >= c.nextReview;
+
+const srLabel = c => {
+  if (!c.nextReview) return 'Chưa học';
+  const diff = c.nextReview - Date.now();
+  if (diff <= 0) return 'Đến hạn';
+  const d = Math.floor(diff/86400000);
+  const h = Math.floor(diff/3600000);
+  if (d > 0) return `${d}n nữa`;
+  if (h > 0) return `${h}h nữa`;
+  return 'Hôm nay';
+};
+
+const srDotColor = c => {
+  if (!c.nextReview) return '#7878a0';
+  if (isDue(c)) return 'var(--red)';
+  if ((c.interval||0) >= 7) return 'var(--green)';
+  return 'var(--yellow)';
+};
+
+// ═══════════════════════════════════════════
+// SM-2 SPACED REPETITION
+// ═══════════════════════════════════════════
+function computeNext(card, quality) {
+  let { interval = 0, easiness = 2.5, repetitions = 0 } = card;
+  if (quality === 0) { repetitions = 0; interval = 1; }
+  else if (quality === 1) { interval = Math.max(1, Math.round(interval * 1.2)); }
+  else {
+    if (repetitions === 0) interval = 1;
+    else if (repetitions === 1) interval = 6;
+    else interval = Math.round(interval * easiness);
+    repetitions++;
+    easiness = Math.max(1.3, easiness + 0.1 - (3-quality)*(0.08 + (3-quality)*0.02));
+  }
+  return { interval, easiness, repetitions, lastReview: Date.now(), nextReview: Date.now() + interval*86400000 };
+}
+
+function intervalStr(quality, card) {
+  const { interval } = computeNext({...card}, quality);
+  return interval <= 1 ? '1 ngày' : `${interval} ngày`;
+}
+
+// ═══════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════
+let currentView = 'home';
+let studyMode   = 'sr'; // 'sr' | 'manual'
+let studyQueue  = [];
+let studyIdx    = 0;
+let isFlipped   = false;
+let prevView    = 'sr';
+
+function showView(v) {
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.view === v);
+  });
+  document.getElementById(v + '-view').classList.add('active');
+  currentView = v;
+  if (v === 'home')     renderHome();
+  if (v === 'calendar') renderCalendar();
+  if (v === 'sr')       renderSR();
+  updateBadge();
+}
+
+document.querySelectorAll('.nav-item[data-view]').forEach(el => {
+  el.addEventListener('click', () => showView(el.dataset.view));
+});
+
+// ═══════════════════════════════════════════
+// HOME
+// ═══════════════════════════════════════════
+function renderHome() {
+  const cards = loadCards();
+  const due = cards.filter(isDue);
+  document.getElementById('home-sub').textContent = `${new Date().toLocaleDateString('vi-VN',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}`;
+  document.getElementById('home-stats').innerHTML = `
+    <div class="stat-box"><div class="sv">${cards.length}</div><div class="sl">Tổng thẻ</div></div>
+    <div class="stat-box"><div class="sv">${due.length}</div><div class="sl">Cần ôn SR</div></div>
+    <div class="stat-box"><div class="sv">${cards.filter(c=>(c.interval||0)>=7).length}</div><div class="sl">Thành thạo</div></div>
+    <div class="stat-box"><div class="sv">${[...new Set(cards.map(c=>toDateStr(c.createdAt)))].length}</div><div class="sl">Ngày học</div></div>
+  `;
+  document.getElementById('home-due').innerHTML = due.length > 0
+    ? `<div class="due-banner" onclick="showView('sr')">
+        <div><div class="db-count">${due.length} thẻ</div><div class="db-text">đến hạn ôn tập SR hôm nay</div></div>
+        <div class="db-arrow">▶</div>
+      </div>`
+    : cards.length > 0
+    ? `<div class="due-banner" style="background:linear-gradient(135deg,var(--green) 0%,#2ecc71 100%);cursor:default">
+        <div><div class="db-count">✓ Hoàn thành</div><div class="db-text">Không còn thẻ SR nào cần ôn hôm nay</div></div>
+      </div>` : '';
+
+  // recent days
+  const byDay = groupByDay(cards);
+  const days  = Object.keys(byDay).sort((a,b) => b.localeCompare(a)).slice(0,3);
+  document.getElementById('home-recent').innerHTML = days.length === 0
+    ? `<div class="empty-state"><div class="ee">✨</div><p>Chưa có thẻ nào. Hãy thêm từ đầu tiên!</p><button class="btn-goto" onclick="showView('add')">＋ Thêm thẻ</button></div>`
+    : `<div style="margin-bottom:8px;font-size:0.78rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.8px;font-weight:600">Gần đây</div>`
+      + days.map(d => folderHTML(d, byDay[d], false)).join('');
+}
+
+// ═══════════════════════════════════════════
+// CALENDAR
+// ═══════════════════════════════════════════
+let calYear  = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+let selectedDays = new Set();
+
+function renderCalendar() {
+  renderCalGrid();
+  renderFolderView();
+}
+
+function renderCalGrid() {
+  const cards  = loadCards();
+  const byDay  = groupByDay(cards);
+  const today  = todayStr();
+  const first  = new Date(calYear, calMonth, 1);
+  const last   = new Date(calYear, calMonth+1, 0);
+  const months = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
+  document.getElementById('cal-title').textContent = `${months[calMonth]} ${calYear}`;
+
+  let html = '';
+  // empty cells before first day (0=Sun)
+  for (let i = 0; i < first.getDay(); i++) html += `<div class="cal-day empty"></div>`;
+  for (let d = 1; d <= last.getDate(); d++) {
+    const ds  = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const cnt = (byDay[ds]||[]).length;
+    const sel = selectedDays.has(ds);
+    const td  = ds === today;
+    html += `<div class="cal-day ${cnt>0?'has-cards':''} ${sel?'selected':''} ${td?'today':''}" onclick="toggleDay('${ds}')">
+      ${d}
+      ${cnt>0 ? `<div class="day-count">${cnt}</div>` : ''}
+    </div>`;
+  }
+  document.getElementById('cal-days').innerHTML = html;
+}
+
+function toggleDay(ds) {
+  const cards = loadCards();
+  const byDay = groupByDay(cards);
+  if (!(byDay[ds]||[]).length) return; // no cards that day
+  if (selectedDays.has(ds)) selectedDays.delete(ds);
+  else selectedDays.add(ds);
+  renderCalGrid();
+  renderSelectionBar();
+  renderFolderView();
+}
+
+function clearSelection() {
+  selectedDays.clear();
+  renderCalGrid();
+  renderSelectionBar();
+  renderFolderView();
+}
+
+function renderSelectionBar() {
+  const bar = document.getElementById('sel-bar');
+  if (selectedDays.size === 0) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  const cards = loadCards();
+  const byDay = groupByDay(cards);
+  let total = 0;
+  selectedDays.forEach(d => total += (byDay[d]||[]).length);
+  const dates = [...selectedDays].sort().map(d => {
+    const [,m,day] = d.split('-');
+    return `${parseInt(day)}/${parseInt(m)}`;
+  }).join(', ');
+  document.getElementById('sel-info').innerHTML = `Đã chọn <strong>${selectedDays.size} ngày</strong> (${dates}) — <strong>${total} thẻ</strong>`;
+  document.getElementById('btn-study-sel').disabled = total === 0;
+}
+
+function renderFolderView() {
+  const cards = loadCards();
+  const byDay = groupByDay(cards);
+  // show selected days, or current month days
+  let days;
+  if (selectedDays.size > 0) {
+    days = [...selectedDays].sort((a,b) => b.localeCompare(a));
+  } else {
+    const prefix = `${calYear}-${String(calMonth+1).padStart(2,'0')}`;
+    days = Object.keys(byDay).filter(d => d.startsWith(prefix)).sort((a,b) => b.localeCompare(a));
+  }
+  document.getElementById('cal-folder-view').innerHTML = days.length === 0
+    ? `<div class="empty-state"><div class="ee">📂</div><p>Không có thẻ nào trong tháng này.</p></div>`
+    : days.map(d => folderHTML(d, byDay[d]||[], true)).join('');
+}
+
+document.getElementById('cal-prev').addEventListener('click', () => {
+  calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; }
+  selectedDays.clear(); renderCalendar();
+});
+document.getElementById('cal-next').addEventListener('click', () => {
+  calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; }
+  selectedDays.clear(); renderCalendar();
+});
+
+// ═══════════════════════════════════════════
+// FOLDER HTML
+// ═══════════════════════════════════════════
+function groupByDay(cards) {
+  const map = {};
+  cards.forEach(c => {
+    const d = toDateStr(c.createdAt);
+    (map[d] = map[d]||[]).push(c);
+  });
+  return map;
+}
+
+function folderHTML(dateStr, cards, showDelete) {
+  return `<div class="folder-section">
+    <div class="folder-header">
+      <div class="folder-date">${formatDateLabel(dateStr)}</div>
+      <div class="folder-cnt">${cards.length} thẻ</div>
+    </div>
+    <div class="cards-grid">
+      ${cards.map(c => `
+        <div class="mini-card">
+          <div class="mc-en">${c.en}</div>
+          <div class="mc-vi">${c.vi}</div>
+          <div class="mc-type">${c.type}</div>
+          <div class="mc-sr">
+            <span class="sr-dot" style="background:${srDotColor(c)}"></span>
+            SR: ${srLabel(c)}
+          </div>
+          ${showDelete ? `<button class="btn-del" onclick="deleteCard('${c.id}')">✕ Xoá</button>` : ''}
+        </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════
+// DELETE
+// ═══════════════════════════════════════════
+function deleteCard(id) {
+  saveCards(loadCards().filter(c => c.id !== id));
+  renderCalendar(); renderHome(); updateBadge();
+}
+
+// ═══════════════════════════════════════════
+// SR VIEW
+// ═══════════════════════════════════════════
+function renderSR() {
+  const due = loadCards().filter(isDue);
+  document.getElementById('sr-content').innerHTML = due.length === 0
+    ? `<div class="empty-state"><div class="ee">🎉</div><p>Không có thẻ SR nào cần ôn hôm nay!</p><button class="btn-goto" onclick="showView('calendar')">📅 Xem lịch thẻ</button></div>`
+    : `<div class="due-banner" onclick="launchSR()" style="max-width:480px">
+        <div><div class="db-count">${due.length} thẻ cần ôn</div><div class="db-text">Bắt đầu phiên SR ngay</div></div>
+        <div class="db-arrow">▶</div>
+      </div>
+      <div style="margin-top:16px">` + due.slice(0,6).map(c=>`
+        <div class="mini-card" style="display:inline-flex;flex-direction:row;gap:10px;align-items:center;margin:4px;width:auto">
+          <span style="font-weight:600">${c.en}</span>
+          <span style="color:var(--text-soft);font-size:0.8rem">${c.vi}</span>
+        </div>`).join('') + (due.length > 6 ? `<div style="font-size:0.78rem;color:var(--text-dim);margin-top:8px">và ${due.length-6} thẻ nữa...</div>` : '') + '</div>';
+}
+
+function launchSR() {
+  const cards = loadCards().filter(isDue);
+  shuffle(cards);
+  studyMode  = 'sr';
+  studyQueue = cards;
+  studyIdx   = 0;
+  isFlipped  = false;
+  prevView   = 'sr';
+  showView('study');
+  renderStudy();
+}
+
+// ═══════════════════════════════════════════
+// MANUAL STUDY (from calendar selection)
+// ═══════════════════════════════════════════
+function startManualStudy() {
+  const cards  = loadCards();
+  const byDay  = groupByDay(cards);
+  let pool = [];
+  selectedDays.forEach(d => { pool = pool.concat(byDay[d]||[]); });
+  shuffle(pool);
+  studyMode  = 'manual';
+  studyQueue = pool;
+  studyIdx   = 0;
+  isFlipped  = false;
+  prevView   = 'calendar';
+  showView('study');
+  renderStudy();
+}
+
+// ═══════════════════════════════════════════
+// STUDY SESSION
+// ═══════════════════════════════════════════
+function renderStudy() {
+  const el    = document.getElementById('study-content');
+  const total = studyQueue.length;
+
+  if (total === 0) {
+    el.innerHTML = `<div class="done-wrap"><div class="done-emoji">📭</div><h3>Không có thẻ</h3><p>Chọn ngày có thẻ để ôn tập.</p><button class="btn-done" onclick="showView('${prevView}')">← Quay lại</button></div>`;
+    return;
+  }
+  if (studyIdx >= total) {
+    el.innerHTML = `<div class="done-wrap">
+      <div class="done-emoji">🏆</div>
+      <h3>Xong rồi!</h3>
+      <p>Bạn vừa ôn <strong>${total} thẻ</strong>${studyMode==='manual' ? ' (ôn thủ công — SR không thay đổi)' : ' theo lịch SR'}.</p>
+      <button class="btn-done" onclick="showView('${prevView}')">← Quay lại</button>
+    </div>`;
+    return;
+  }
+
+  const card = studyQueue[studyIdx];
+  const pct  = Math.round((studyIdx / total) * 100);
+  const isSR = studyMode === 'sr';
+
+  el.innerHTML = `
+    <div class="study-top">
+      <button class="study-back" onclick="showView('${prevView}')">← Quay lại</button>
+      <div class="study-info">${studyIdx+1} / ${total}</div>
+      <div class="study-mode-badge">${isSR ? '🔁 SR' : '📅 Ôn thủ công'}</div>
+    </div>
+    <div class="prog-bar-wrap"><div class="prog-bar" style="width:${pct}%"></div></div>
+
+    <div class="flip-wrap ${isFlipped?'flipped':''}" id="flip-wrap" onclick="flipCard()">
+      <div class="flip-inner">
+        <div class="flip-face flip-front">
+          <div class="card-word">${card.en}</div>
+          ${card.phonetic ? `<div class="card-phonetic">${card.phonetic}</div>` : ''}
+          <div class="card-type-pill">${card.type}</div>
+          <div class="card-hint">Nhấn để xem nghĩa</div>
+        </div>
+        <div class="flip-face flip-back">
+          <div class="card-word-back">${card.en}</div>
+          <div class="card-meaning">${card.vi}</div>
+          ${card.example ? `<div class="card-example">"${card.example}"</div>` : ''}
+        </div>
+      </div>
+    </div>
+
+    ${!isFlipped
+      ? `<div class="flip-hint-row">⌨ Space / Enter để lật thẻ</div>`
+      : isSR
+        ? `<div class="rating-wrap">
+            <div class="rating-label">Bạn nhớ từ này như thế nào?</div>
+            <div class="rating-btns">
+              <button class="r-btn r-again" onclick="rateCard(0)"><div class="ri">😰</div><div class="rl">Không nhớ</div><div class="rn">Ôn lại ngay</div></button>
+              <button class="r-btn r-hard"  onclick="rateCard(1)"><div class="ri">😓</div><div class="rl">Khó</div><div class="rn">${intervalStr(1,card)}</div></button>
+              <button class="r-btn r-good"  onclick="rateCard(2)"><div class="ri">😊</div><div class="rl">Nhớ được</div><div class="rn">${intervalStr(2,card)}</div></button>
+              <button class="r-btn r-easy"  onclick="rateCard(3)"><div class="ri">🚀</div><div class="rl">Dễ quá!</div><div class="rn">${intervalStr(3,card)}</div></button>
+            </div>
+          </div>`
+        : `<div class="manual-rating-wrap">
+            <button class="btn-next-manual" onclick="nextManual()">Thẻ tiếp theo →</button>
+          </div>`
+    }`;
+}
+
+function flipCard() {
+  if (isFlipped) return;
+  isFlipped = true;
+  renderStudy();
+}
+
+function rateCard(q) {
+  const cards = loadCards();
+  const card  = studyQueue[studyIdx];
+  const idx   = cards.findIndex(c => c.id === card.id);
+  if (idx !== -1) {
+    Object.assign(cards[idx], computeNext(cards[idx], q));
+    saveCards(cards);
+    if (q === 0) studyQueue.push({...cards[idx]}); // push Again back
+  }
+  studyIdx++; isFlipped = false; renderStudy(); updateBadge();
+}
+
+function nextManual() {
+  studyIdx++; isFlipped = false; renderStudy();
+}
+
+// ═══════════════════════════════════════════
+// ADD CARD
+// ═══════════════════════════════════════════
+function addCard() {
+  const en = document.getElementById('f-en').value.trim();
+  const vi = document.getElementById('f-vi').value.trim();
+  if (!en || !vi) { showModal('⚠️ Thiếu thông tin', 'Vui lòng nhập từ tiếng Anh và nghĩa tiếng Việt.'); return; }
+  const cards = loadCards();
+  cards.push({
+    id: Date.now().toString(),
+    en, vi,
+    phonetic: document.getElementById('f-ph').value.trim(),
+    type:     document.getElementById('f-type').value,
+    example:  document.getElementById('f-ex').value.trim(),
+    createdAt: Date.now(),
+    interval: 0, easiness: 2.5, repetitions: 0,
+    lastReview: null, nextReview: null,
+  });
+  saveCards(cards);
+  ['f-en','f-ph','f-vi','f-ex'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-type').selectedIndex = 0;
+  const t = document.getElementById('add-toast');
+  t.textContent = `✓ Đã lưu "${en}" vào thư mục ${formatDateLabel(todayStr())}`;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+  updateBadge();
+}
+
+// ═══════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════
+function showModal(t, b) {
+  document.getElementById('m-title').textContent = t;
+  document.getElementById('m-body').textContent  = b;
+  document.getElementById('modal').classList.add('show');
+}
+function closeModal() { document.getElementById('modal').classList.remove('show'); }
+
+// ═══════════════════════════════════════════
+// BADGE
+// ═══════════════════════════════════════════
+function updateBadge() {
+  const n = loadCards().filter(isDue).length;
+  ['sr-badge','sr-badge-m'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = n; el.style.display = n > 0 ? '' : 'none'; }
+  });
+}
+
+// ═══════════════════════════════════════════
+// KEYBOARD
+// ═══════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if (currentView !== 'study') return;
+  if ((e.key === ' ' || e.key === 'Enter') && !isFlipped) { e.preventDefault(); flipCard(); }
+  if (isFlipped && studyMode === 'sr') {
+    if (e.key === '1') rateCard(0);
+    if (e.key === '2') rateCard(1);
+    if (e.key === '3') rateCard(2);
+    if (e.key === '4') rateCard(3);
+  }
+  if (isFlipped && studyMode === 'manual' && e.key === 'ArrowRight') nextManual();
+});
+
+// ═══════════════════════════════════════════
+// DAILY PROMPT
+// ═══════════════════════════════════════════
+function shuffle(arr) {
+  for (let i = arr.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]] = [arr[j],arr[i]];
+  }
+}
+
+function checkDailyNotif() {
+  const meta = loadMeta();
+  const td   = todayStr();
+  if (meta.lastNotif === td) return;
+  const due = loadCards().filter(isDue).length;
+  if (due > 0) {
+    setTimeout(() => {
+      showModal('📚 Nhắc nhở ôn tập', `Hôm nay bạn có ${due} thẻ SR cần ôn. Chỉ mất vài phút!`);
+      meta.lastNotif = td; saveMeta(meta);
+    }, 700);
+  }
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+updateBadge();
+renderHome();
+checkDailyNotif();
+</script>
+</body>
+</html>
