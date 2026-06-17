@@ -1203,7 +1203,32 @@ function folderHTML(dateStr, cards, showDelete) {
     </div>
   </div>`;
 }
+let pickMode = false;
+let pickedCards = new Set();
 
+function togglePickMode() {
+  pickMode = !pickMode;
+  pickedCards.clear();
+
+  const btn = document.getElementById('btn-pick-mode');
+  btn.classList.toggle('active', pickMode);
+  btn.textContent = pickMode
+    ? '❌ Thoát chọn'
+    : '☑ Chọn nhiều thẻ';
+
+  renderFolderView();
+}
+
+function toggleCardPick(id) {
+  if (!pickMode) return;
+
+  if (pickedCards.has(id))
+    pickedCards.delete(id);
+  else
+    pickedCards.add(id);
+
+  renderFolderView();
+}
 // ═══════════════════════════════════════════
 // DELETE
 // ═══════════════════════════════════════════
