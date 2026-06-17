@@ -207,13 +207,14 @@ body {
 .folder-cnt { font-size: 0.75rem; color: var(--text-dim); background: var(--surface2); padding: 2px 9px; border-radius: 50px; }
 .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
 .mini-card {
-  background: var(--surface2); border: 1px solid var(--border);
+  background: var(--surface2); border: 1.5px solid var(--border);
   border-radius: var(--r-sm); padding: 14px 16px;
   display: flex; flex-direction: column; gap: 4px;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s; position: relative;
 }
 .mini-card:hover { border-color: var(--border2); }
-.mini-card .mc-en { font-weight: 600; font-size: 0.95rem; }
+.mini-card.picked { border-color: var(--accent); background: var(--glow); }
+.mini-card .mc-en { font-weight: 600; font-size: 0.95rem; padding-right: 22px; }
 .mini-card .mc-vi { font-size: 0.8rem; color: var(--text-soft); }
 .mini-card .mc-type { font-size: 0.65rem; color: var(--accent2); font-weight: 600; margin-top: 4px; }
 .mini-card .mc-sr {
@@ -221,6 +222,78 @@ body {
   display: flex; align-items: center; gap: 4px;
 }
 .sr-dot { width: 5px; height: 5px; border-radius: 50%; display: inline-block; }
+.mc-pick-chk {
+  position: absolute; top: 12px; right: 12px;
+  width: 17px; height: 17px; border-radius: 5px;
+  border: 1.5px solid var(--border2); background: var(--surface);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.65rem; color: #fff; cursor: pointer; transition: all 0.15s;
+}
+.mini-card.picked .mc-pick-chk { background: var(--accent); border-color: var(--accent); }
+.mini-card .mc-bottom-row { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+
+/* ── SUBFOLDERS (within a day) ── */
+.subfolder-tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+.subfolder-tab {
+  padding: 6px 14px; border-radius: 50px; font-size: 0.78rem; font-weight: 600;
+  cursor: pointer; transition: all 0.15s; user-select: none;
+  background: var(--surface2); border: 1.5px solid var(--border2); color: var(--text-soft);
+  display: flex; align-items: center; gap: 6px;
+}
+.subfolder-tab:hover { color: var(--text); }
+.subfolder-tab.active { background: var(--glow); border-color: var(--accent); color: var(--accent2); }
+.subfolder-tab .sf-cnt { font-size: 0.68rem; opacity: 0.75; }
+.subfolder-tab .sf-del { font-size: 0.7rem; opacity: 0.5; margin-left: 2px; }
+.subfolder-tab .sf-del:hover { opacity: 1; color: var(--red); }
+.subfolder-add-btn {
+  padding: 6px 14px; border-radius: 50px; font-size: 0.78rem; font-weight: 600;
+  cursor: pointer; background: none; border: 1.5px dashed var(--border2); color: var(--text-soft);
+  transition: all 0.15s;
+}
+.subfolder-add-btn:hover { border-color: var(--accent); color: var(--accent2); }
+
+/* ── BULK ACTION BAR (multi-select cards) ── */
+.bulk-bar {
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: var(--r-sm); padding: 12px 18px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.bulk-bar .bulk-info { font-size: 0.85rem; color: var(--text-soft); flex: 1; }
+.bulk-bar .bulk-info strong { color: var(--text); }
+.bulk-btn {
+  border-radius: 50px; padding: 6px 16px; font-size: 0.8rem; font-weight: 600;
+  cursor: pointer; transition: all 0.15s; border: 1px solid var(--border2);
+  background: var(--surface); color: var(--text-soft);
+}
+.bulk-btn:hover { color: var(--text); border-color: var(--text-soft); }
+.bulk-btn.danger { color: var(--red); border-color: rgba(255,107,107,0.3); }
+.bulk-btn.danger:hover { background: var(--red); color: #fff; border-color: var(--red); }
+.bulk-btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.bulk-btn.primary:hover { background: var(--accent2); }
+.btn-pick-mode {
+  background: none; border: 1px solid var(--border2); color: var(--text-soft);
+  border-radius: 50px; padding: 6px 16px; font-size: 0.8rem; font-weight: 600;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-pick-mode.active { background: var(--glow); border-color: var(--accent); color: var(--accent2); }
+.btn-pick-mode:hover { color: var(--text); }
+
+/* ── MOVE-TO-SUBFOLDER MODAL ── */
+.move-modal-list { display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow-y: auto; margin-bottom: 16px; }
+.move-modal-item {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface2); border: 1.5px solid var(--border2);
+  border-radius: var(--r-sm); padding: 10px 14px;
+  cursor: pointer; transition: all 0.15s; font-size: 0.88rem; font-weight: 500;
+}
+.move-modal-item:hover { border-color: var(--accent); }
+.move-modal-new {
+  display: flex; gap: 8px; margin-bottom: 4px;
+}
+.move-modal-new input {
+  flex: 1; padding: 9px 13px; font-size: 0.85rem;
+}
 
 /* ── ADD FORM ── */
 .form-wrap { max-width: 600px; }
@@ -258,6 +331,43 @@ textarea { min-height: 72px; }
   display: none; margin-top: 12px;
 }
 .toast.show { display: block; }
+
+/* ── ADD MODE TABS (single vs bulk) ── */
+.add-mode-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
+.add-mode-tab {
+  padding: 8px 18px; border-radius: 50px; font-size: 0.85rem; font-weight: 600;
+  cursor: pointer; transition: all 0.15s; user-select: none;
+  background: var(--surface2); border: 1.5px solid var(--border2); color: var(--text-soft);
+}
+.add-mode-tab.active { background: var(--glow); border-color: var(--accent); color: var(--accent2); }
+.add-mode-tab:hover { color: var(--text); }
+.add-mode-panel { display: none; }
+.add-mode-panel.active { display: block; }
+
+.bulk-textarea {
+  width: 100%; min-height: 220px;
+  background: var(--surface2); border: 1.5px solid var(--border2);
+  border-radius: var(--r-sm); padding: 14px 16px;
+  font-size: 0.88rem; font-family: 'DM Sans', monospace;
+  color: var(--text); outline: none; resize: vertical; line-height: 1.6;
+}
+.bulk-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--glow); }
+.bulk-hint {
+  font-size: 0.78rem; color: var(--text-dim); margin: 8px 0 18px; line-height: 1.6;
+  background: var(--surface2); border-radius: var(--r-sm); padding: 12px 16px;
+}
+.bulk-hint code { background: var(--surface); padding: 1px 6px; border-radius: 4px; color: var(--accent2); }
+.bulk-preview { margin-top: 16px; }
+.bulk-preview-title { font-size: 0.78rem; font-weight: 600; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 10px; }
+.bulk-preview-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 14px; border-radius: var(--r-sm);
+  background: var(--surface2); margin-bottom: 6px; font-size: 0.85rem;
+}
+.bulk-preview-row.invalid { background: rgba(255,107,107,0.1); color: var(--red); }
+.bulk-preview-row .bp-en { font-weight: 600; min-width: 110px; }
+.bulk-preview-row .bp-vi { color: var(--text-soft); flex: 1; }
+.bulk-preview-row .bp-warn { font-size: 0.72rem; }
 
 /* ── STUDY / FLIP CARD ── */
 #study-view { max-width: 640px; }
@@ -681,6 +791,10 @@ textarea { min-height: 72px; }
         <button class="btn-study-sel" id="btn-study-sel" onclick="startManualStudy()">Ôn tập ngay →</button>
       </div>
 
+      <div class="boss-actions-row" style="margin-bottom:16px">
+        <button class="btn-pick-mode" id="btn-pick-mode" onclick="togglePickMode()">☑ Chọn nhiều thẻ</button>
+      </div>
+
       <div id="cal-folder-view"></div>
     </div>
 
@@ -732,42 +846,70 @@ textarea { min-height: 72px; }
     <div class="view" id="add-view">
       <div class="page-title">Thêm thẻ mới</div>
       <div class="page-sub">Từ sẽ được lưu vào thư mục ngày hôm nay.</div>
-      <div class="form-wrap">
-        <div class="form-card">
-          <div class="field-row">
-            <div class="field">
-              <label>Từ tiếng Anh *</label>
-              <input id="f-en" type="text" placeholder="e.g. meticulous">
+
+      <div class="add-mode-tabs">
+        <div class="add-mode-tab active" data-mode="single" onclick="switchAddMode('single')">✦ Thêm 1 từ</div>
+        <div class="add-mode-tab" data-mode="bulk" onclick="switchAddMode('bulk')">📋 Thêm nhiều từ</div>
+      </div>
+
+      <!-- SINGLE ADD -->
+      <div class="add-mode-panel active" id="add-panel-single">
+        <div class="form-wrap">
+          <div class="form-card">
+            <div class="field-row">
+              <div class="field">
+                <label>Từ tiếng Anh *</label>
+                <input id="f-en" type="text" placeholder="e.g. meticulous">
+              </div>
+              <div class="field">
+                <label>Phiên âm</label>
+                <input id="f-ph" type="text" placeholder="e.g. /məˈtɪk.jə.ləs/">
+              </div>
             </div>
-            <div class="field">
-              <label>Phiên âm</label>
-              <input id="f-ph" type="text" placeholder="e.g. /məˈtɪk.jə.ləs/">
+            <div class="field-row">
+              <div class="field">
+                <label>Loại từ</label>
+                <select id="f-type">
+                  <option value="adj">Tính từ (adj)</option>
+                  <option value="n">Danh từ (n)</option>
+                  <option value="v">Động từ (v)</option>
+                  <option value="adv">Trạng từ (adv)</option>
+                  <option value="phrase">Cụm từ</option>
+                  <option value="other">Khác</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Nghĩa tiếng Việt *</label>
+                <input id="f-vi" type="text" placeholder="e.g. cẩn thận, tỉ mỉ">
+              </div>
             </div>
+            <div class="field" style="margin-bottom:18px">
+              <label>Ví dụ (tuỳ chọn)</label>
+              <textarea id="f-ex" placeholder="e.g. She is meticulous about her work."></textarea>
+            </div>
+            <button class="btn-add" onclick="addCard()">✦ Lưu thẻ hôm nay</button>
           </div>
-          <div class="field-row">
-            <div class="field">
-              <label>Loại từ</label>
-              <select id="f-type">
-                <option value="adj">Tính từ (adj)</option>
-                <option value="n">Danh từ (n)</option>
-                <option value="v">Động từ (v)</option>
-                <option value="adv">Trạng từ (adv)</option>
-                <option value="phrase">Cụm từ</option>
-                <option value="other">Khác</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>Nghĩa tiếng Việt *</label>
-              <input id="f-vi" type="text" placeholder="e.g. cẩn thận, tỉ mỉ">
-            </div>
-          </div>
-          <div class="field" style="margin-bottom:18px">
-            <label>Ví dụ (tuỳ chọn)</label>
-            <textarea id="f-ex" placeholder="e.g. She is meticulous about her work."></textarea>
-          </div>
-          <button class="btn-add" onclick="addCard()">✦ Lưu thẻ hôm nay</button>
+          <div class="toast" id="add-toast"></div>
         </div>
-        <div class="toast" id="add-toast"></div>
+      </div>
+
+      <!-- BULK ADD -->
+      <div class="add-mode-panel" id="add-panel-bulk">
+        <div class="form-wrap" style="max-width:680px">
+          <div class="form-card">
+            <div class="bulk-hint">
+              Mỗi dòng 1 từ, theo định dạng: <code>từ tiếng Anh | nghĩa tiếng Việt | ví dụ (tuỳ chọn)</code><br>
+              Ví dụ: <code>meticulous | cẩn thận, tỉ mỉ | She is meticulous about her work.</code><br>
+              Phần ví dụ có thể bỏ trống — chỉ cần <code>từ | nghĩa</code>.
+            </div>
+            <textarea class="bulk-textarea" id="bulk-input" placeholder="meticulous | cẩn thận, tỉ mỉ | She is meticulous about her work.
+diligent | chăm chỉ
+ambiguous | mơ hồ, không rõ ràng" oninput="renderBulkPreview()"></textarea>
+            <div class="bulk-preview" id="bulk-preview"></div>
+            <button class="btn-add" id="btn-bulk-submit" onclick="submitBulkAdd()" style="margin-top:16px" disabled>📋 Thêm tất cả vào hôm nay</button>
+          </div>
+          <div class="toast" id="bulk-toast"></div>
+        </div>
       </div>
     </div>
 
@@ -780,6 +922,22 @@ textarea { min-height: 72px; }
     <h3 id="m-title"></h3>
     <p id="m-body"></p>
     <button class="btn-ok" onclick="closeModal()">OK</button>
+  </div>
+</div>
+
+<!-- MOVE TO SUBFOLDER MODAL -->
+<div class="modal-overlay" id="move-modal">
+  <div class="modal-box" style="max-width:440px">
+    <h3>Chọn thư mục con</h3>
+    <p id="move-modal-sub">Di chuyển thẻ đã chọn vào thư mục con:</p>
+    <div class="move-modal-new">
+      <input type="text" id="new-subfolder-name" placeholder="Tên thư mục con mới...">
+      <button class="btn-add" style="padding:9px 16px;font-size:0.82rem" onclick="createAndMoveSubfolder()">+ Tạo</button>
+    </div>
+    <div class="move-modal-list" id="move-modal-list"></div>
+    <div class="modal-actions" style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn-bb-back" style="padding:9px 20px" onclick="closeMoveModal()">Huỷ</button>
+    </div>
   </div>
 </div>
 
@@ -1206,6 +1364,7 @@ function addCard() {
     type:     document.getElementById('f-type').value,
     example:  document.getElementById('f-ex').value.trim(),
     createdAt: Date.now(),
+    subfolder: null,
     interval: 0, easiness: 2.5, repetitions: 0,
     lastReview: null, nextReview: null,
   });
@@ -1216,6 +1375,87 @@ function addCard() {
   t.textContent = `✓ Đã lưu "${en}" vào thư mục ${formatDateLabel(todayStr())}`;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
+  updateBadge();
+}
+
+// ═══════════════════════════════════════════
+// ADD MODE TABS (single / bulk)
+// ═══════════════════════════════════════════
+function switchAddMode(mode) {
+  document.querySelectorAll('.add-mode-tab').forEach(el => el.classList.toggle('active', el.dataset.mode === mode));
+  document.getElementById('add-panel-single').classList.toggle('active', mode === 'single');
+  document.getElementById('add-panel-bulk').classList.toggle('active', mode === 'bulk');
+}
+
+// ═══════════════════════════════════════════
+// BULK ADD (paste multiple lines: en | vi | example)
+// ═══════════════════════════════════════════
+function parseBulkLines(text) {
+  return text.split('\n')
+    .map(l => l.trim())
+    .filter(l => l.length > 0)
+    .map(line => {
+      const parts = line.split('|').map(p => p.trim());
+      const en = parts[0] || '';
+      const vi = parts[1] || '';
+      const example = parts[2] || '';
+      return { en, vi, example, valid: !!en && !!vi };
+    });
+}
+
+function renderBulkPreview() {
+  const text  = document.getElementById('bulk-input').value;
+  const lines = parseBulkLines(text);
+  const box   = document.getElementById('bulk-preview');
+  const btn   = document.getElementById('btn-bulk-submit');
+
+  if (lines.length === 0) {
+    box.innerHTML = '';
+    btn.disabled = true;
+    return;
+  }
+
+  const validCount = lines.filter(l => l.valid).length;
+  box.innerHTML = `
+    <div class="bulk-preview-title">Xem trước — ${validCount}/${lines.length} dòng hợp lệ</div>
+    ${lines.map(l => `
+      <div class="bulk-preview-row ${l.valid ? '' : 'invalid'}">
+        <span class="bp-en">${l.en || '(trống)'}</span>
+        <span class="bp-vi">${l.vi || ''}</span>
+        ${!l.valid ? `<span class="bp-warn">⚠ Thiếu từ hoặc nghĩa</span>` : ''}
+      </div>`).join('')}
+  `;
+  btn.disabled = validCount === 0;
+}
+
+function submitBulkAdd() {
+  const text  = document.getElementById('bulk-input').value;
+  const lines = parseBulkLines(text).filter(l => l.valid);
+  if (lines.length === 0) return;
+
+  const cards = loadCards();
+  const now   = Date.now();
+  lines.forEach((l, i) => {
+    cards.push({
+      id: (now + i).toString(),
+      en: l.en, vi: l.vi,
+      phonetic: '', type: 'other', example: l.example,
+      createdAt: now,
+      subfolder: null,
+      interval: 0, easiness: 2.5, repetitions: 0,
+      lastReview: null, nextReview: null,
+    });
+  });
+  saveCards(cards);
+
+  document.getElementById('bulk-input').value = '';
+  document.getElementById('bulk-preview').innerHTML = '';
+  document.getElementById('btn-bulk-submit').disabled = true;
+
+  const t = document.getElementById('bulk-toast');
+  t.textContent = `✓ Đã thêm ${lines.length} từ vào thư mục ${formatDateLabel(todayStr())}`;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
   updateBadge();
 }
 
