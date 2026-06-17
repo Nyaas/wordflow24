@@ -1190,7 +1190,8 @@ function folderHTML(dateStr, cards, showDelete) {
     </div>
     <div class="cards-grid">
       ${cards.map(c => `
-        <div class="mini-card">
+        <div class="mini-card ${pickedCards.has(c.id) ? 'picked' : ''}"
+     onclick="toggleCardPick('${c.id}')">
           <div class="mc-en">${c.en}</div>
           <div class="mc-vi">${c.vi}</div>
           <div class="mc-type">${c.type}</div>
