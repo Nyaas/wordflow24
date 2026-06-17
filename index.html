@@ -422,10 +422,18 @@ textarea { min-height: 72px; }
 .bb-combatant-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; }
 .bb-name { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; display: flex; align-items: center; gap: 6px; }
 .bb-hp-text { font-size: 0.78rem; color: var(--text-soft); font-weight: 600; }
-.bb-hp-track { height: 14px; background: var(--surface2); border-radius: 50px; overflow: hidden; border: 1px solid var(--border2); }
+.bb-hp-track { height: 14px; background: var(--surface2); border-radius: 50px; overflow: hidden; border: 1px solid var(--border2); position: relative; }
 .bb-hp-fill { height: 100%; border-radius: 50px; transition: width 0.45s cubic-bezier(0.4,0,0.2,1); }
 .bb-hp-fill.boss   { background: linear-gradient(90deg, #ff6b6b, #ff9f43); }
 .bb-hp-fill.player { background: linear-gradient(90deg, #3ecf8e, #4ecdc4); }
+
+.bb-phase-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.4px;
+  padding: 4px 12px; border-radius: 50px; margin-bottom: 14px;
+}
+.bb-phase-badge.p1 { background: rgba(124,106,255,0.18); color: var(--accent2); }
+.bb-phase-badge.p2 { background: rgba(255,107,107,0.18); color: var(--red); }
 
 .bb-streak {
   display: inline-flex; align-items: center; gap: 5px;
@@ -447,6 +455,10 @@ textarea { min-height: 72px; }
   text-align: center; margin-bottom: 18px;
   position: relative; overflow: hidden;
 }
+.bb-question-card.phase2 {
+  background: linear-gradient(145deg, #3a1530 0%, #1f0d22 60%, #150810 100%);
+  border-color: rgba(255,107,107,0.3);
+}
 .bb-question-card.shake { animation: bbshake 0.4s; }
 @keyframes bbshake {
   0%,100% { transform: translateX(0); }
@@ -456,6 +468,8 @@ textarea { min-height: 72px; }
   80% { transform: translateX(4px); }
 }
 .bb-q-word { font-family: 'DM Serif Display', serif; font-size: 2.2rem; color: #fff; margin-bottom: 6px; }
+.bb-q-vi { font-family: 'DM Serif Display', serif; font-size: 1.9rem; color: #fff; margin-bottom: 6px; }
+.bb-q-sub { font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-bottom: 10px; }
 .bb-q-phonetic { font-size: 0.85rem; color: var(--accent2); margin-bottom: 8px; }
 .bb-q-type { display: inline-block; background: rgba(124,106,255,0.2); color: var(--accent2); border-radius: 50px; padding: 3px 13px; font-size: 0.68rem; font-weight: 600; }
 
@@ -477,12 +491,33 @@ textarea { min-height: 72px; }
   border-radius: var(--r-sm); padding: 14px 12px;
   font-size: 0.9rem; font-weight: 600; color: var(--text);
   cursor: pointer; transition: all 0.15s; text-align: center;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'DM Sans', sans-serif; position: relative; overflow: hidden;
 }
 .bb-choice:hover:not(:disabled) { border-color: var(--accent); background: var(--glow); }
 .bb-choice:disabled { cursor: default; }
 .bb-choice.correct { background: rgba(62,207,142,0.18); border-color: var(--green); color: var(--green); }
 .bb-choice.wrong   { background: rgba(255,107,107,0.18); border-color: var(--red); color: var(--red); }
+
+.bb-essay-wrap { margin-top: 4px; }
+.bb-essay-input {
+  width: 100%; background: var(--surface2); border: 1.5px solid var(--border2);
+  border-radius: var(--r-sm); padding: 14px 16px;
+  font-size: 1rem; font-family: 'DM Sans', sans-serif;
+  color: var(--text); outline: none; transition: all 0.15s;
+  text-align: center;
+}
+.bb-essay-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--glow); }
+.bb-essay-input.correct { border-color: var(--green); background: rgba(62,207,142,0.12); color: var(--green); }
+.bb-essay-input.wrong   { border-color: var(--red);   background: rgba(255,107,107,0.12); color: var(--red); }
+.btn-essay-submit {
+  width: 100%; margin-top: 10px;
+  background: linear-gradient(135deg, var(--red) 0%, var(--orange) 100%);
+  color: #fff; border: none; border-radius: var(--r-sm);
+  padding: 13px; font-size: 0.92rem; font-weight: 700; cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-essay-submit:hover:not(:disabled) { box-shadow: 0 4px 18px rgba(255,107,107,0.3); transform: translateY(-1px); }
+.btn-essay-submit:disabled { opacity: 0.4; cursor: default; transform: none; box-shadow: none; }
 
 .bb-feedback { text-align: center; font-size: 0.85rem; font-weight: 600; margin-top: 14px; min-height: 20px; }
 .bb-feedback.good { color: var(--green); }
@@ -501,6 +536,60 @@ textarea { min-height: 72px; }
 .btn-bb-retry:hover { background: var(--accent2); }
 .btn-bb-back { background: none; border: 1px solid var(--border2); color: var(--text-soft); border-radius: 50px; padding: 12px 26px; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
 .btn-bb-back:hover { color: var(--text); border-color: var(--text-soft); }
+
+.bb-phase-transition {
+  text-align: center; padding: 50px 20px;
+}
+.bb-phase-transition .pt-emoji { font-size: 4rem; margin-bottom: 14px; }
+.bb-phase-transition h3 { font-family: 'DM Serif Display', serif; font-size: 1.8rem; margin-bottom: 10px; color: var(--red); }
+.bb-phase-transition p { color: var(--text-soft); font-size: 0.9rem; margin-bottom: 22px; line-height: 1.7; max-width: 420px; margin-left:auto; margin-right:auto; }
+
+/* muzzle flash click effect */
+.muzzle-flash {
+  position: fixed; pointer-events: none; z-index: 999;
+  width: 4px; height: 4px;
+}
+.muzzle-flash svg { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); }
+.mf-spark {
+  position: absolute; border-radius: 50%;
+  background: #ffd76b;
+  animation: mfSpark 0.45s ease-out forwards;
+}
+.mf-ray {
+  position: absolute; top: 50%; left: 50%;
+  width: 3px; border-radius: 2px;
+  background: linear-gradient(90deg, #fff, #ffb347, transparent);
+  transform-origin: left center;
+  animation: mfRay 0.32s ease-out forwards;
+}
+.mf-flash-core {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  width: 26px; height: 26px; border-radius: 50%;
+  background: radial-gradient(circle, #fff 0%, #ffd76b 35%, rgba(255,159,67,0) 75%);
+  animation: mfCore 0.3s ease-out forwards;
+}
+.mf-shell {
+  position: absolute; top: 50%; left: 50%;
+  width: 5px; height: 9px; border-radius: 1px;
+  background: #d4a13c;
+  animation: mfShell 0.5s ease-out forwards;
+}
+@keyframes mfCore {
+  0% { opacity: 1; transform: translate(-50%,-50%) scale(0.2); }
+  100% { opacity: 0; transform: translate(-50%,-50%) scale(1.6); }
+}
+@keyframes mfRay {
+  0% { opacity: 1; transform: rotate(var(--ang)) translateX(0) scaleX(1); }
+  100% { opacity: 0; transform: rotate(var(--ang)) translateX(22px) scaleX(0.3); }
+}
+@keyframes mfSpark {
+  0% { opacity: 1; transform: translate(0,0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.3); }
+}
+@keyframes mfShell {
+  0% { opacity: 1; transform: translate(-50%,-50%) rotate(var(--rot)) translateY(0); }
+  100% { opacity: 0; transform: translate(-50%,-50%) rotate(calc(var(--rot) + 200deg)) translateY(34px); }
+}
 
 /* scrollbar */
 ::-webkit-scrollbar { width: 5px; }
@@ -610,13 +699,14 @@ textarea { min-height: 72px; }
     <!-- BOSS SETUP -->
     <div class="view" id="boss-view">
       <div class="page-title">Đấu Boss Từ Vựng ⚔️</div>
-      <div class="page-sub">Chọn thư mục từ vựng để mang vào trận đấu. Trả lời đúng nhanh và liên tục để gây nhiều dame hơn (1–10 dame/từ).</div>
+      <div class="page-sub">Chọn thư mục từ vựng để mang vào trận đấu.</div>
 
       <div class="boss-preview-card">
         <div class="boss-preview-avatar">👹</div>
         <div>
-          <h4>Boss Từ Vựng</h4>
-          <p>Boss có HP ngẫu nhiên 1000–1500 mỗi trận. Trả lời sai hoặc hết giờ, Boss sẽ phản công vào máu của bạn. Hết máu thì trận đấu kết thúc và bắt đầu lại từ đầu.</p>
+          <h4>Boss Từ Vựng — 2 Phase</h4>
+          <p><strong>Phase 1 (Trắc nghiệm):</strong> 20 giây/câu, trả lời đúng gây 10–15 dame, sai hoặc hết giờ bị Boss phản công.<br>
+          <strong>Phase 2 (Tự luận — tự mở khi hạ hết máu Phase 1):</strong> Gõ tiếng Anh từ nghĩa tiếng Việt, không giới hạn thời gian, mỗi câu đúng gây 30 dame!</p>
         </div>
       </div>
 
@@ -850,7 +940,6 @@ function renderCalGrid() {
   document.getElementById('cal-title').textContent = `${months[calMonth]} ${calYear}`;
 
   let html = '';
-  // empty cells before first day (0=Sun)
   for (let i = 0; i < first.getDay(); i++) html += `<div class="cal-day empty"></div>`;
   for (let d = 1; d <= last.getDate(); d++) {
     const ds  = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
@@ -868,7 +957,7 @@ function renderCalGrid() {
 function toggleDay(ds) {
   const cards = loadCards();
   const byDay = groupByDay(cards);
-  if (!(byDay[ds]||[]).length) return; // no cards that day
+  if (!(byDay[ds]||[]).length) return;
   if (selectedDays.has(ds)) selectedDays.delete(ds);
   else selectedDays.add(ds);
   renderCalGrid();
@@ -902,7 +991,6 @@ function renderSelectionBar() {
 function renderFolderView() {
   const cards = loadCards();
   const byDay = groupByDay(cards);
-  // show selected days, or current month days
   let days;
   if (selectedDays.size > 0) {
     days = [...selectedDays].sort((a,b) => b.localeCompare(a));
@@ -1094,7 +1182,7 @@ function rateCard(q) {
   if (idx !== -1) {
     Object.assign(cards[idx], computeNext(cards[idx], q));
     saveCards(cards);
-    if (q === 0) studyQueue.push({...cards[idx]}); // push Again back
+    if (q === 0) studyQueue.push({...cards[idx]});
   }
   studyIdx++; isFlipped = false; renderStudy(); updateBadge();
 }
@@ -1153,13 +1241,72 @@ function updateBadge() {
 }
 
 // ═══════════════════════════════════════════
+// MUZZLE FLASH CLICK EFFECT (gunshot-style burst on every click)
+// ═══════════════════════════════════════════
+function spawnMuzzleFlash(x, y) {
+  const wrap = document.createElement('div');
+  wrap.className = 'muzzle-flash';
+  wrap.style.left = x + 'px';
+  wrap.style.top  = y + 'px';
+
+  const core = document.createElement('div');
+  core.className = 'mf-flash-core';
+  wrap.appendChild(core);
+
+  const rayCount = 6;
+  for (let i = 0; i < rayCount; i++) {
+    const ray = document.createElement('div');
+    ray.className = 'mf-ray';
+    const ang = (360 / rayCount) * i + (Math.random()*18 - 9);
+    const len = 14 + Math.random()*10;
+    ray.style.setProperty('--ang', ang + 'deg');
+    ray.style.height = (1.5 + Math.random()*1.5) + 'px';
+    ray.style.width  = len + 'px';
+    wrap.appendChild(ray);
+  }
+
+  const sparkCount = 5;
+  for (let i = 0; i < sparkCount; i++) {
+    const sp = document.createElement('div');
+    sp.className = 'mf-spark';
+    const ang = Math.random() * Math.PI * 2;
+    const dist = 14 + Math.random()*16;
+    sp.style.setProperty('--dx', Math.cos(ang)*dist + 'px');
+    sp.style.setProperty('--dy', Math.sin(ang)*dist + 'px');
+    const size = 2 + Math.random()*2.5;
+    sp.style.width = size + 'px';
+    sp.style.height = size + 'px';
+    sp.style.left = (Math.random()*6 - 3) + 'px';
+    sp.style.top  = (Math.random()*6 - 3) + 'px';
+    wrap.appendChild(sp);
+  }
+
+  const shell = document.createElement('div');
+  shell.className = 'mf-shell';
+  shell.style.setProperty('--rot', (Math.random()*60 - 30) + 'deg');
+  wrap.appendChild(shell);
+
+  document.body.appendChild(wrap);
+  setTimeout(() => wrap.remove(), 600);
+}
+
+document.addEventListener('click', e => {
+  const target = e.target.closest('button, .cal-day, .boss-folder-item, .bb-choice, .nav-item');
+  if (!target) return;
+  spawnMuzzleFlash(e.clientX, e.clientY);
+}, true);
+
+// ═══════════════════════════════════════════
 // KEYBOARD
 // ═══════════════════════════════════════════
 document.addEventListener('keydown', e => {
   if (currentView === 'boss-battle') {
-    if (bossState && !bossState.answered && ['1','2','3','4'].includes(e.key)) {
+    if (bossState && bossState.phase === 1 && !bossState.answered && ['1','2','3','4'].includes(e.key)) {
       const idx = parseInt(e.key, 10) - 1;
       if (idx < bossState.choices.length) chooseBossAnswer(idx);
+    }
+    if (bossState && bossState.phase === 2 && e.key === 'Enter') {
+      submitEssayAnswer();
     }
     return;
   }
@@ -1175,14 +1322,14 @@ document.addEventListener('keydown', e => {
 });
 
 // ═══════════════════════════════════════════
-// BOSS BATTLE
+// BOSS BATTLE — 2 PHASES
 // ═══════════════════════════════════════════
 let bossSelectedDays  = new Set();
 let bossState         = null;
 let bossTimerInterval = null;
 
-const BOSS_TIME_LIMIT = 8; // giây cho mỗi câu hỏi
-const BOSS_AVATARS    = ['👹','🐉','👾','🧟','💀','🦂','🐍','🦑'];
+const BOSS_TIME_LIMIT_P1 = 20; // giây cho mỗi câu hỏi Phase 1
+const BOSS_AVATARS       = ['👹','🐉','👾','🧟','💀','🦂','🐍','🦑'];
 
 function renderBossSetup() {
   const cards = loadCards();
@@ -1238,12 +1385,13 @@ function makeBossState(pool) {
   const bossMaxHP = 1000 + Math.floor(Math.random() * 501); // 1000-1500
   return {
     pool, queue: [],
+    phase: 1,
     bossHP: bossMaxHP, bossMaxHP,
     playerHP: 100, playerMaxHP: 100,
     streak: 0, answered: false,
     avatar: BOSS_AVATARS[Math.floor(Math.random()*BOSS_AVATARS.length)],
     totalAnswered: 0, totalCorrect: 0, totalDamage: 0,
-    timeLeft: BOSS_TIME_LIMIT, qStart: 0,
+    timeLeft: BOSS_TIME_LIMIT_P1, qStart: 0,
     current: null, choices: [],
   };
 }
@@ -1292,20 +1440,29 @@ function nextBossQuestion() {
   if (!bossState) return;
   if (bossState.queue.length === 0) refillBossQueue();
   bossState.current  = bossState.queue.shift();
-  bossState.choices  = genBossChoices(bossState.current);
   bossState.answered = false;
-  bossState.timeLeft  = BOSS_TIME_LIMIT;
-  bossState.qStart    = Date.now();
-  renderBossBattle();
-  startBossTimer();
+
+  if (bossState.phase === 1) {
+    bossState.choices  = genBossChoices(bossState.current);
+    bossState.timeLeft = BOSS_TIME_LIMIT_P1;
+    bossState.qStart   = Date.now();
+    renderBossBattle();
+    startBossTimer();
+  } else {
+    renderBossBattle();
+    setTimeout(() => {
+      const inp = document.getElementById('bb-essay-input');
+      if (inp) inp.focus();
+    }, 50);
+  }
 }
 
 function startBossTimer() {
   stopBossTimer();
   bossTimerInterval = setInterval(() => {
-    if (!bossState || bossState.answered) return;
+    if (!bossState || bossState.answered || bossState.phase !== 1) return;
     const elapsed = (Date.now() - bossState.qStart) / 1000;
-    bossState.timeLeft = Math.max(0, BOSS_TIME_LIMIT - elapsed);
+    bossState.timeLeft = Math.max(0, BOSS_TIME_LIMIT_P1 - elapsed);
     updateBossTimerBar();
     if (bossState.timeLeft <= 0) { stopBossTimer(); bossTimeUp(); }
   }, 100);
@@ -1318,23 +1475,24 @@ function stopBossTimer() {
 function updateBossTimerBar() {
   const fill = document.getElementById('bb-timer-fill');
   if (!fill || !bossState) return;
-  const pct = (bossState.timeLeft / BOSS_TIME_LIMIT) * 100;
+  const pct = (bossState.timeLeft / BOSS_TIME_LIMIT_P1) * 100;
   fill.style.width = pct + '%';
   fill.classList.toggle('urgent', pct < 30);
 }
 
 function bossTimeUp() {
   if (!bossState || bossState.answered) return;
-  resolveBossAnswer(-1); // -1 = hết giờ, không chọn = tính sai
+  resolveBossAnswerP1(-1);
 }
 
 function chooseBossAnswer(idx) {
-  if (!bossState || bossState.answered) return;
+  if (!bossState || bossState.answered || bossState.phase !== 1) return;
   stopBossTimer();
-  resolveBossAnswer(idx);
+  resolveBossAnswerP1(idx);
 }
 
-function resolveBossAnswer(idx) {
+// ── PHASE 1 RESOLUTION (multiple choice, 20s, 10-15 dmg) ──
+function resolveBossAnswerP1(idx) {
   bossState.answered = true;
   const card       = bossState.current;
   const correctIdx = bossState.choices.indexOf(card.vi);
@@ -1345,12 +1503,8 @@ function resolveBossAnswer(idx) {
 
   if (isCorrect) {
     bossState.totalCorrect++;
-    const elapsed    = Math.min(BOSS_TIME_LIMIT, (Date.now() - bossState.qStart) / 1000);
-    const speedRatio = Math.max(0, 1 - elapsed / BOSS_TIME_LIMIT); // 1 = trả lời ngay, 0 = gần hết giờ
-    const base        = 1 + Math.round(speedRatio * 6);            // 1-7 theo tốc độ
+    dmg = 10 + Math.floor(Math.random() * 6); // 10-15
     bossState.streak++;
-    const streakBonus = Math.min(3, Math.floor(bossState.streak / 3)); // +1 mỗi 3 streak, tối đa +3
-    dmg = Math.max(1, Math.min(10, base + streakBonus));
     bossState.bossHP   = Math.max(0, bossState.bossHP - dmg);
     bossState.totalDamage += dmg;
   } else {
@@ -1363,33 +1517,133 @@ function resolveBossAnswer(idx) {
 
   setTimeout(() => {
     if (!bossState) return;
-    if (bossState.bossHP <= 0)   { endBossWin();  return; }
+    if (bossState.bossHP <= 0)   { enterPhase2(); return; }
     if (bossState.playerHP <= 0) { endBossLose(); return; }
     nextBossQuestion();
   }, 1100);
 }
 
-function renderBossBattle(answeredIdx, correctIdx, dmg, playerDmg, isCorrect) {
+// ── PHASE TRANSITION ──
+function enterPhase2() {
+  stopBossTimer();
+  const s = bossState;
+  // Boss "regenerates" HP pool for phase 2 — fresh bar, no time pressure, higher damage per hit
+  s.phase    = 2;
+  s.bossMaxHP = 300 + Math.floor(Math.random() * 121); // 300-420, fewer hits needed at 30 dmg/hit
+  s.bossHP    = s.bossMaxHP;
+  s.streak    = 0;
+  refillBossQueue();
+
+  document.getElementById('boss-battle-content').innerHTML = `
+    <div class="bb-phase-transition">
+      <div class="pt-emoji">🔥</div>
+      <h3>Boss chuyển sang Phase 2!</h3>
+      <p>Boss đã hồi máu và trở nên nguy hiểm hơn. Giờ bạn phải <strong>gõ tiếng Anh</strong> từ nghĩa tiếng Việt được đưa ra — không giới hạn thời gian, nhưng mỗi câu đúng sẽ gây <strong>30 dame</strong>!</p>
+      <button class="btn-bb-retry" onclick="nextBossQuestion()">⚔️ Vào Phase 2</button>
+    </div>`;
+}
+
+// ── PHASE 2: ESSAY (Vietnamese -> English typing) ──
+function normalizeAnswer(str) {
+  return str
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // strip accents just in case
+    .replace(/[^a-z0-9]/g, ''); // remove spaces and special characters
+}
+
+function submitEssayAnswer() {
+  if (!bossState || bossState.answered || bossState.phase !== 2) return;
+  const input = document.getElementById('bb-essay-input');
+  const raw   = input ? input.value : '';
+  resolveBossAnswerP2(raw);
+}
+
+function resolveBossAnswerP2(rawAnswer) {
+  bossState.answered = true;
+  const card      = bossState.current;
+  const isCorrect = normalizeAnswer(rawAnswer) === normalizeAnswer(card.en);
+  bossState.totalAnswered++;
+
+  let dmg = 0, playerDmg = 0;
+
+  if (isCorrect) {
+    bossState.totalCorrect++;
+    dmg = 30;
+    bossState.streak++;
+    bossState.bossHP = Math.max(0, bossState.bossHP - dmg);
+    bossState.totalDamage += dmg;
+  } else {
+    bossState.streak  = 0;
+    playerDmg = 10 + Math.floor(Math.random() * 10); // 10-19, phase 2 hits harder
+    bossState.playerHP = Math.max(0, bossState.playerHP - playerDmg);
+  }
+
+  renderBossBattle(null, null, dmg, playerDmg, isCorrect, rawAnswer);
+
+  setTimeout(() => {
+    if (!bossState) return;
+    if (bossState.bossHP <= 0)   { endBossWin();  return; }
+    if (bossState.playerHP <= 0) { endBossLose(); return; }
+    nextBossQuestion();
+  }, 1300);
+}
+
+function renderBossBattle(answeredIdx, correctIdx, dmg, playerDmg, isCorrect, rawAnswer) {
   if (!bossState) return;
   const s    = bossState;
   const card = s.current;
   const bossPct   = Math.round((s.bossHP / s.bossMaxHP) * 100);
   const playerPct = Math.round((s.playerHP / s.playerMaxHP) * 100);
+  const isP1 = s.phase === 1;
 
-  const choicesHTML = s.choices.map((c, i) => {
-    let cls = 'bb-choice';
-    if (s.answered) {
-      if (i === correctIdx) cls += ' correct';
-      else if (i === answeredIdx) cls += ' wrong';
-    }
-    return `<button class="${cls}" ${s.answered ? 'disabled' : ''} onclick="chooseBossAnswer(${i})">${c}</button>`;
-  }).join('');
-
+  let questionAreaHTML = '';
   let feedbackHTML = '';
-  if (s.answered) {
-    feedbackHTML = isCorrect
-      ? `<div class="bb-feedback good">✓ Chính xác! Gây ${dmg} dame lên Boss.</div>`
-      : `<div class="bb-feedback bad">✕ ${answeredIdx === -1 ? 'Hết giờ!' : 'Sai rồi!'} Boss phản công ${playerDmg} dame.</div>`;
+
+  if (isP1) {
+    const choicesHTML = s.choices.map((c, i) => {
+      let cls = 'bb-choice';
+      if (s.answered) {
+        if (i === correctIdx) cls += ' correct';
+        else if (i === answeredIdx) cls += ' wrong';
+      }
+      return `<button class="${cls}" ${s.answered ? 'disabled' : ''} onclick="chooseBossAnswer(${i})">${c}</button>`;
+    }).join('');
+
+    questionAreaHTML = `
+      <div class="bb-question-card">
+        ${s.answered && isCorrect ? `<div class="bb-float-dmg show">-${dmg}</div>` : ''}
+        <div class="bb-q-word">${card.en}</div>
+        ${card.phonetic ? `<div class="bb-q-phonetic">${card.phonetic}</div>` : ''}
+        <div class="bb-q-type">${card.type}</div>
+      </div>
+      <div class="bb-choices">${choicesHTML}</div>`;
+
+    if (s.answered) {
+      feedbackHTML = isCorrect
+        ? `<div class="bb-feedback good">✓ Chính xác! Gây ${dmg} dame lên Boss.</div>`
+        : `<div class="bb-feedback bad">✕ ${answeredIdx === -1 ? 'Hết giờ!' : 'Sai rồi!'} Boss phản công ${playerDmg} dame.</div>`;
+    }
+  } else {
+    const inputCls = s.answered ? (isCorrect ? 'correct' : 'wrong') : '';
+    questionAreaHTML = `
+      <div class="bb-question-card phase2">
+        ${s.answered && isCorrect ? `<div class="bb-float-dmg show">-${dmg}</div>` : ''}
+        <div class="bb-q-sub">Dịch sang tiếng Anh</div>
+        <div class="bb-q-vi">${card.vi}</div>
+        <div class="bb-q-type">${card.type}</div>
+      </div>
+      <div class="bb-essay-wrap">
+        <input type="text" id="bb-essay-input" class="bb-essay-input ${inputCls}"
+          placeholder="Gõ đáp án tiếng Anh..." autocomplete="off" spellcheck="false"
+          ${s.answered ? 'disabled' : ''} value="${s.answered ? (rawAnswer||'') : ''}">
+        <button class="btn-essay-submit" ${s.answered ? 'disabled' : ''} onclick="submitEssayAnswer()">⚔️ Trả lời</button>
+      </div>`;
+
+    if (s.answered) {
+      feedbackHTML = isCorrect
+        ? `<div class="bb-feedback good">✓ Chính xác! Gây ${dmg} dame lên Boss.</div>`
+        : `<div class="bb-feedback bad">✕ Sai rồi! Đáp án đúng: "${card.en}". Boss phản công ${playerDmg} dame.</div>`;
+    }
   }
 
   document.getElementById('boss-battle-content').innerHTML = `
@@ -1397,6 +1651,8 @@ function renderBossBattle(answeredIdx, correctIdx, dmg, playerDmg, isCorrect) {
       <button class="study-back" onclick="showView('boss')">← Quay lại</button>
       <div class="study-info">Câu ${s.totalAnswered + (s.answered?0:1)}</div>
     </div>
+
+    <div class="bb-phase-badge ${isP1 ? 'p1' : 'p2'}">${isP1 ? '⚔️ PHASE 1 — TRẮC NGHIỆM' : '🔥 PHASE 2 — TỰ LUẬN'}</div>
 
     <div class="bb-combatant">
       <div class="bb-combatant-head">
@@ -1417,18 +1673,19 @@ function renderBossBattle(answeredIdx, correctIdx, dmg, playerDmg, isCorrect) {
       ${s.streak > 0 ? `<div class="bb-streak">🔥 Streak ${s.streak}</div>` : ''}
     </div>
 
-    <div class="bb-timer-track"><div class="bb-timer-fill" id="bb-timer-fill" style="width:${(s.timeLeft/BOSS_TIME_LIMIT)*100}%"></div></div>
+    ${isP1 ? `<div class="bb-timer-track"><div class="bb-timer-fill" id="bb-timer-fill" style="width:${(s.timeLeft/BOSS_TIME_LIMIT_P1)*100}%"></div></div>` : ''}
 
-    <div class="bb-question-card ${s.answered && !isCorrect ? 'shake' : ''}">
-      ${s.answered && isCorrect ? `<div class="bb-float-dmg show">-${dmg}</div>` : ''}
-      <div class="bb-q-word">${card.en}</div>
-      ${card.phonetic ? `<div class="bb-q-phonetic">${card.phonetic}</div>` : ''}
-      <div class="bb-q-type">${card.type}</div>
-    </div>
-
-    <div class="bb-choices">${choicesHTML}</div>
+    ${questionAreaHTML}
     ${feedbackHTML}
   `;
+
+  if (!isP1 && !s.answered) {
+    const inp = document.getElementById('bb-essay-input');
+    if (inp) {
+      inp.addEventListener('keydown', e => { if (e.key === 'Enter') submitEssayAnswer(); });
+      inp.focus();
+    }
+  }
 }
 
 function endBossWin() {
@@ -1439,7 +1696,7 @@ function endBossWin() {
     <div class="bb-end-wrap">
       <div class="bb-end-emoji">🏆</div>
       <h3>Hạ Boss thành công!</h3>
-      <p>Bạn đã đánh bại Boss Từ Vựng có ${s.bossMaxHP} HP. Làm tốt lắm!</p>
+      <p>Bạn đã đánh bại Boss Từ Vựng qua cả 2 phase. Làm tốt lắm!</p>
       <div class="bb-end-stats">
         <div class="bb-end-stat"><div class="es-v">${s.totalAnswered}</div><div class="es-l">Câu hỏi</div></div>
         <div class="bb-end-stat"><div class="es-v">${acc}%</div><div class="es-l">Độ chính xác</div></div>
@@ -1459,7 +1716,7 @@ function endBossLose() {
     <div class="bb-end-wrap">
       <div class="bb-end-emoji">💀</div>
       <h3>Bạn đã thua!</h3>
-      <p>Boss vẫn còn ${s.bossHP} / ${s.bossMaxHP} HP. Trả lời nhanh và chính xác liên tục để gây nhiều dame hơn nhé!</p>
+      <p>Boss vẫn còn ${s.bossHP} / ${s.bossMaxHP} HP ở ${s.phase === 1 ? 'Phase 1' : 'Phase 2'}. Trả lời nhanh và chính xác liên tục để gây nhiều dame hơn nhé!</p>
       <div class="bb-end-btns">
         <button class="btn-bb-retry" onclick="restartBossFight()">⟲ Bắt đầu lại</button>
         <button class="btn-bb-back" onclick="showView('boss')">← Chọn thư mục khác</button>
