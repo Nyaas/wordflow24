@@ -245,6 +245,20 @@ body {
 .subfolder-tab .sf-cnt { font-size: 0.68rem; opacity: 0.75; }
 .subfolder-tab .sf-del { font-size: 0.7rem; opacity: 0.5; margin-left: 2px; }
 .subfolder-tab .sf-del:hover { opacity: 1; color: var(--red); }
+.subfolder-tab .sf-pick {
+  width: 14px; height: 14px; border-radius: 4px;
+  border: 1.5px solid currentColor; opacity: 0.55;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.58rem; margin-right: 2px; flex-shrink: 0;
+}
+.subfolder-tab.sf-selected { border-color: var(--green); background: rgba(62,207,142,0.14); color: var(--green); }
+.subfolder-tab.sf-selected .sf-pick { background: var(--green); border-color: var(--green); color: #0a2a1a; opacity: 1; }
+
+.folder-subhead {
+  font-size: 0.68rem; font-weight: 600; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: 0.7px; margin: 2px 0 8px;
+}
+
 .subfolder-add-btn {
   padding: 6px 14px; border-radius: 50px; font-size: 0.78rem; font-weight: 600;
   cursor: pointer; background: none; border: 1.5px dashed var(--border2); color: var(--text-soft);
@@ -406,6 +420,79 @@ textarea { min-height: 72px; }
 .card-example { font-size: 0.85rem; color: var(--text-soft); font-style: italic; text-align: center; line-height: 1.6; max-width: 380px; }
 .card-word-back { font-family: 'DM Serif Display', serif; font-size: 1.5rem; color: var(--accent2); margin-bottom: 10px; }
 
+/* ── card header controls: settings gear (top-left) + session dot trail (top-right) ── */
+.flip-wrap { position: relative; }
+.card-gear-btn {
+  position: absolute; top: 14px; left: 14px; z-index: 5;
+  width: 30px; height: 30px; border-radius: 8px;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.6); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 0.95rem; transition: all 0.15s;
+}
+.card-gear-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+.card-dot-trail {
+  position: absolute; top: 14px; right: 16px; z-index: 5;
+  display: flex; align-items: center; gap: 6px;
+}
+.card-dot-trail .cdt-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+  box-shadow: 0 0 6px currentColor;
+}
+.settings-pop {
+  position: absolute; top: 50px; left: 14px; z-index: 20;
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: var(--r-sm); padding: 14px 16px; width: 230px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+}
+.settings-pop .sp-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.settings-pop .sp-row:last-child { margin-bottom: 0; }
+.settings-pop .sp-label { font-size: 0.8rem; color: var(--text); }
+.settings-pop .sp-rate { width: 100%; }
+
+/* ── reusable toggle switch ── */
+.toggle-switch { position: relative; width: 38px; height: 22px; flex-shrink: 0; cursor: pointer; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-switch .ts-track {
+  position: absolute; inset: 0; background: var(--surface); border: 1.5px solid var(--border2);
+  border-radius: 50px; transition: all 0.2s;
+}
+.toggle-switch .ts-knob {
+  position: absolute; top: 2px; left: 2px; width: 15px; height: 15px; border-radius: 50%;
+  background: var(--text-soft); transition: all 0.2s;
+}
+.toggle-switch input:checked + .ts-track { background: var(--accent); border-color: var(--accent); }
+.toggle-switch input:checked + .ts-track .ts-knob { transform: translateX(16px); background: #fff; }
+
+/* ── bottom-right card controls: mic / autoplay toggle / speaker ── */
+.card-bottom-controls {
+  position: absolute; bottom: 14px; right: 16px; z-index: 5;
+  display: flex; align-items: center; gap: 10px;
+}
+.card-mic-btn, .card-speak-btn {
+  width: 38px; height: 38px; border-radius: 50%; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; font-size: 1.05rem;
+  transition: all 0.15s;
+}
+.card-mic-btn { background: #fff; color: #1a1a2e; }
+.card-mic-btn:hover { transform: scale(1.06); }
+.card-mic-btn.listening { background: var(--red); color: #fff; animation: micPulse 1s infinite; }
+.card-mic-btn:disabled { opacity: 0.35; cursor: default; }
+@keyframes micPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(255,107,107,0.5); } 50% { box-shadow: 0 0 0 8px rgba(255,107,107,0); } }
+.card-speak-btn { background: rgba(255,255,255,0.08); color: var(--text-soft); border: 1px solid rgba(255,255,255,0.12); }
+.card-speak-btn:hover { color: #fff; background: rgba(255,255,255,0.14); }
+.mic-feedback {
+  text-align: center; font-size: 0.82rem; font-weight: 600; margin-top: 10px; min-height: 18px;
+}
+.mic-feedback.ok  { color: var(--green); }
+.mic-feedback.bad { color: var(--red); }
+
+/* ── keyboard-shortcut footer ── */
+.kbd-hint-row { text-align: center; font-size: 0.8rem; color: var(--text-dim); margin-top: 14px; }
+.kbd-hint-row kbd {
+  background: var(--surface2); border: 1px solid var(--border2); border-radius: 6px;
+  padding: 2px 8px; font-family: 'DM Sans', sans-serif; font-size: 0.74rem; color: var(--text-soft);
+}
+
 .rating-wrap { margin-top: 6px; }
 .rating-label { text-align: center; font-size: 0.78rem; color: var(--text-dim); margin-bottom: 12px; }
 .rating-btns { display: flex; gap: 10px; }
@@ -496,24 +583,44 @@ textarea { min-height: 72px; }
 .boss-summary { font-size: 0.85rem; color: var(--text-soft); }
 .boss-summary strong { color: var(--text); }
 
-.boss-folder-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 22px; }
+.boss-folder-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 22px; }
+.boss-day-block { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--r-sm); overflow: hidden; }
 .boss-folder-item {
   display: flex; align-items: center; gap: 12px;
-  background: var(--surface); border: 1.5px solid var(--border);
-  border-radius: var(--r-sm); padding: 12px 16px;
+  background: transparent; border: none;
+  border-radius: 0; padding: 12px 16px;
   cursor: pointer; transition: all 0.15s; user-select: none;
 }
-.boss-folder-item:hover { border-color: var(--border2); }
-.boss-folder-item.checked { border-color: var(--accent); background: var(--glow); }
+.boss-day-block:hover { border-color: var(--border2); }
+.boss-day-block.checked { border-color: var(--accent); background: var(--glow); }
 .boss-chk {
   width: 18px; height: 18px; border-radius: 5px; flex-shrink: 0;
   border: 1.5px solid var(--border2); background: var(--surface2);
   display: flex; align-items: center; justify-content: center;
   font-size: 0.68rem; color: #fff; transition: all 0.15s;
 }
-.boss-folder-item.checked .boss-chk { background: var(--accent); border-color: var(--accent); }
+.boss-day-block.checked .boss-chk { background: var(--accent); border-color: var(--accent); }
 .boss-folder-name { font-weight: 600; font-size: 0.9rem; flex: 1; }
 .boss-folder-cnt { font-size: 0.78rem; color: var(--text-soft); }
+.boss-sub-list { padding: 0 14px 12px 38px; display: flex; flex-direction: column; gap: 6px; }
+.boss-subfolder-item {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface2); border: 1.5px solid var(--border2);
+  border-radius: 8px; padding: 8px 12px;
+  cursor: pointer; transition: all 0.15s; user-select: none;
+  font-size: 0.82rem;
+}
+.boss-subfolder-item:hover { border-color: var(--border); }
+.boss-subfolder-item.checked { border-color: var(--green); background: rgba(62,207,142,0.12); }
+.boss-subfolder-item.checked .boss-chk-sm { background: var(--green); border-color: var(--green); }
+.boss-chk-sm {
+  width: 15px; height: 15px; border-radius: 4px; flex-shrink: 0;
+  border: 1.5px solid var(--border2); background: var(--surface);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.6rem; color: #0a2a1a; transition: all 0.15s;
+}
+.boss-subfolder-name { font-weight: 600; flex: 1; color: var(--text); }
+.boss-subfolder-cnt { font-size: 0.72rem; color: var(--text-soft); }
 
 .btn-boss-start {
   background: linear-gradient(135deg, var(--red) 0%, var(--orange) 100%);
@@ -607,6 +714,13 @@ textarea { min-height: 72px; }
 .bb-choice:disabled { cursor: default; }
 .bb-choice.correct { background: rgba(62,207,142,0.18); border-color: var(--green); color: var(--green); }
 .bb-choice.wrong   { background: rgba(255,107,107,0.18); border-color: var(--red); color: var(--red); }
+.bb-choice .bc-vi { line-height: 1.3; }
+.bb-choice .bc-reveal {
+  display: block; font-size: 0.66rem; font-weight: 500; opacity: 0.8;
+  margin-top: 4px; font-family: 'DM Sans', sans-serif; color: var(--accent2);
+}
+.bb-choice.correct .bc-reveal { color: var(--green); }
+.bb-choice.wrong .bc-reveal { color: var(--red); }
 
 .bb-essay-wrap { margin-top: 4px; }
 .bb-essay-input {
@@ -793,9 +907,8 @@ textarea { min-height: 72px; }
 
       <div class="boss-actions-row" style="margin-bottom:16px">
         <button class="btn-pick-mode" id="btn-pick-mode" onclick="togglePickMode()">☑ Chọn nhiều thẻ</button>
-        <button onclick="document.getElementById('move-modal').style.display='flex'">
-📂 Thư mục con
-</button>
+        <button onclick="openMoveModal()">📁 Thư mục con</button>
+        <button onclick="moveOutOfSubfolder()">↩ Đưa thẻ ra ngoài</button>
       </div>
 
       <div id="cal-folder-view"></div>
@@ -1019,6 +1132,42 @@ function intervalStr(quality, card) {
 }
 
 // ═══════════════════════════════════════════
+// AUDIO — TEXT-TO-SPEECH & SPEECH RECOGNITION
+// ═══════════════════════════════════════════
+const SpeechRecognitionImpl = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+const micSupported = () => !!SpeechRecognitionImpl;
+
+function getAutoPlay() { return !!loadMeta().autoPlayAudio; }
+function setAutoPlay(v) { const m = loadMeta(); m.autoPlayAudio = v; saveMeta(m); }
+function getTtsRate() { const r = loadMeta().ttsRate; return typeof r === 'number' ? r : 0.95; }
+function setTtsRate(r) { const m = loadMeta(); m.ttsRate = r; saveMeta(m); }
+
+function speak(text) {
+  if (!text || !('speechSynthesis' in window)) return;
+  try {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-US';
+    u.rate = getTtsRate();
+    window.speechSynthesis.speak(u);
+  } catch (e) { /* speech synthesis unavailable — fail silently */ }
+}
+
+// One-shot mic capture. onResult(transcript) fires on success.
+function captureSpeech(onResult, onError, onEnd) {
+  if (!micSupported()) { onError && onError('unsupported'); return null; }
+  const rec = new SpeechRecognitionImpl();
+  rec.lang = 'en-US';
+  rec.maxAlternatives = 1;
+  rec.interimResults = false;
+  rec.onresult = e => onResult(e.results[0][0].transcript);
+  rec.onerror  = e => onError && onError(e.error);
+  rec.onend    = () => onEnd && onEnd();
+  try { rec.start(); } catch (e) { onError && onError('start-failed'); }
+  return rec;
+}
+
+// ═══════════════════════════════════════════
 // NAVIGATION
 // ═══════════════════════════════════════════
 let currentView = 'home';
@@ -1027,6 +1176,24 @@ let studyQueue  = [];
 let studyIdx    = 0;
 let isFlipped   = false;
 let prevView    = 'sr';
+
+// transient per-session study UI state (not persisted)
+let studySettingsOpen = false;
+let studyMicState  = { listening: false, result: null }; // result: { ok, heard } | null
+let studySessionDots = []; // recent feedback dots, newest last: { color }
+let lastAutoSpokenKey = null;
+
+function resetStudyTransient() {
+  studySettingsOpen = false;
+  studyMicState = { listening: false, result: null };
+  studySessionDots = [];
+  lastAutoSpokenKey = null;
+}
+
+function pushSessionDot(color) {
+  studySessionDots.push({ color });
+  if (studySessionDots.length > 6) studySessionDots.shift();
+}
 
 function showView(v) {
   if (v !== 'boss-battle') stopBossTimer();
@@ -1085,8 +1252,10 @@ function renderHome() {
 let calYear  = new Date().getFullYear();
 let calMonth = new Date().getMonth();
 let selectedDays = new Set();
+let selectedSubfolders = new Set(); // composite keys "day::subfolderName" — picking small (sub)folders for study
 
 function renderCalendar() {
+  openSubfolderCtx = null;
   renderCalGrid();
   renderFolderView();
 }
@@ -1121,6 +1290,7 @@ function toggleDay(ds) {
   if (!(byDay[ds]||[]).length) return;
   if (selectedDays.has(ds)) selectedDays.delete(ds);
   else selectedDays.add(ds);
+  openSubfolderCtx = null;
   renderCalGrid();
   renderSelectionBar();
   renderFolderView();
@@ -1128,6 +1298,8 @@ function toggleDay(ds) {
 
 function clearSelection() {
   selectedDays.clear();
+  selectedSubfolders.clear();
+  openSubfolderCtx = null;
   renderCalGrid();
   renderSelectionBar();
   renderFolderView();
@@ -1135,18 +1307,32 @@ function clearSelection() {
 
 function renderSelectionBar() {
   const bar = document.getElementById('sel-bar');
-  if (selectedDays.size === 0) { bar.style.display = 'none'; return; }
+  if (selectedDays.size === 0 && selectedSubfolders.size === 0) { bar.style.display = 'none'; return; }
   bar.style.display = 'flex';
-  const cards = loadCards();
-  const byDay = groupByDay(cards);
-  let total = 0;
-  selectedDays.forEach(d => total += (byDay[d]||[]).length);
+  const pool = collectSelectionPool();
   const dates = [...selectedDays].sort().map(d => {
     const [,m,day] = d.split('-');
     return `${parseInt(day)}/${parseInt(m)}`;
   }).join(', ');
-  document.getElementById('sel-info').innerHTML = `Đã chọn <strong>${selectedDays.size} ngày</strong> (${dates}) — <strong>${total} thẻ</strong>`;
-  document.getElementById('btn-study-sel').disabled = total === 0;
+  const parts = [];
+  if (selectedDays.size > 0) parts.push(`<strong>${selectedDays.size} ngày</strong> (${dates})`);
+  if (selectedSubfolders.size > 0) parts.push(`<strong>${selectedSubfolders.size} thư mục con</strong>`);
+  document.getElementById('sel-info').innerHTML = `Đã chọn ${parts.join(', ')} — <strong>${pool.length} thẻ</strong>`;
+  document.getElementById('btn-study-sel').disabled = pool.length === 0;
+}
+
+// Builds a de-duplicated pool of cards from the current calendar selection
+// (whole "big folders" = days, plus specific "small folders" = subfolders).
+function collectSelectionPool() {
+  const cards = loadCards();
+  const byDay = groupByDay(cards);
+  const map = new Map();
+  selectedDays.forEach(d => (byDay[d]||[]).forEach(c => map.set(c.id, c)));
+  selectedSubfolders.forEach(key => {
+    const [d, sf] = key.split('::');
+    (byDay[d]||[]).filter(c => c.subfolder === sf).forEach(c => map.set(c.id, c));
+  });
+  return [...map.values()];
 }
 
 function renderFolderView() {
@@ -1166,11 +1352,11 @@ function renderFolderView() {
 
 document.getElementById('cal-prev').addEventListener('click', () => {
   calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; }
-  selectedDays.clear(); renderCalendar();
+  selectedDays.clear(); selectedSubfolders.clear(); openSubfolderCtx = null; renderCalendar();
 });
 document.getElementById('cal-next').addEventListener('click', () => {
   calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; }
-  selectedDays.clear(); renderCalendar();
+  selectedDays.clear(); selectedSubfolders.clear(); openSubfolderCtx = null; renderCalendar();
 });
 
 // ═══════════════════════════════════════════
@@ -1185,16 +1371,38 @@ function groupByDay(cards) {
   return map;
 }
 
-function folderHTML(dateStr, cards, showDelete) {
+function folderHTML(dateStr, cards, interactive) {
+  const unfiled = cards.filter(c => !c.subfolder);
+  const subNames = [...new Set(cards.filter(c=>c.subfolder).map(c=>c.subfolder))];
+  const subCounts = {};
+  subNames.forEach(sf => subCounts[sf] = cards.filter(c=>c.subfolder===sf).length);
+
   return `<div class="folder-section">
-    <div class="folder-header">
-      <div class="folder-date">${formatDateLabel(dateStr)}</div>
-      <div class="folder-cnt">${cards.length} thẻ</div>
-    </div>
+  <div class="folder-header">
+  <div class="folder-date">${formatDateLabel(dateStr)}</div>
+  <div class="folder-cnt">${cards.length} thẻ</div>
+</div>
+
+${subNames.length > 0 ? `
+<div class="subfolder-tabs">
+  ${subNames.map(sf => {
+    const key = `${dateStr}::${sf}`;
+    const isSel = interactive && selectedSubfolders.has(key);
+    return `
+      <div class="subfolder-tab ${isSel ? 'sf-selected' : ''}" onclick="openSubfolder('${dateStr}','${sf}')">
+        ${interactive ? `<span class="sf-pick" onclick="event.stopPropagation(); toggleSubfolderPick('${dateStr}','${sf}')">${isSel ? '✓' : ''}</span>` : ''}
+        📁 ${sf} <span class="sf-cnt">${subCounts[sf]}</span>
+      </div>
+    `;
+  }).join('')}
+</div>` : ''}
+
+${subNames.length > 0 ? `<div class="folder-subhead">Thẻ chưa phân loại — ${unfiled.length}</div>` : ''}
     <div class="cards-grid">
-      ${cards.map(c => `
+      ${unfiled.map(c => `
         <div class="mini-card ${pickedCards.has(c.id) ? 'picked' : ''}"
      onclick="toggleCardPick('${c.id}')">
+          ${interactive && pickMode ? `<div class="mc-pick-chk">${pickedCards.has(c.id) ? '✓' : ''}</div>` : ''}
           <div class="mc-en">${c.en}</div>
           <div class="mc-vi">${c.vi}</div>
           <div class="mc-type">${c.type}</div>
@@ -1202,8 +1410,9 @@ function folderHTML(dateStr, cards, showDelete) {
             <span class="sr-dot" style="background:${srDotColor(c)}"></span>
             SR: ${srLabel(c)}
           </div>
-          ${showDelete ? `<button class="btn-del" onclick="deleteCard('${c.id}')">✕ Xoá</button>` : ''}
+          ${interactive ? `<button class="btn-del" onclick="event.stopPropagation(); deleteCard('${c.id}')">✕ Xoá</button>` : ''}
         </div>`).join('')}
+      ${unfiled.length === 0 ? `<div style="font-size:0.8rem;color:var(--text-dim)">Tất cả thẻ đã được chuyển vào thư mục con.</div>` : ''}
     </div>
   </div>`;
 }
@@ -1220,7 +1429,7 @@ function togglePickMode() {
     ? '❌ Thoát chọn'
     : '☑ Chọn nhiều thẻ';
 
-  renderFolderView();
+  refreshFolderArea();
 }
 
 function toggleCardPick(id) {
@@ -1231,14 +1440,156 @@ function toggleCardPick(id) {
   else
     pickedCards.add(id);
 
+  refreshFolderArea();
+}
+
+function toggleSubfolderPick(day, sf) {
+  const key = `${day}::${sf}`;
+  if (selectedSubfolders.has(key)) selectedSubfolders.delete(key);
+  else selectedSubfolders.add(key);
+  renderSelectionBar();
   renderFolderView();
 }
 // ═══════════════════════════════════════════
-// DELETE
+// SUBFOLDERS (day-scoped "thư mục nhỏ") + DELETE
+// ═══════════════════════════════════════════
+let openSubfolderCtx = null; // { day, name } when a subfolder is open, else null
+
+// Re-renders whichever folder area is currently showing (the day list,
+// or — if the user has drilled into a subfolder — that subfolder view),
+// so pick mode / moving cards never silently kicks the user back out.
+function refreshFolderArea() {
+  if (openSubfolderCtx) openSubfolder(openSubfolderCtx.day, openSubfolderCtx.name);
+  else renderFolderView();
+}
+
+function openMoveModal() {
+  if (pickedCards.size === 0) {
+    alert("Hãy chọn ít nhất 1 thẻ");
+    return;
+  }
+
+  document.getElementById("move-modal").classList.add("show");
+
+  const cards = loadCards();
+  const folders = [...new Set(
+    cards.map(c => c.subfolder).filter(Boolean)
+  )];
+
+  const box = document.getElementById("move-modal-list");
+
+  box.innerHTML = (folders.length === 0
+    ? `<div style="font-size:0.8rem;color:var(--text-dim);padding:6px 2px">Chưa có thư mục con nào — tạo mới ở trên.</div>`
+    : folders.map(name => `
+    <div class="move-modal-item"
+         onclick="moveSelectedToSubfolder('${name}')">
+      📁 ${name}
+    </div>
+  `).join(""));
+}
+
+function closeMoveModal() {
+  document.getElementById("move-modal").classList.remove("show");
+}
+
+function createAndMoveSubfolder() {
+  const name =
+    document.getElementById("new-subfolder-name")
+      .value.trim();
+
+  if (!name) {
+    alert("Nhập tên thư mục");
+    return;
+  }
+
+  moveSelectedToSubfolder(name);
+}
+
+function moveSelectedToSubfolder(name) {
+  const cards = loadCards();
+
+  cards.forEach(card => {
+    if (pickedCards.has(card.id)) {
+      card.subfolder = name;
+    }
+  });
+
+  saveCards(cards);
+
+  pickedCards.clear();
+  pickMode = false;
+  const btn = document.getElementById('btn-pick-mode');
+  if (btn) { btn.classList.remove('active'); btn.textContent = '☑ Chọn nhiều thẻ'; }
+
+  closeMoveModal();
+  document.getElementById('new-subfolder-name').value = '';
+
+  // moving cards into a folder removes them from the plain day list,
+  // so if we were inside a (now possibly stale) subfolder, go back to the day view
+  openSubfolderCtx = null;
+  renderFolderView();
+}
+
+// Moves picked cards OUT of whatever subfolder they're in, back to the
+// plain "Thẻ chưa phân loại" list of their day.
+function moveOutOfSubfolder() {
+  if (pickedCards.size === 0) {
+    alert("Hãy chọn ít nhất 1 thẻ để đưa ra ngoài thư mục.");
+    return;
+  }
+  const cards = loadCards();
+  cards.forEach(card => {
+    if (pickedCards.has(card.id)) card.subfolder = null;
+  });
+  saveCards(cards);
+  pickedCards.clear();
+  refreshFolderArea();
+}
+
+function openSubfolder(day, name) {
+  openSubfolderCtx = { day, name };
+  const cards = loadCards()
+    .filter(c => c.subfolder === name && toDateStr(c.createdAt) === day);
+
+  document.getElementById("cal-folder-view").innerHTML = `
+    <div class="folder-section">
+      <div class="folder-header">
+        <div class="folder-date">📁 ${name} <span style="font-size:0.85rem;color:var(--text-soft);font-weight:400">— ${formatDateLabel(day)}</span></div>
+        <div class="folder-cnt">${cards.length} thẻ</div>
+        <button class="sel-clear" onclick="closeSubfolder()" style="margin-left:auto">⬅ Quay lại</button>
+      </div>
+
+      <div class="cards-grid">
+        ${cards.map(c => `
+          <div class="mini-card ${pickedCards.has(c.id) ? 'picked' : ''}" onclick="toggleCardPick('${c.id}')">
+            ${pickMode ? `<div class="mc-pick-chk">${pickedCards.has(c.id) ? '✓' : ''}</div>` : ''}
+            <div class="mc-en">${c.en}</div>
+            <div class="mc-vi">${c.vi}</div>
+            <div class="mc-type">${c.type}</div>
+            <div class="mc-sr">
+              <span class="sr-dot" style="background:${srDotColor(c)}"></span>
+              SR: ${srLabel(c)}
+            </div>
+            <button class="btn-del" onclick="event.stopPropagation(); deleteCard('${c.id}')">✕ Xoá</button>
+          </div>
+        `).join("") || `<div style="font-size:0.8rem;color:var(--text-dim)">Thư mục này chưa có thẻ nào.</div>`}
+      </div>
+    </div>
+  `;
+}
+
+function closeSubfolder() {
+  openSubfolderCtx = null;
+  renderFolderView();
+}
 // ═══════════════════════════════════════════
 function deleteCard(id) {
   saveCards(loadCards().filter(c => c.id !== id));
-  renderCalendar(); renderHome(); updateBadge();
+  pickedCards.delete(id);
+  renderCalGrid();
+  if (currentView === 'calendar') refreshFolderArea();
+  renderHome();
+  updateBadge();
 }
 
 // ═══════════════════════════════════════════
@@ -1267,6 +1618,7 @@ function launchSR() {
   studyIdx   = 0;
   isFlipped  = false;
   prevView   = 'sr';
+  resetStudyTransient();
   showView('study');
   renderStudy();
 }
@@ -1275,16 +1627,14 @@ function launchSR() {
 // MANUAL STUDY (from calendar selection)
 // ═══════════════════════════════════════════
 function startManualStudy() {
-  const cards  = loadCards();
-  const byDay  = groupByDay(cards);
-  let pool = [];
-  selectedDays.forEach(d => { pool = pool.concat(byDay[d]||[]); });
+  const pool = collectSelectionPool();
   shuffle(pool);
   studyMode  = 'manual';
   studyQueue = pool;
   studyIdx   = 0;
   isFlipped  = false;
   prevView   = 'calendar';
+  resetStudyTransient();
   showView('study');
   renderStudy();
 }
@@ -1292,6 +1642,53 @@ function startManualStudy() {
 // ═══════════════════════════════════════════
 // STUDY SESSION
 // ═══════════════════════════════════════════
+function renderStudySettingsPop() {
+  return `<div class="settings-pop" onclick="event.stopPropagation()">
+    <div class="sp-row">
+      <span class="sp-label">Tự động phát âm khi đổi thẻ</span>
+      <label class="toggle-switch">
+        <input type="checkbox" ${getAutoPlay() ? 'checked' : ''} onchange="studyToggleAutoPlay()">
+        <span class="ts-track"><span class="ts-knob"></span></span>
+      </label>
+    </div>
+    <div class="sp-row" style="flex-direction:column;align-items:stretch;gap:6px">
+      <span class="sp-label">Tốc độ đọc — ${getTtsRate().toFixed(2)}x</span>
+      <input class="sp-rate" type="range" min="0.5" max="1.5" step="0.05" value="${getTtsRate()}" oninput="studySetRate(this.value)">
+    </div>
+  </div>`;
+}
+
+function toggleStudySettings() {
+  studySettingsOpen = !studySettingsOpen;
+  renderStudy();
+}
+function studyToggleAutoPlay() { setAutoPlay(!getAutoPlay()); renderStudy(); }
+function studySetRate(v) { setTtsRate(parseFloat(v)); }
+
+function studyMicTry() {
+  if (studyMicState.listening) return;
+  if (!micSupported()) {
+    showModal('🎤 Không hỗ trợ', 'Trình duyệt này không hỗ trợ nhận diện giọng nói. Hãy thử Chrome trên máy tính hoặc Android.');
+    return;
+  }
+  const card = studyQueue[studyIdx];
+  if (!card) return;
+  studyMicState = { listening: true, result: null };
+  renderStudy();
+  captureSpeech(
+    heard => {
+      const ok = normalizeAnswer(heard) === normalizeAnswer(card.en);
+      studyMicState = { listening: false, result: { ok, heard } };
+      renderStudy();
+    },
+    () => {
+      studyMicState = { listening: false, result: { ok: false, heard: '(không nghe rõ — thử lại)' } };
+      renderStudy();
+    },
+    () => { if (studyMicState.listening) { studyMicState.listening = false; renderStudy(); } }
+  );
+}
+
 function renderStudy() {
   const el    = document.getElementById('study-content');
   const total = studyQueue.length;
@@ -1314,6 +1711,15 @@ function renderStudy() {
   const pct  = Math.round((studyIdx / total) * 100);
   const isSR = studyMode === 'sr';
 
+  // auto-pronounce once per (mode, card index) — avoids repeating on unrelated re-renders
+  const speakKey = `${studyMode}_${studyIdx}`;
+  if (getAutoPlay() && speakKey !== lastAutoSpokenKey) {
+    lastAutoSpokenKey = speakKey;
+    speak(card.en);
+  }
+
+  const safeEn = card.en.replace(/'/g, "\\'");
+
   el.innerHTML = `
     <div class="study-top">
       <button class="study-back" onclick="showView('${prevView}')">← Quay lại</button>
@@ -1322,8 +1728,12 @@ function renderStudy() {
     </div>
     <div class="prog-bar-wrap"><div class="prog-bar" style="width:${pct}%"></div></div>
 
-    <div class="flip-wrap ${isFlipped?'flipped':''}" id="flip-wrap" onclick="flipCard()">
-      <div class="flip-inner">
+    <div class="flip-wrap ${isFlipped?'flipped':''}" id="flip-wrap">
+      <button class="card-gear-btn" onclick="event.stopPropagation(); toggleStudySettings()" title="Cài đặt">⚙</button>
+      <div class="card-dot-trail">${studySessionDots.map(d => `<span class="cdt-dot" style="background:${d.color};color:${d.color}"></span>`).join('')}</div>
+      ${studySettingsOpen ? renderStudySettingsPop() : ''}
+
+      <div class="flip-inner" onclick="flipCard()">
         <div class="flip-face flip-front">
           <div class="card-word">${card.en}</div>
           ${card.phonetic ? `<div class="card-phonetic">${card.phonetic}</div>` : ''}
@@ -1336,11 +1746,23 @@ function renderStudy() {
           ${card.example ? `<div class="card-example">"${card.example}"</div>` : ''}
         </div>
       </div>
+
+      <div class="card-bottom-controls" onclick="event.stopPropagation()">
+        <button class="card-mic-btn ${studyMicState.listening?'listening':''}" ${micSupported() ? '' : 'disabled'} title="${micSupported() ? 'Nhấn để luyện nói từ này' : 'Trình duyệt không hỗ trợ nhận diện giọng nói'}" onclick="studyMicTry()">🎤</button>
+        <label class="toggle-switch" title="Tự động phát âm khi đổi thẻ">
+          <input type="checkbox" ${getAutoPlay()?'checked':''} onchange="studyToggleAutoPlay()">
+          <span class="ts-track"><span class="ts-knob"></span></span>
+        </label>
+        <button class="card-speak-btn" onclick="speak('${safeEn}')" title="Phát âm">🔊</button>
+      </div>
     </div>
 
-    ${!isFlipped
-      ? `<div class="flip-hint-row">⌨ Space / Enter để lật thẻ</div>`
-      : isSR
+    ${studyMicState.result
+      ? `<div class="mic-feedback ${studyMicState.result.ok?'ok':'bad'}">${studyMicState.result.ok ? `✓ Phát âm khớp! Nghe được: "${studyMicState.result.heard}"` : `✕ Chưa khớp — nghe được: "${studyMicState.result.heard}"`}</div>`
+      : ''}
+
+    ${isFlipped
+      ? (isSR
         ? `<div class="rating-wrap">
             <div class="rating-label">Bạn nhớ từ này như thế nào?</div>
             <div class="rating-btns">
@@ -1351,9 +1773,14 @@ function renderStudy() {
             </div>
           </div>`
         : `<div class="manual-rating-wrap">
+            <button class="btn-next-manual" style="margin-right:8px" onclick="prevManual()" ${studyIdx===0?'disabled':''}>← Thẻ trước</button>
             <button class="btn-next-manual" onclick="nextManual()">Thẻ tiếp theo →</button>
-          </div>`
-    }`;
+          </div>`)
+      : `<div class="flip-hint-row">Nhấn vào thẻ để xem nghĩa</div>`
+    }
+
+    <div class="kbd-hint-row">⌨ <kbd>←</kbd> <kbd>→</kbd> ${studyMode==='manual' ? 'để chuyển thẻ' : 'điều hướng'} • <kbd>Space</kbd> / <kbd>Enter</kbd> để lật thẻ${isSR ? ' • <kbd>1</kbd>–<kbd>4</kbd> để chọn mức nhớ' : ''}</div>
+  `;
 }
 
 function flipCard() {
@@ -1371,11 +1798,22 @@ function rateCard(q) {
     saveCards(cards);
     if (q === 0) studyQueue.push({...cards[idx]});
   }
+  const dotColors = ['var(--red)','var(--orange)','var(--green)','var(--accent2)'];
+  pushSessionDot(dotColors[q]);
+  studyMicState = { listening: false, result: null };
   studyIdx++; isFlipped = false; renderStudy(); updateBadge();
 }
 
 function nextManual() {
+  pushSessionDot(studyMicState.result ? (studyMicState.result.ok ? 'var(--green)' : 'var(--red)') : 'var(--text-dim)');
+  studyMicState = { listening: false, result: null };
   studyIdx++; isFlipped = false; renderStudy();
+}
+
+function prevManual() {
+  if (studyIdx <= 0) return;
+  studyMicState = { listening: false, result: null };
+  studyIdx--; isFlipped = false; renderStudy();
 }
 
 // ═══════════════════════════════════════════
@@ -1587,18 +2025,23 @@ document.addEventListener('keydown', e => {
     if (e.key === '3') rateCard(2);
     if (e.key === '4') rateCard(3);
   }
-  if (isFlipped && studyMode === 'manual' && e.key === 'ArrowRight') nextManual();
+  if (studyMode === 'manual') {
+    if (e.key === 'ArrowRight') nextManual();
+    if (e.key === 'ArrowLeft')  prevManual();
+  }
 });
 
 // ═══════════════════════════════════════════
 // BOSS BATTLE — 2 PHASES
 // ═══════════════════════════════════════════
-let bossSelectedDays  = new Set();
+let bossSelectedDays       = new Set();
+let bossSelectedSubfolders = new Set(); // composite keys "day::subfolderName" — picking small folders
 let bossState         = null;
 let bossTimerInterval = null;
 
 const BOSS_TIME_LIMIT_P1 = 20; // giây cho mỗi câu hỏi Phase 1
 const BOSS_AVATARS       = ['👹','🐉','👾','🧟','💀','🦂','🐍','🦑'];
+const BOSS_HP_PER_PHASE  = 350; // máu Boss cố định cho cả Phase 1 và Phase 2
 
 function renderBossSetup() {
   const cards = loadCards();
@@ -1608,11 +2051,27 @@ function renderBossSetup() {
   document.getElementById('boss-folder-list').innerHTML = days.length === 0
     ? `<div class="empty-state"><div class="ee">📭</div><p>Chưa có thẻ nào để mang vào trận đấu.</p><button class="btn-goto" onclick="showView('add')">＋ Thêm thẻ</button></div>`
     : days.map(d => {
-        const checked = bossSelectedDays.has(d);
-        return `<div class="boss-folder-item ${checked?'checked':''}" onclick="toggleBossDay('${d}')">
-          <div class="boss-chk">${checked ? '✓' : ''}</div>
-          <div class="boss-folder-name">${formatDateLabel(d)}</div>
-          <div class="boss-folder-cnt">${byDay[d].length} thẻ</div>
+        const checked  = bossSelectedDays.has(d);
+        const dayCards = byDay[d];
+        const subNames = [...new Set(dayCards.filter(c=>c.subfolder).map(c=>c.subfolder))];
+        return `<div class="boss-day-block ${checked?'checked':''}">
+          <div class="boss-folder-item" onclick="toggleBossDay('${d}')">
+            <div class="boss-chk">${checked ? '✓' : ''}</div>
+            <div class="boss-folder-name">📦 ${formatDateLabel(d)} <span style="opacity:0.6;font-weight:400">(thư mục lớn)</span></div>
+            <div class="boss-folder-cnt">${dayCards.length} thẻ</div>
+          </div>
+          ${subNames.length > 0 ? `<div class="boss-sub-list">
+            ${subNames.map(sf => {
+              const key = `${d}::${sf}`;
+              const subChecked = bossSelectedSubfolders.has(key);
+              const cnt = dayCards.filter(c=>c.subfolder===sf).length;
+              return `<div class="boss-subfolder-item ${subChecked?'checked':''}" onclick="event.stopPropagation(); toggleBossSubfolder('${d}','${sf}')">
+                <div class="boss-chk-sm">${subChecked ? '✓' : ''}</div>
+                <div class="boss-subfolder-name">📁 ${sf} <span style="opacity:0.6;font-weight:400">(thư mục nhỏ)</span></div>
+                <div class="boss-subfolder-cnt">${cnt} thẻ</div>
+              </div>`;
+            }).join('')}
+          </div>` : ''}
         </div>`;
       }).join('');
 
@@ -1625,33 +2084,47 @@ function toggleBossDay(d) {
   renderBossSetup();
 }
 
+function toggleBossSubfolder(d, sf) {
+  const key = `${d}::${sf}`;
+  if (bossSelectedSubfolders.has(key)) bossSelectedSubfolders.delete(key);
+  else bossSelectedSubfolders.add(key);
+  renderBossSetup();
+}
+
 function bossSelectAll() {
   bossSelectedDays = new Set(Object.keys(groupByDay(loadCards())));
+  bossSelectedSubfolders.clear(); // whole days already cover their subfolders
   renderBossSetup();
 }
 
 function bossClearAll() {
   bossSelectedDays.clear();
+  bossSelectedSubfolders.clear();
   renderBossSetup();
 }
 
 function getBossPool() {
   const byDay = groupByDay(loadCards());
-  let pool = [];
-  bossSelectedDays.forEach(d => { pool = pool.concat(byDay[d] || []); });
-  return pool;
+  const map = new Map();
+  bossSelectedDays.forEach(d => (byDay[d]||[]).forEach(c => map.set(c.id, c)));
+  bossSelectedSubfolders.forEach(key => {
+    const [d, sf] = key.split('::');
+    (byDay[d]||[]).filter(c => c.subfolder === sf).forEach(c => map.set(c.id, c));
+  });
+  return [...map.values()];
 }
 
 function renderBossSummary() {
-  const pool = getBossPool();
+  const pool  = getBossPool();
+  const total = bossSelectedDays.size + bossSelectedSubfolders.size;
   document.getElementById('boss-summary').innerHTML = pool.length === 0
     ? `Chưa chọn thư mục nào.`
-    : `Đã chọn <strong>${bossSelectedDays.size} thư mục</strong> — <strong>${pool.length} từ</strong> sẽ được mang vào trận đấu.`;
+    : `Đã chọn <strong>${bossSelectedDays.size} thư mục lớn</strong> + <strong>${bossSelectedSubfolders.size} thư mục nhỏ</strong> — <strong>${pool.length} từ</strong> sẽ được mang vào trận đấu.`;
   document.getElementById('btn-boss-start').disabled = pool.length === 0;
 }
 
 function makeBossState(pool) {
-  const bossMaxHP = 1000 + Math.floor(Math.random() * 501); // 1000-1500
+  const bossMaxHP = BOSS_HP_PER_PHASE; // máu Boss cố định 350 cho cả Phase 1 và Phase 2
   return {
     pool, queue: [],
     phase: 1,
@@ -1690,17 +2163,17 @@ function genBossChoices(card) {
   const all     = loadCards();
   const others  = all.filter(c => c.id !== card.id && c.vi !== card.vi);
   shuffle(others);
-  const distractors = [];
+  const distractors = []; // each: { vi, source: cardObj|null, isCorrect:false }
   const seen = new Set([card.vi]);
   for (const c of others) {
     if (distractors.length >= 3) break;
     if (seen.has(c.vi)) continue;
     seen.add(c.vi);
-    distractors.push(c.vi);
+    distractors.push({ vi: c.vi, source: c, isCorrect: false });
   }
   const filler = ['(không có nghĩa khác)','(chưa có dữ liệu)','(bỏ qua đáp án này)'];
-  while (distractors.length < 3) distractors.push(filler[distractors.length]);
-  const choices = [...distractors, card.vi];
+  while (distractors.length < 3) distractors.push({ vi: filler[distractors.length], source: null, isCorrect: false });
+  const choices = [...distractors, { vi: card.vi, source: card, isCorrect: true }];
   shuffle(choices);
   return choices;
 }
@@ -1764,7 +2237,7 @@ function chooseBossAnswer(idx) {
 function resolveBossAnswerP1(idx) {
   bossState.answered = true;
   const card       = bossState.current;
-  const correctIdx = bossState.choices.indexOf(card.vi);
+  const correctIdx = bossState.choices.findIndex(c => c.isCorrect);
   const isCorrect  = idx === correctIdx;
   bossState.totalAnswered++;
 
@@ -1798,7 +2271,7 @@ function enterPhase2() {
   const s = bossState;
   // Boss "regenerates" HP pool for phase 2 — fresh bar, no time pressure, higher damage per hit
   s.phase    = 2;
-  s.bossMaxHP = 300 + Math.floor(Math.random() * 121); // 300-420, fewer hits needed at 30 dmg/hit
+  s.bossMaxHP = BOSS_HP_PER_PHASE; // máu Boss cố định 350 ở Phase 2
   s.bossHP    = s.bossMaxHP;
   s.streak    = 0;
   refillBossQueue();
@@ -1875,7 +2348,10 @@ function renderBossBattle(answeredIdx, correctIdx, dmg, playerDmg, isCorrect, ra
         if (i === correctIdx) cls += ' correct';
         else if (i === answeredIdx) cls += ' wrong';
       }
-      return `<button class="${cls}" ${s.answered ? 'disabled' : ''} onclick="chooseBossAnswer(${i})">${c}</button>`;
+      const reveal = (s.answered && c.source)
+        ? `<span class="bc-reveal">${c.source.en}${c.source.phonetic ? ' · ' + c.source.phonetic : ''}</span>`
+        : '';
+      return `<button class="${cls}" ${s.answered ? 'disabled' : ''} onclick="chooseBossAnswer(${i})"><span class="bc-vi">${c.vi}</span>${reveal}</button>`;
     }).join('');
 
     questionAreaHTML = `
