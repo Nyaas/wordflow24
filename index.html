@@ -423,11 +423,25 @@ textarea { min-height: 72px; }
   display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: #fff;
 }
 .dw-card:not(.unpicked) .dw-chk { background: var(--accent); border-color: var(--accent); }
-.dw-en { font-weight: 700; font-size: 0.95rem; }
-.dw-type { font-size: 0.68rem; font-weight: 600; color: var(--accent2); margin-left: 6px; text-transform: uppercase; }
-.dw-ph { font-size: 0.78rem; color: var(--text-dim); font-style: italic; margin: 2px 0 4px; }
-.dw-vi { font-size: 0.86rem; color: var(--text-soft); margin-bottom: 4px; }
-.dw-ex { font-size: 0.78rem; color: var(--text-dim); font-style: italic; }
+.dw-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; position: relative; }
+.dw-en-row { display: flex; gap: 6px; align-items: center; }
+.dw-edit {
+  background: var(--surface2); border: 1.5px solid transparent; border-radius: 6px;
+  color: var(--text); font-family: 'DM Sans', sans-serif; padding: 5px 8px; width: 100%;
+  transition: border-color 0.15s;
+}
+.dw-edit:hover { border-color: var(--border2); }
+.dw-edit:focus { border-color: var(--accent); outline: none; background: var(--surface); }
+.dw-edit-en { font-weight: 700; font-size: 0.92rem; flex: 1; min-width: 0; }
+.dw-edit-type {
+  flex-shrink: 0; width: 64px; font-size: 0.68rem; font-weight: 600; color: var(--accent2);
+  text-transform: uppercase; cursor: pointer;
+}
+.dw-edit-ph { font-size: 0.78rem; color: var(--text-dim); font-style: italic; }
+.dw-edit-vi { font-size: 0.86rem; color: var(--text-soft); }
+.dw-edit-ex { font-size: 0.78rem; color: var(--text-dim); font-style: italic; }
+.dw-lvl-tag { position: absolute; top: -2px; right: -2px; font-size: 0.65rem; color: var(--text-dim); }
+.discover-edit-hint { font-size: 0.76rem; color: var(--text-dim); margin: -6px 0 16px; }
 .discover-batch-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 30px; }
 .discover-batch-actions .dba-links { display: flex; gap: 14px; }
 .discover-batch-actions .dba-link { font-size: 0.8rem; color: var(--text-soft); cursor: pointer; text-decoration: underline; background: none; border: none; }
@@ -2400,6 +2414,23 @@ async function fetchOnlineDiscoverBatch() {
 
 // Looks up one English word's phonetic/part-of-speech/example (Free Dictionary API)
 // and its Vietnamese meaning (MyMemory). Returns null if no Vietnamese meaning is found.
+// MyMemory sometimes returns redundant comma-separated repeats of the same idea
+// (e.g. "vùng Bắc Cực, (thuộc) Bắc Cực") — this dedupes near-identical segments.
+// Doesn't need to be perfect; the result is editable anyway before adding.
+function cleanViTranslation(raw) {
+  if (!raw) return raw;
+  const parts = raw.split(/[,;]/).map(s => s.trim()).filter(Boolean);
+  const seen  = new Set();
+  const kept  = [];
+  for (const p of parts) {
+    const key = p.toLowerCase().replace(/[()]/g, '').trim();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    kept.push(p);
+  }
+  return kept.join(', ');
+}
+
 async function enrichDiscoverWord(word) {
   let phonetic = '', type = '', example = '';
   try {
@@ -2427,7 +2458,7 @@ async function enrichDiscoverWord(word) {
     }
   } catch (e) { /* không dịch được thì bỏ qua từ này */ }
 
-  vi = (vi || '').trim();
+  vi = cleanViTranslation((vi || '').trim());
   // Không cần dịch chuẩn 100% — chỉ bỏ qua khi rõ ràng là dịch thất bại
   // (rỗng, báo lỗi "no translation", hoặc API trả về nguyên chữ tiếng Anh không đổi).
   const failed = !vi || /no translation/i.test(vi) || vi.toLowerCase() === word.toLowerCase();
@@ -2450,19 +2481,27 @@ function renderDiscoverBatch() {
     return;
   }
   const pickedCount = discoverBatch.filter(w => w.picked).length;
+  const TYPE_OPTS = ['n','v','adj','adv','phrase','other'];
   box.innerHTML = `
     <div class="discover-batch-grid">
       ${discoverBatch.map((w, i) => `
         <div class="dw-card ${w.picked ? '' : 'unpicked'}" onclick="toggleDiscoverPick(${i})">
           <div class="dw-chk">${w.picked ? '✓' : ''}</div>
-          <div class="dw-main">
-            <div class="dw-en">${w.en}<span class="dw-type">${w.type}</span></div>
-            ${(w.ph || w.lvl) ? `<div class="dw-ph">${[w.ph, w.lvl].filter(Boolean).join(' · ')}</div>` : ''}
-            <div class="dw-vi">${w.vi}</div>
-            ${w.ex ? `<div class="dw-ex">"${w.ex}"</div>` : ''}
+          <div class="dw-main" onclick="event.stopPropagation()">
+            <div class="dw-en-row">
+              <input class="dw-edit dw-edit-en" value="${escAttr(w.en)}" oninput="updateDiscoverField(${i},'en',this.value)">
+              <select class="dw-edit dw-edit-type" onchange="updateDiscoverField(${i},'type',this.value)">
+                ${TYPE_OPTS.map(t => `<option value="${t}" ${w.type===t?'selected':''}>${t}</option>`).join('')}
+              </select>
+            </div>
+            <input class="dw-edit dw-edit-ph" value="${escAttr(w.ph||'')}" placeholder="phiên âm (không bắt buộc)" oninput="updateDiscoverField(${i},'ph',this.value)">
+            <input class="dw-edit dw-edit-vi" value="${escAttr(w.vi)}" placeholder="nghĩa tiếng Việt" oninput="updateDiscoverField(${i},'vi',this.value)">
+            <input class="dw-edit dw-edit-ex" value="${escAttr(w.ex||'')}" placeholder="câu ví dụ (không bắt buộc)" oninput="updateDiscoverField(${i},'ex',this.value)">
+            ${w.lvl ? `<div class="dw-lvl-tag">${w.lvl}</div>` : ''}
           </div>
         </div>`).join('')}
     </div>
+    <div class="discover-edit-hint">✏️ Sửa trực tiếp nghĩa/từ loại/ví dụ ở từng thẻ nếu bản dịch chưa đúng ý — chỉ cần đúng nghĩa, không cần khớp 100% với bản gốc.</div>
     <div class="discover-batch-actions">
       <div class="dba-links">
         <button class="dba-link" onclick="discoverPickAll(true)">Chọn tất cả</button>
@@ -2476,6 +2515,19 @@ function renderDiscoverBatch() {
 function toggleDiscoverPick(i) {
   discoverBatch[i].picked = !discoverBatch[i].picked;
   renderDiscoverBatch();
+}
+
+// Lets the user fix up any field (meaning, type, phonetic, example) inline before adding —
+// no need for the translation to be perfect, just correct enough once edited.
+function updateDiscoverField(i, field, value) {
+  if (!discoverBatch[i]) return;
+  discoverBatch[i][field] = value;
+}
+
+function escAttr(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function discoverPickAll(v) {
