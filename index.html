@@ -383,6 +383,57 @@ textarea { min-height: 72px; }
 .bulk-preview-row .bp-vi { color: var(--text-soft); flex: 1; }
 .bulk-preview-row .bp-warn { font-size: 0.72rem; }
 
+/* ── DISCOVER NEW WORDS ── */
+.discover-note {
+  background: var(--glow); border: 1px solid var(--border2); border-radius: var(--r-sm);
+  padding: 12px 16px; font-size: 0.8rem; color: var(--text-soft); line-height: 1.5; margin-bottom: 20px;
+}
+.discover-setup { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--r); padding: 18px; margin-bottom: 22px; }
+.discover-topic-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.discover-custom-input {
+  width: 100%; margin-top: 10px; background: var(--surface2); border: 1.5px solid var(--border2);
+  border-radius: var(--r-sm); padding: 10px 14px; color: var(--text); font-size: 0.85rem; font-family: 'DM Sans', sans-serif;
+}
+.discover-custom-input:focus { border-color: var(--accent); outline: none; }
+.discover-loading { text-align: center; padding: 30px 10px; color: var(--text-soft); font-size: 0.88rem; }
+.discover-error {
+  background: rgba(255,107,107,0.1); border: 1px solid var(--red); border-radius: var(--r-sm);
+  padding: 14px 16px; font-size: 0.82rem; color: var(--red); margin-bottom: 16px; line-height: 1.5;
+}
+.discover-topic-chip {
+  background: var(--surface2); border: 1.5px solid var(--border2); border-radius: 50px;
+  padding: 9px 16px; font-size: 0.82rem; font-weight: 600; color: var(--text-soft);
+  cursor: pointer; transition: all 0.15s;
+}
+.discover-topic-chip:hover { border-color: var(--accent); color: var(--text); }
+.discover-topic-chip.active { background: var(--glow); border-color: var(--accent); color: var(--accent2); }
+.discover-summary { font-size: 0.82rem; color: var(--text-soft); margin-top: 14px; }
+.discover-summary strong { color: var(--text); }
+.discover-batch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 12px; margin-bottom: 16px; }
+.dw-card {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--r-sm);
+  padding: 14px; cursor: pointer; transition: all 0.15s;
+}
+.dw-card:hover { border-color: var(--border2); }
+.dw-card.unpicked { opacity: 0.45; }
+.dw-chk {
+  width: 20px; height: 20px; border-radius: 6px; flex-shrink: 0; margin-top: 2px;
+  border: 1.5px solid var(--border2); background: var(--surface2);
+  display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: #fff;
+}
+.dw-card:not(.unpicked) .dw-chk { background: var(--accent); border-color: var(--accent); }
+.dw-en { font-weight: 700; font-size: 0.95rem; }
+.dw-type { font-size: 0.68rem; font-weight: 600; color: var(--accent2); margin-left: 6px; text-transform: uppercase; }
+.dw-ph { font-size: 0.78rem; color: var(--text-dim); font-style: italic; margin: 2px 0 4px; }
+.dw-vi { font-size: 0.86rem; color: var(--text-soft); margin-bottom: 4px; }
+.dw-ex { font-size: 0.78rem; color: var(--text-dim); font-style: italic; }
+.discover-batch-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 30px; }
+.discover-batch-actions .dba-links { display: flex; gap: 14px; }
+.discover-batch-actions .dba-link { font-size: 0.8rem; color: var(--text-soft); cursor: pointer; text-decoration: underline; background: none; border: none; }
+.discover-batch-actions .dba-link:hover { color: var(--text); }
+.discover-empty { font-size: 0.85rem; color: var(--text-dim); padding: 20px 4px; }
+
 /* ── STUDY / FLIP CARD ── */
 #study-view { max-width: 640px; }
 .study-top { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
@@ -874,6 +925,9 @@ textarea { min-height: 72px; }
     <div class="nav-item" data-view="add">
       <span class="icon">＋</span> Thêm thẻ
     </div>
+    <div class="nav-item" data-view="discover">
+      <span class="icon">🔍</span> Khám phá từ
+    </div>
     <div class="sidebar-footer">
       Dữ liệu lưu trên trình duyệt này.<br>Không cần đăng nhập.
     </div>
@@ -886,6 +940,7 @@ textarea { min-height: 72px; }
     <div class="nav-item" data-view="sr"><span class="icon">🔁</span> SR <span class="nav-badge" id="sr-badge-m">0</span></div>
     <div class="nav-item" data-view="boss"><span class="icon">⚔️</span> Boss</div>
     <div class="nav-item" data-view="add"><span class="icon">＋</span> Thêm</div>
+    <div class="nav-item" data-view="discover"><span class="icon">🔍</span> Khám phá</div>
   </div>
 
   <!-- CONTENT -->
@@ -956,7 +1011,7 @@ textarea { min-height: 72px; }
           <h4>Boss Từ Vựng — 2 Phase</h4>
           <p><strong>Phase 1 (Trắc nghiệm):</strong> 20 giây/câu, trả lời đúng gây 10–15 dame, sai hoặc hết giờ bị Boss phản công.<br>
           <strong>Phase 2 (Tự luận — mở khi hạ hết máu Phase 1, hoặc chơi riêng):</strong> Gõ tiếng Anh từ nghĩa tiếng Việt, không giới hạn thời gian, mỗi câu đúng gây 30 dame!<br>
-          <span style="color:var(--text-dim)">Máu Boss tự tăng theo số từ bạn chọn — pool nhiều từ thì Boss trâu hơn để bạn ôn được nhiều từ hơn. Sau mỗi câu, trận đấu dừng lại để bạn đọc đáp án — bấm "Câu tiếp theo" khi đã sẵn sàng.</span></p>
+          <span style="color:var(--text-dim)">Máu Boss tự tăng theo số từ bạn chọn — pool nhiều từ thì Boss trâu hơn để bạn ôn được nhiều từ hơn. Từ nào bạn trả lời sai sẽ xuất hiện lại nhiều hơn, từ nào trả lời đúng sẽ ít xuất hiện hơn. Sau mỗi câu, trận đấu dừng lại để bạn đọc đáp án — bấm "Câu tiếp theo" khi đã sẵn sàng.</span></p>
         </div>
       </div>
 
@@ -966,6 +1021,14 @@ textarea { min-height: 72px; }
           <button class="phase-opt" data-mode="p1" onclick="setBossPhaseMode('p1')">🥉 Chỉ Phase 1<br><span style="font-weight:400;opacity:0.7">(trắc nghiệm)</span></button>
           <button class="phase-opt" data-mode="p2" onclick="setBossPhaseMode('p2')">🥈 Chỉ Phase 2<br><span style="font-weight:400;opacity:0.7">(tự luận)</span></button>
           <button class="phase-opt active" data-mode="both" onclick="setBossPhaseMode('both')">🏆 Cả 2 Phase<br><span style="font-weight:400;opacity:0.7">(đầy đủ)</span></button>
+        </div>
+      </div>
+
+      <div class="phase-select-wrap">
+        <div class="phase-select-label">Hướng dịch ở Phase 2 (tự luận)</div>
+        <div class="phase-select-row" id="boss-direction-select">
+          <button class="phase-opt active" data-dir="vi2en" onclick="setBossDirection('vi2en')">🇻🇳→🇬🇧 Việt → Anh</button>
+          <button class="phase-opt" data-dir="en2vi" onclick="setBossDirection('en2vi')">🇬🇧→🇻🇳 Anh → Việt</button>
         </div>
       </div>
 
@@ -1058,6 +1121,42 @@ ambiguous | mơ hồ, không rõ ràng" oninput="renderBulkPreview()"></textarea
       </div>
     </div>
 
+    <!-- DISCOVER NEW WORDS -->
+    <div class="view" id="discover-view">
+      <div class="page-title">Khám phá từ vựng mới 🔍</div>
+      <div class="page-sub">Chọn chủ đề và cấp độ (A1–B2), mỗi lần tìm 10 từ mới chưa có trong bộ thẻ của bạn.</div>
+
+      <div class="phase-select-wrap">
+        <div class="phase-select-label">Nguồn từ vựng</div>
+        <div class="phase-select-row" id="discover-mode-select">
+          <button class="phase-opt active" data-mode="online" onclick="setDiscoverMode('online')">🌐 Tra từ điển trực tuyến<br><span style="font-weight:400;opacity:0.7">cần internet, luôn có từ mới</span></button>
+          <button class="phase-opt" data-mode="offline" onclick="setDiscoverMode('offline')">📦 Kho có sẵn trong app<br><span style="font-weight:400;opacity:0.7">offline, số từ có hạn</span></button>
+        </div>
+      </div>
+
+      <div class="discover-note" id="discover-note"></div>
+
+      <div class="discover-setup">
+        <div class="phase-select-label">Chủ đề</div>
+        <div class="discover-topic-row" id="discover-topic-row"></div>
+        <input type="text" id="discover-custom-topic" class="discover-custom-input" placeholder="...hoặc nhập chủ đề riêng (tiếng Anh, ví dụ: music, sports, weather)" style="display:none" oninput="setDiscoverCustomTopic(this.value)">
+
+        <div class="phase-select-label" style="margin-top:16px">Cấp độ (CEFR)</div>
+        <div class="phase-select-row" id="discover-level-row">
+          <button class="phase-opt" data-lvl="A1" onclick="setDiscoverLevel('A1')">A1<br><span style="font-weight:400;opacity:0.7">Cơ bản</span></button>
+          <button class="phase-opt" data-lvl="A2" onclick="setDiscoverLevel('A2')">A2<br><span style="font-weight:400;opacity:0.7">Sơ cấp</span></button>
+          <button class="phase-opt" data-lvl="B1" onclick="setDiscoverLevel('B1')">B1<br><span style="font-weight:400;opacity:0.7">Trung cấp</span></button>
+          <button class="phase-opt" data-lvl="B2" onclick="setDiscoverLevel('B2')">B2<br><span style="font-weight:400;opacity:0.7">Trên trung cấp</span></button>
+        </div>
+
+        <div class="discover-summary" id="discover-summary"></div>
+        <button class="btn-add" id="btn-discover-generate" onclick="generateDiscoverBatch()" style="margin-top:14px">🔍 Tìm 10 từ mới</button>
+      </div>
+
+      <div id="discover-batch"></div>
+      <div class="toast" id="discover-toast"></div>
+    </div>
+
   </main>
 </div>
 
@@ -1134,30 +1233,53 @@ const srLabel = c => {
 const srDotColor = c => {
   if (!c.nextReview) return '#7878a0';
   if (isDue(c)) return 'var(--red)';
-  if ((c.interval||0) >= 7) return 'var(--green)';
+  if ((c.cycleStep||0) >= SR_STEPS.length - 1) return 'var(--green)';
   return 'var(--yellow)';
 };
 
 // ═══════════════════════════════════════════
-// SM-2 SPACED REPETITION
+// FIXED-CYCLE SPACED REPETITION
+// Mỗi thẻ đi qua 6 mốc cố định rồi LẶP LẠI vòng đó mãi:
+// lần 1→1h, lần 2→6h, lần 3→24h, lần 4→2 ngày, lần 5→5 ngày, lần 6→7 ngày, lần 7→1h, ...
 // ═══════════════════════════════════════════
+const SR_STEPS = [
+  { ms: 1  * 60 * 60 * 1000,        label: '1 giờ',  days: 1/24 },
+  { ms: 6  * 60 * 60 * 1000,        label: '6 giờ',  days: 6/24 },
+  { ms: 24 * 60 * 60 * 1000,        label: '1 ngày', days: 1    },
+  { ms: 2  * 24 * 60 * 60 * 1000,   label: '2 ngày', days: 2    },
+  { ms: 5  * 24 * 60 * 60 * 1000,   label: '5 ngày', days: 5    },
+  { ms: 7  * 24 * 60 * 60 * 1000,   label: '7 ngày', days: 7    },
+];
+
 function computeNext(card, quality) {
-  let { interval = 0, easiness = 2.5, repetitions = 0 } = card;
-  if (quality === 0) { repetitions = 0; interval = 1; }
-  else if (quality === 1) { interval = Math.max(1, Math.round(interval * 1.2)); }
-  else {
-    if (repetitions === 0) interval = 1;
-    else if (repetitions === 1) interval = 6;
-    else interval = Math.round(interval * easiness);
-    repetitions++;
-    easiness = Math.max(1.3, easiness + 0.1 - (3-quality)*(0.08 + (3-quality)*0.02));
+  let step = typeof card.cycleStep === 'number' ? card.cycleStep : 0;
+  let repetitions = card.repetitions || 0;
+
+  if (quality === 0) {
+    step = 0; // Không nhớ — quay lại đầu vòng (1 giờ)
+  } else if (quality === 1) {
+    // Khó — ôn lại ở đúng mốc hiện tại lần nữa, chưa tiến lên
+  } else if (quality === 2) {
+    step = (step + 1) % SR_STEPS.length; // Nhớ được — tiến 1 mốc, hết vòng thì lặp lại
+  } else {
+    step = (step + 2) % SR_STEPS.length; // Dễ quá — vượt nhanh 2 mốc
   }
-  return { interval, easiness, repetitions, lastReview: Date.now(), nextReview: Date.now() + interval*86400000 };
+
+  repetitions++;
+  const { ms, days } = SR_STEPS[step];
+  return {
+    cycleStep: step,
+    interval: days, // giữ lại field này (đơn vị ngày) để tương thích các chỗ hiển thị/thống kê cũ
+    easiness: card.easiness || 2.5, // không còn dùng để tính lịch, giữ lại cho tương thích dữ liệu cũ
+    repetitions,
+    lastReview: Date.now(),
+    nextReview: Date.now() + ms,
+  };
 }
 
 function intervalStr(quality, card) {
-  const { interval } = computeNext({...card}, quality);
-  return interval <= 1 ? '1 ngày' : `${interval} ngày`;
+  const { cycleStep } = computeNext({...card}, quality);
+  return SR_STEPS[cycleStep].label;
 }
 
 // ═══════════════════════════════════════════
@@ -1236,6 +1358,7 @@ function showView(v) {
   if (v === 'calendar') renderCalendar();
   if (v === 'sr')       renderSR();
   if (v === 'boss')     renderBossSetup();
+  if (v === 'discover') renderDiscoverSetup();
   updateBadge();
 }
 
@@ -1846,7 +1969,7 @@ function addCard() {
     example:  document.getElementById('f-ex').value.trim(),
     createdAt: Date.now(),
     subfolder: null,
-    interval: 0, easiness: 2.5, repetitions: 0,
+    interval: 0, easiness: 2.5, repetitions: 0, cycleStep: 0,
     lastReview: null, nextReview: null,
   });
   saveCards(cards);
@@ -1923,7 +2046,7 @@ function submitBulkAdd() {
       phonetic: '', type: 'other', example: l.example,
       createdAt: now,
       subfolder: null,
-      interval: 0, easiness: 2.5, repetitions: 0,
+      interval: 0, easiness: 2.5, repetitions: 0, cycleStep: 0,
       lastReview: null, nextReview: null,
     });
   });
@@ -1938,6 +2061,452 @@ function submitBulkAdd() {
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3500);
   updateBadge();
+}
+
+// ═══════════════════════════════════════════
+// DISCOVER NEW WORDS — kho từ vựng soạn sẵn theo Chủ đề × Cấp độ CEFR
+// Hoạt động 100% offline (không gọi API/từ điển trực tuyến) để luôn ổn định.
+// ═══════════════════════════════════════════
+const VOCAB_BANK = [
+// ── Du lịch (Travel) ──
+{en:'airport',vi:'sân bay',ph:'/ˈeərpɔːt/',type:'n',topic:'Du lịch',lvl:'A1',ex:'We are at the airport.'},
+{en:'ticket',vi:'vé',ph:'/ˈtɪkɪt/',type:'n',topic:'Du lịch',lvl:'A1',ex:'I bought a train ticket.'},
+{en:'hotel',vi:'khách sạn',ph:'/hoʊˈtɛl/',type:'n',topic:'Du lịch',lvl:'A1',ex:'We stayed at a nice hotel.'},
+{en:'map',vi:'bản đồ',ph:'/mæp/',type:'n',topic:'Du lịch',lvl:'A1',ex:'Use the map to find the way.'},
+{en:'luggage bag',vi:'túi hành lý',ph:'/ˈlʌgɪdʒ bæg/',type:'n',topic:'Du lịch',lvl:'A1',ex:'Pack your bag for the trip.'},
+{en:'taxi',vi:'tắc xi',ph:'/ˈtæksi/',type:'n',topic:'Du lịch',lvl:'A1',ex:'We took a taxi to the hotel.'},
+{en:'passport',vi:'hộ chiếu',ph:'/ˈpæspɔːrt/',type:'n',topic:'Du lịch',lvl:'A1',ex:"Don't forget your passport."},
+{en:'beach',vi:'bãi biển',ph:'/biːtʃ/',type:'n',topic:'Du lịch',lvl:'A1',ex:'The beach was very crowded.'},
+{en:'train',vi:'tàu hỏa',ph:'/treɪn/',type:'n',topic:'Du lịch',lvl:'A1',ex:'We traveled by train.'},
+{en:'bus',vi:'xe buýt',ph:'/bʌs/',type:'n',topic:'Du lịch',lvl:'A1',ex:'The bus arrives at 9 AM.'},
+{en:'luggage',vi:'hành lý',ph:'/ˈlʌgɪdʒ/',type:'n',topic:'Du lịch',lvl:'A2',ex:'Please check your luggage before boarding.'},
+{en:'reservation',vi:'việc đặt trước',ph:'/ˌrɛzərˈveɪʃən/',type:'n',topic:'Du lịch',lvl:'A2',ex:'I made a hotel reservation online.'},
+{en:'tourist',vi:'khách du lịch',ph:'/ˈtʊərɪst/',type:'n',topic:'Du lịch',lvl:'A2',ex:'Many tourists visit this city.'},
+{en:'journey',vi:'chuyến đi, hành trình',ph:'/ˈdʒɜːrni/',type:'n',topic:'Du lịch',lvl:'A2',ex:'It was a long journey.'},
+{en:'suitcase',vi:'vali',ph:'/ˈsuːtkeɪs/',type:'n',topic:'Du lịch',lvl:'A2',ex:'She packed her suitcase quickly.'},
+{en:'vacation',vi:'kỳ nghỉ',ph:'/veɪˈkeɪʃən/',type:'n',topic:'Du lịch',lvl:'A2',ex:"We're planning our summer vacation."},
+{en:'postcard',vi:'bưu thiếp',ph:'/ˈpoʊstkɑːrd/',type:'n',topic:'Du lịch',lvl:'A2',ex:'I sent a postcard from Paris.'},
+{en:'customs',vi:'hải quan',ph:'/ˈkʌstəmz/',type:'n',topic:'Du lịch',lvl:'A2',ex:'We passed through customs quickly.'},
+{en:'departure',vi:'sự khởi hành',ph:'/dɪˈpɑːrtʃər/',type:'n',topic:'Du lịch',lvl:'A2',ex:'The departure time changed.'},
+{en:'arrival',vi:'sự đến nơi',ph:'/əˈraɪvəl/',type:'n',topic:'Du lịch',lvl:'A2',ex:'Our arrival was delayed.'},
+{en:'itinerary',vi:'lịch trình',ph:'/aɪˈtɪnəˌrɛri/',type:'n',topic:'Du lịch',lvl:'B1',ex:'Check the itinerary before we leave.'},
+{en:'accommodation',vi:'chỗ ở',ph:'/əˌkɑːməˈdeɪʃən/',type:'n',topic:'Du lịch',lvl:'B1',ex:'We booked our accommodation early.'},
+{en:'excursion',vi:'chuyến tham quan ngắn',ph:'/ɪkˈskɜːrʒən/',type:'n',topic:'Du lịch',lvl:'B1',ex:'We went on a day excursion.'},
+{en:'currency',vi:'tiền tệ',ph:'/ˈkɜːrənsi/',type:'n',topic:'Du lịch',lvl:'B1',ex:'Exchange your currency at the bank.'},
+{en:'souvenir',vi:'quà lưu niệm',ph:'/ˌsuːvəˈnɪər/',type:'n',topic:'Du lịch',lvl:'B1',ex:'I bought a souvenir for my mom.'},
+{en:'destination',vi:'điểm đến',ph:'/ˌdɛstɪˈneɪʃən/',type:'n',topic:'Du lịch',lvl:'B1',ex:'Our final destination is Hanoi.'},
+{en:'layover',vi:'thời gian chờ chuyển chuyến',ph:'/ˈleɪˌoʊvər/',type:'n',topic:'Du lịch',lvl:'B1',ex:'We have a two-hour layover.'},
+{en:'boarding',vi:'việc lên máy bay/tàu',ph:'/ˈbɔːrdɪŋ/',type:'n',topic:'Du lịch',lvl:'B1',ex:'Boarding starts in ten minutes.'},
+{en:'transit',vi:'sự quá cảnh',ph:'/ˈtrænzɪt/',type:'n',topic:'Du lịch',lvl:'B1',ex:"We're in transit at the airport."},
+{en:'voucher',vi:'phiếu ưu đãi',ph:'/ˈvaʊtʃər/',type:'n',topic:'Du lịch',lvl:'B1',ex:'Use this voucher for a discount.'},
+{en:'wanderlust',vi:'khao khát xê dịch',ph:'/ˈwɑːndərlʌst/',type:'n',topic:'Du lịch',lvl:'B2',ex:'Her wanderlust took her around the world.'},
+{en:'backpacking',vi:'du lịch tự túc bằng balo',ph:'/ˈbækˌpækɪŋ/',type:'n',topic:'Du lịch',lvl:'B2',ex:'They went backpacking through Europe.'},
+{en:'expedition',vi:'cuộc thám hiểm',ph:'/ˌɛkspɪˈdɪʃən/',type:'n',topic:'Du lịch',lvl:'B2',ex:'The team planned an expedition to the Arctic.'},
+{en:'hospitality',vi:'sự hiếu khách',ph:'/ˌhɑːspɪˈtæləti/',type:'n',topic:'Du lịch',lvl:'B2',ex:'We were grateful for their hospitality.'},
+{en:'sojourn',vi:'kỳ lưu trú ngắn',ph:'/ˈsoʊdʒɜːrn/',type:'n',topic:'Du lịch',lvl:'B2',ex:'He had a short sojourn in Rome.'},
+{en:'picturesque',vi:'đẹp như tranh',ph:'/ˌpɪktʃəˈrɛsk/',type:'adj',topic:'Du lịch',lvl:'B2',ex:'The village was picturesque.'},
+{en:'itinerant',vi:'lưu động, đi đây đó',ph:'/aɪˈtɪnərənt/',type:'adj',topic:'Du lịch',lvl:'B2',ex:'He lived an itinerant life as a musician.'},
+{en:'embark',vi:'bắt đầu lên đường',ph:'/ɪmˈbɑːrk/',type:'v',topic:'Du lịch',lvl:'B2',ex:'We embarked on a long journey.'},
+{en:'disembark',vi:'rời khỏi tàu/máy bay',ph:'/ˌdɪsɪmˈbɑːrk/',type:'v',topic:'Du lịch',lvl:'B2',ex:'Passengers began to disembark.'},
+{en:'pilgrimage',vi:'cuộc hành hương',ph:'/ˈpɪlgrɪmɪdʒ/',type:'n',topic:'Du lịch',lvl:'B2',ex:'They made a pilgrimage to the temple.'},
+// ── Công việc (Work & Office) ──
+{en:'job',vi:'công việc',ph:'/dʒɑːb/',type:'n',topic:'Công việc',lvl:'A1',ex:'She has a new job.'},
+{en:'office',vi:'văn phòng',ph:'/ˈɔːfɪs/',type:'n',topic:'Công việc',lvl:'A1',ex:'I work in an office.'},
+{en:'boss',vi:'sếp',ph:'/bɔːs/',type:'n',topic:'Công việc',lvl:'A1',ex:'My boss is very kind.'},
+{en:'meeting',vi:'cuộc họp',ph:'/ˈmiːtɪŋ/',type:'n',topic:'Công việc',lvl:'A1',ex:'We have a meeting at 10.'},
+{en:'desk',vi:'bàn làm việc',ph:'/dɛsk/',type:'n',topic:'Công việc',lvl:'A1',ex:"There's a computer on my desk."},
+{en:'email',vi:'thư điện tử',ph:'/ˈiːmeɪl/',type:'n',topic:'Công việc',lvl:'A1',ex:'Please send me an email.'},
+{en:'team',vi:'nhóm, tổ',ph:'/tiːm/',type:'n',topic:'Công việc',lvl:'A1',ex:'Our team won the project award.'},
+{en:'salary',vi:'lương',ph:'/ˈsæləri/',type:'n',topic:'Công việc',lvl:'A1',ex:'He got a salary raise.'},
+{en:'break',vi:'giờ nghỉ',ph:'/breɪk/',type:'n',topic:'Công việc',lvl:'A1',ex:"Let's take a coffee break."},
+{en:'file',vi:'hồ sơ, tài liệu',ph:'/faɪl/',type:'n',topic:'Công việc',lvl:'A1',ex:'Put the file on my desk.'},
+{en:'deadline',vi:'hạn cuối',ph:'/ˈdɛdlaɪn/',type:'n',topic:'Công việc',lvl:'A2',ex:'The deadline is tomorrow.'},
+{en:'colleague',vi:'đồng nghiệp',ph:'/ˈkɑːliːg/',type:'n',topic:'Công việc',lvl:'A2',ex:'My colleague helped me finish the report.'},
+{en:'interview',vi:'phỏng vấn',ph:'/ˈɪntərvjuː/',type:'n',topic:'Công việc',lvl:'A2',ex:'I have a job interview tomorrow.'},
+{en:'resign',vi:'từ chức',ph:'/rɪˈzaɪn/',type:'v',topic:'Công việc',lvl:'A2',ex:'She decided to resign from her job.'},
+{en:'promotion',vi:'sự thăng tiến',ph:'/prəˈmoʊʃən/',type:'n',topic:'Công việc',lvl:'A2',ex:'He got a promotion last month.'},
+{en:'overtime',vi:'làm thêm giờ',ph:'/ˈoʊvərtaɪm/',type:'n',topic:'Công việc',lvl:'A2',ex:'We worked overtime to finish on time.'},
+{en:'employee',vi:'nhân viên',ph:'/ɪmˈplɔɪiː/',type:'n',topic:'Công việc',lvl:'A2',ex:'The company has 50 employees.'},
+{en:'supervisor',vi:'người giám sát',ph:'/ˈsuːpərvaɪzər/',type:'n',topic:'Công việc',lvl:'A2',ex:'Talk to your supervisor about the issue.'},
+{en:'contract',vi:'hợp đồng',ph:'/ˈkɑːntrækt/',type:'n',topic:'Công việc',lvl:'A2',ex:'I signed a one-year contract.'},
+{en:'schedule',vi:'lịch trình, thời gian biểu',ph:'/ˈskɛdʒuːl/',type:'n',topic:'Công việc',lvl:'A2',ex:'Check your schedule for next week.'},
+{en:'negotiate',vi:'thương lượng',ph:'/nɪˈgoʊʃiˌeɪt/',type:'v',topic:'Công việc',lvl:'B1',ex:'They negotiated a better salary.'},
+{en:'delegate',vi:'giao việc, ủy quyền',ph:'/ˈdɛlɪˌgeɪt/',type:'v',topic:'Công việc',lvl:'B1',ex:'A good manager knows how to delegate.'},
+{en:'proposal',vi:'bản đề xuất',ph:'/prəˈpoʊzəl/',type:'n',topic:'Công việc',lvl:'B1',ex:'She submitted a project proposal.'},
+{en:'resource',vi:'nguồn lực',ph:'/ˈriːsɔːrs/',type:'n',topic:'Công việc',lvl:'B1',ex:'We need more human resources.'},
+{en:'efficiency',vi:'hiệu suất',ph:'/ɪˈfɪʃənsi/',type:'n',topic:'Công việc',lvl:'B1',ex:'The new system improved efficiency.'},
+{en:'recruit',vi:'tuyển dụng',ph:'/rɪˈkruːt/',type:'v',topic:'Công việc',lvl:'B1',ex:'The company plans to recruit more staff.'},
+{en:'feedback',vi:'phản hồi',ph:'/ˈfiːdbæk/',type:'n',topic:'Công việc',lvl:'B1',ex:'Please give me feedback on my work.'},
+{en:'workload',vi:'khối lượng công việc',ph:'/ˈwɜːrkloʊd/',type:'n',topic:'Công việc',lvl:'B1',ex:'His workload increased this quarter.'},
+{en:'strategy',vi:'chiến lược',ph:'/ˈstrætədʒi/',type:'n',topic:'Công việc',lvl:'B1',ex:'We need a new marketing strategy.'},
+{en:'productivity',vi:'năng suất',ph:'/ˌproʊdʌkˈtɪvəti/',type:'n',topic:'Công việc',lvl:'B1',ex:'Productivity dropped during the holidays.'},
+{en:'entrepreneurship',vi:'tinh thần khởi nghiệp',ph:'/ˌɑːntrəprəˈnɜːrʃɪp/',type:'n',topic:'Công việc',lvl:'B2',ex:'She studied entrepreneurship in college.'},
+{en:'accountability',vi:'tinh thần trách nhiệm',ph:'/əˌkaʊntəˈbɪləti/',type:'n',topic:'Công việc',lvl:'B2',ex:'Accountability is important in leadership.'},
+{en:'redundancy',vi:'dư thừa nhân sự, sa thải',ph:'/rɪˈdʌndənsi/',type:'n',topic:'Công việc',lvl:'B2',ex:'Many workers faced redundancy last year.'},
+{en:'collaborate',vi:'hợp tác',ph:'/kəˈlæbəˌreɪt/',type:'v',topic:'Công việc',lvl:'B2',ex:'The two teams collaborated on the project.'},
+{en:'streamline',vi:'tối ưu hóa, đơn giản hóa',ph:'/ˈstriːmlaɪn/',type:'v',topic:'Công việc',lvl:'B2',ex:'We streamlined our hiring process.'},
+{en:'ambiguous',vi:'mơ hồ, không rõ ràng',ph:'/æmˈbɪgjuəs/',type:'adj',topic:'Công việc',lvl:'B2',ex:'The instructions were ambiguous.'},
+{en:'precedent',vi:'tiền lệ',ph:'/ˈprɛsɪdənt/',type:'n',topic:'Công việc',lvl:'B2',ex:'This sets a dangerous precedent.'},
+{en:'liaise',vi:'liên lạc, kết nối',ph:'/liˈeɪz/',type:'v',topic:'Công việc',lvl:'B2',ex:'She liaises between departments.'},
+{en:'consensus',vi:'sự đồng thuận',ph:'/kənˈsɛnsəs/',type:'n',topic:'Công việc',lvl:'B2',ex:'The team reached a consensus.'},
+{en:'mitigate',vi:'giảm thiểu',ph:'/ˈmɪtɪˌgeɪt/',type:'v',topic:'Công việc',lvl:'B2',ex:'We need to mitigate the risks.'},
+// ── Công nghệ (Technology) ──
+{en:'phone',vi:'điện thoại',ph:'/foʊn/',type:'n',topic:'Công nghệ',lvl:'A1',ex:'I lost my phone.'},
+{en:'computer',vi:'máy tính',ph:'/kəmˈpjuːtər/',type:'n',topic:'Công nghệ',lvl:'A1',ex:'I use a computer for work.'},
+{en:'internet',vi:'mạng internet',ph:'/ˈɪntərnɛt/',type:'n',topic:'Công nghệ',lvl:'A1',ex:'We need fast internet.'},
+{en:'password',vi:'mật khẩu',ph:'/ˈpæswɜːrd/',type:'n',topic:'Công nghệ',lvl:'A1',ex:"Don't share your password."},
+{en:'screen',vi:'màn hình',ph:'/skriːn/',type:'n',topic:'Công nghệ',lvl:'A1',ex:'The screen is too bright.'},
+{en:'button',vi:'nút bấm',ph:'/ˈbʌtən/',type:'n',topic:'Công nghệ',lvl:'A1',ex:'Press this button to start.'},
+{en:'camera',vi:'máy ảnh',ph:'/ˈkæmərə/',type:'n',topic:'Công nghệ',lvl:'A1',ex:'This phone has a good camera.'},
+{en:'video',vi:'video',ph:'/ˈvɪdioʊ/',type:'n',topic:'Công nghệ',lvl:'A1',ex:'I watched a funny video.'},
+{en:'app',vi:'ứng dụng',ph:'/æp/',type:'n',topic:'Công nghệ',lvl:'A1',ex:'I downloaded a new app.'},
+{en:'charger',vi:'bộ sạc',ph:'/ˈtʃɑːrdʒər/',type:'n',topic:'Công nghệ',lvl:'A1',ex:'Can I borrow your charger?'},
+{en:'download',vi:'tải xuống',ph:'/ˈdaʊnloʊd/',type:'v',topic:'Công nghệ',lvl:'A2',ex:'I downloaded the file.'},
+{en:'upload',vi:'tải lên',ph:'/ˈʌploʊd/',type:'v',topic:'Công nghệ',lvl:'A2',ex:'Upload your photo here.'},
+{en:'device',vi:'thiết bị',ph:'/dɪˈvaɪs/',type:'n',topic:'Công nghệ',lvl:'A2',ex:'This device is very useful.'},
+{en:'software',vi:'phần mềm',ph:'/ˈsɔːftwɛr/',type:'n',topic:'Công nghệ',lvl:'A2',ex:'We need new software.'},
+{en:'network',vi:'mạng lưới',ph:'/ˈnɛtwɜːrk/',type:'n',topic:'Công nghệ',lvl:'A2',ex:'The network is down today.'},
+{en:'update',vi:'cập nhật',ph:'/ˈʌpdeɪt/',type:'v',topic:'Công nghệ',lvl:'A2',ex:'Please update the app.'},
+{en:'storage',vi:'bộ nhớ, lưu trữ',ph:'/ˈstɔːrɪdʒ/',type:'n',topic:'Công nghệ',lvl:'A2',ex:'I need more storage on my phone.'},
+{en:'wireless',vi:'không dây',ph:'/ˈwaɪərlɪs/',type:'adj',topic:'Công nghệ',lvl:'A2',ex:'We have wireless internet.'},
+{en:'browser',vi:'trình duyệt',ph:'/ˈbraʊzər/',type:'n',topic:'Công nghệ',lvl:'A2',ex:'Open your browser to search.'},
+{en:'backup',vi:'sao lưu',ph:'/ˈbækʌp/',type:'n',topic:'Công nghệ',lvl:'A2',ex:'Always make a backup of your data.'},
+{en:'algorithm',vi:'thuật toán',ph:'/ˈælgəˌrɪðəm/',type:'n',topic:'Công nghệ',lvl:'B1',ex:'The algorithm sorts the data quickly.'},
+{en:'encryption',vi:'mã hóa',ph:'/ɪnˈkrɪpʃən/',type:'n',topic:'Công nghệ',lvl:'B1',ex:'The message is protected by encryption.'},
+{en:'interface',vi:'giao diện',ph:'/ˈɪntərˌfeɪs/',type:'n',topic:'Công nghệ',lvl:'B1',ex:'The app has a simple interface.'},
+{en:'bandwidth',vi:'băng thông',ph:'/ˈbændwɪdθ/',type:'n',topic:'Công nghệ',lvl:'B1',ex:'We need more bandwidth for video calls.'},
+{en:'firewall',vi:'tường lửa',ph:'/ˈfaɪərwɔːl/',type:'n',topic:'Công nghệ',lvl:'B1',ex:'The firewall blocks unsafe websites.'},
+{en:'database',vi:'cơ sở dữ liệu',ph:'/ˈdeɪtəbeɪs/',type:'n',topic:'Công nghệ',lvl:'B1',ex:'All records are stored in a database.'},
+{en:'malware',vi:'mã độc',ph:'/ˈmælwɛr/',type:'n',topic:'Công nghệ',lvl:'B1',ex:'This malware can steal your data.'},
+{en:'compatible',vi:'tương thích',ph:'/kəmˈpætəbəl/',type:'adj',topic:'Công nghệ',lvl:'B1',ex:'This cable is compatible with most phones.'},
+{en:'troubleshoot',vi:'khắc phục sự cố',ph:'/ˈtrʌbəlˌʃuːt/',type:'v',topic:'Công nghệ',lvl:'B1',ex:'I tried to troubleshoot the printer.'},
+{en:'virtual',vi:'ảo, trực tuyến',ph:'/ˈvɜːrtʃuəl/',type:'adj',topic:'Công nghệ',lvl:'B1',ex:'We had a virtual meeting today.'},
+{en:'artificial intelligence',vi:'trí tuệ nhân tạo',ph:'/ˌɑːrtəˈfɪʃəl ɪnˈtɛlədʒəns/',type:'phrase',topic:'Công nghệ',lvl:'B2',ex:'Artificial intelligence is changing many industries.'},
+{en:'scalability',vi:'khả năng mở rộng',ph:'/ˌskeɪləˈbɪləti/',type:'n',topic:'Công nghệ',lvl:'B2',ex:'The system was designed for scalability.'},
+{en:'obsolete',vi:'lỗi thời, đã cũ',ph:'/ˌɑːbsəˈliːt/',type:'adj',topic:'Công nghệ',lvl:'B2',ex:'This software is now obsolete.'},
+{en:'infrastructure',vi:'cơ sở hạ tầng',ph:'/ˈɪnfrəˌstrʌktʃər/',type:'n',topic:'Công nghệ',lvl:'B2',ex:'We upgraded our IT infrastructure.'},
+{en:'cybersecurity',vi:'an ninh mạng',ph:'/ˈsaɪbərsɪˌkjʊrəti/',type:'n',topic:'Công nghệ',lvl:'B2',ex:'Cybersecurity is a top priority.'},
+{en:'integrate',vi:'tích hợp',ph:'/ˈɪntɪˌgreɪt/',type:'v',topic:'Công nghệ',lvl:'B2',ex:'We integrated the new tool into our system.'},
+{en:'proprietary',vi:'thuộc quyền sở hữu riêng',ph:'/prəˈpraɪəˌtɛri/',type:'adj',topic:'Công nghệ',lvl:'B2',ex:'It uses a proprietary format.'},
+{en:'redundant',vi:'dư thừa, lặp lại không cần thiết',ph:'/rɪˈdʌndənt/',type:'adj',topic:'Công nghệ',lvl:'B2',ex:'That step is redundant now.'},
+{en:'glitch',vi:'lỗi nhỏ, trục trặc',ph:'/glɪtʃ/',type:'n',topic:'Công nghệ',lvl:'B2',ex:'There was a glitch in the system.'},
+{en:'interoperability',vi:'khả năng tương tác giữa hệ thống',ph:'/ˌɪntərˌɑːpərəˈbɪləti/',type:'n',topic:'Công nghệ',lvl:'B2',ex:'Interoperability between systems is essential.'},
+// ── Ẩm thực (Food & Cooking) ──
+{en:'food',vi:'thức ăn',ph:'/fuːd/',type:'n',topic:'Ẩm thực',lvl:'A1',ex:'I love Vietnamese food.'},
+{en:'rice',vi:'cơm, gạo',ph:'/raɪs/',type:'n',topic:'Ẩm thực',lvl:'A1',ex:'We eat rice every day.'},
+{en:'water',vi:'nước',ph:'/ˈwɔːtər/',type:'n',topic:'Ẩm thực',lvl:'A1',ex:'Please give me some water.'},
+{en:'fruit',vi:'hoa quả',ph:'/fruːt/',type:'n',topic:'Ẩm thực',lvl:'A1',ex:'Fruit is good for health.'},
+{en:'cook',vi:'nấu ăn',ph:'/kʊk/',type:'v',topic:'Ẩm thực',lvl:'A1',ex:'I like to cook dinner.'},
+{en:'plate',vi:'cái đĩa',ph:'/pleɪt/',type:'n',topic:'Ẩm thực',lvl:'A1',ex:'Put the food on the plate.'},
+{en:'spoon',vi:'cái thìa',ph:'/spuːn/',type:'n',topic:'Ẩm thực',lvl:'A1',ex:'Use a spoon to eat soup.'},
+{en:'menu',vi:'thực đơn',ph:'/ˈmɛnjuː/',type:'n',topic:'Ẩm thực',lvl:'A1',ex:'Can I see the menu?'},
+{en:'hungry',vi:'đói',ph:'/ˈhʌŋgri/',type:'adj',topic:'Ẩm thực',lvl:'A1',ex:'I am very hungry.'},
+{en:'taste',vi:'nếm, có vị',ph:'/teɪst/',type:'v',topic:'Ẩm thực',lvl:'A1',ex:'This soup tastes great.'},
+{en:'recipe',vi:'công thức nấu ăn',ph:'/ˈrɛsəpi/',type:'n',topic:'Ẩm thực',lvl:'A2',ex:'She found a new recipe online.'},
+{en:'ingredient',vi:'nguyên liệu',ph:'/ɪnˈgriːdiənt/',type:'n',topic:'Ẩm thực',lvl:'A2',ex:'Sugar is the main ingredient.'},
+{en:'boil',vi:'luộc, nấu sôi',ph:'/bɔɪl/',type:'v',topic:'Ẩm thực',lvl:'A2',ex:'Boil the water first.'},
+{en:'fry',vi:'chiên, rán',ph:'/fraɪ/',type:'v',topic:'Ẩm thực',lvl:'A2',ex:'Fry the eggs in oil.'},
+{en:'flavor',vi:'hương vị',ph:'/ˈfleɪvər/',type:'n',topic:'Ẩm thực',lvl:'A2',ex:'This dish has a strong flavor.'},
+{en:'leftover',vi:'đồ ăn còn dư',ph:'/ˈlɛftˌoʊvər/',type:'n',topic:'Ẩm thực',lvl:'A2',ex:'We ate the leftovers for lunch.'},
+{en:'appetite',vi:'sự thèm ăn',ph:'/ˈæpəˌtaɪt/',type:'n',topic:'Ẩm thực',lvl:'A2',ex:'Exercise gives me a good appetite.'},
+{en:'nutritious',vi:'bổ dưỡng',ph:'/nuːˈtrɪʃəs/',type:'adj',topic:'Ẩm thực',lvl:'A2',ex:'Vegetables are nutritious.'},
+{en:'seasoning',vi:'gia vị',ph:'/ˈsiːzənɪŋ/',type:'n',topic:'Ẩm thực',lvl:'A2',ex:'Add some seasoning to the soup.'},
+{en:'portion',vi:'phần ăn',ph:'/ˈpɔːrʃən/',type:'n',topic:'Ẩm thực',lvl:'A2',ex:"That's a big portion of rice."},
+{en:'cuisine',vi:'nền ẩm thực',ph:'/kwɪˈziːn/',type:'n',topic:'Ẩm thực',lvl:'B1',ex:'I love Italian cuisine.'},
+{en:'marinate',vi:'ướp gia vị',ph:'/ˈmærəˌneɪt/',type:'v',topic:'Ẩm thực',lvl:'B1',ex:'Marinate the chicken overnight.'},
+{en:'garnish',vi:'trang trí món ăn',ph:'/ˈgɑːrnɪʃ/',type:'v',topic:'Ẩm thực',lvl:'B1',ex:'Garnish the dish with parsley.'},
+{en:'simmer',vi:'nấu sôi nhẹ, ninh',ph:'/ˈsɪmər/',type:'v',topic:'Ẩm thực',lvl:'B1',ex:'Let the sauce simmer for 10 minutes.'},
+{en:'texture',vi:'kết cấu món ăn',ph:'/ˈtɛkstʃər/',type:'n',topic:'Ẩm thực',lvl:'B1',ex:'The cake has a soft texture.'},
+{en:'organic',vi:'hữu cơ',ph:'/ɔːrˈgænɪk/',type:'adj',topic:'Ẩm thực',lvl:'B1',ex:'We only buy organic vegetables.'},
+{en:'preservative',vi:'chất bảo quản',ph:'/prɪˈzɜːrvətɪv/',type:'n',topic:'Ẩm thực',lvl:'B1',ex:'This bread has no preservatives.'},
+{en:'fermentation',vi:'quá trình lên men',ph:'/ˌfɜːrmənˈteɪʃən/',type:'n',topic:'Ẩm thực',lvl:'B1',ex:'Fermentation gives yogurt its taste.'},
+{en:'delicacy',vi:'món ăn đặc sản, cao cấp',ph:'/ˈdɛlɪkəsi/',type:'n',topic:'Ẩm thực',lvl:'B1',ex:'Caviar is considered a delicacy.'},
+{en:'wholesome',vi:'lành mạnh, bổ dưỡng',ph:'/ˈhoʊlsəm/',type:'adj',topic:'Ẩm thực',lvl:'B1',ex:"It's a wholesome family meal."},
+{en:'gastronomy',vi:'nghệ thuật ẩm thực',ph:'/gæˈstrɑːnəmi/',type:'n',topic:'Ẩm thực',lvl:'B2',ex:'He studied gastronomy in France.'},
+{en:'palate',vi:'vị giác, khẩu vị',ph:'/ˈpælət/',type:'n',topic:'Ẩm thực',lvl:'B2',ex:'She has a refined palate.'},
+{en:'umami',vi:'vị ngọt thịt (umami)',ph:'/uːˈmɑːmi/',type:'n',topic:'Ẩm thực',lvl:'B2',ex:'Mushrooms add a rich umami flavor.'},
+{en:'culinary',vi:'thuộc về nấu ăn',ph:'/ˈkʌlɪˌnɛri/',type:'adj',topic:'Ẩm thực',lvl:'B2',ex:'He has great culinary skills.'},
+{en:'epicurean',vi:'sành ăn, khoái lạc ẩm thực',ph:'/ˌɛpɪkjʊˈriːən/',type:'adj',topic:'Ẩm thực',lvl:'B2',ex:'They enjoyed an epicurean feast.'},
+{en:'sustenance',vi:'thức ăn nuôi sống',ph:'/ˈsʌstənəns/',type:'n',topic:'Ẩm thực',lvl:'B2',ex:'Rice provides sustenance for billions.'},
+{en:'condiment',vi:'gia vị, nước chấm kèm theo',ph:'/ˈkɑːndəmənt/',type:'n',topic:'Ẩm thực',lvl:'B2',ex:'Pass me the condiments, please.'},
+{en:'sauté',vi:'xào nhanh trong dầu',ph:'/soʊˈteɪ/',type:'v',topic:'Ẩm thực',lvl:'B2',ex:'Sauté the onions until golden.'},
+{en:'artisanal',vi:'thủ công, theo kiểu nghệ nhân',ph:'/ɑːrˈtɪzənəl/',type:'adj',topic:'Ẩm thực',lvl:'B2',ex:'We sell artisanal bread.'},
+{en:'zest',vi:'vỏ chanh/cam bào',ph:'/zɛst/',type:'n',topic:'Ẩm thực',lvl:'B2',ex:'Add lemon zest for extra flavor.'},
+];
+
+const DISCOVER_LEVELS = ['A1','A2','B1','B2'];
+const TOPIC_ICONS = { 'Du lịch':'✈️', 'Công việc':'💼', 'Công nghệ':'💻', 'Ẩm thực':'🍜' };
+
+// English keywords sent to the online APIs for each topic chip.
+const ONLINE_TOPIC_KEYWORDS = { 'Du lịch':'travel', 'Công việc':'work', 'Công nghệ':'technology', 'Ẩm thực':'food' };
+
+// Rough level filter using Datamuse's word-frequency tag (occurrences per million words).
+// This is a heuristic approximation, NOT an official CEFR rating.
+const LEVEL_FREQ_RANGE = { A1: [40, Infinity], A2: [12, 40], B1: [3, 12], B2: [0, 3] };
+
+let discoverMode         = 'online';  // 'online' | 'offline'
+let discoverTopic        = null;      // offline mode: chosen VOCAB_BANK topic
+let discoverOnlineTopic  = 'Du lịch'; // online mode: chosen chip, or 'custom'
+let discoverCustomTopic  = '';        // online mode: free-typed English topic keyword
+let discoverLevel        = 'A1';
+let discoverBatch        = [];        // current batch: { en, vi, ph, type, ex, topic, lvl, picked }
+let discoverLoading      = false;
+let discoverError        = null;
+
+function getDiscoverTopics() {
+  return [...new Set(VOCAB_BANK.map(w => w.topic))];
+}
+
+// Words for the chosen topic+level that the user doesn't already have as a card
+// (matched case-insensitively against the English word) — these are the "new" words left.
+function getRemainingWords(topic, level) {
+  const haveEn = new Set(loadCards().map(c => c.en.trim().toLowerCase()));
+  return VOCAB_BANK.filter(w => w.topic === topic && w.lvl === level && !haveEn.has(w.en.toLowerCase()));
+}
+
+function setDiscoverMode(mode) {
+  discoverMode = mode;
+  document.querySelectorAll('#discover-mode-select .phase-opt').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+  renderDiscoverSetup();
+}
+
+function setDiscoverOnlineTopic(t) {
+  discoverOnlineTopic = t;
+  renderDiscoverSetup();
+}
+
+// Typing in the custom-topic box shouldn't blow away the input's own focus/value,
+// so this only patches the generate button + summary text instead of a full re-render.
+function setDiscoverCustomTopic(v) {
+  discoverCustomTopic = v;
+  const ready = !!v.trim();
+  document.getElementById('btn-discover-generate').disabled = discoverOnlineTopic === 'custom' && !ready;
+  const summaryEl = document.getElementById('discover-summary');
+  if (summaryEl && discoverMode === 'online' && discoverOnlineTopic === 'custom') {
+    summaryEl.innerHTML = `Sẽ tra 10 từ mới chưa có trong bộ thẻ, chủ đề <strong>${v.trim() || '(chưa nhập)'}</strong>, mức <strong>${discoverLevel}</strong>.`;
+  }
+}
+
+function setDiscoverTopic(t) {
+  discoverTopic = t;
+  renderDiscoverSetup();
+}
+
+function setDiscoverLevel(lvl) {
+  discoverLevel = lvl;
+  renderDiscoverSetup();
+}
+
+function renderDiscoverSetup() {
+  document.querySelectorAll('#discover-level-row .phase-opt').forEach(b => {
+    b.classList.toggle('active', b.dataset.lvl === discoverLevel);
+  });
+
+  const noteEl      = document.getElementById('discover-note');
+  const topicRow     = document.getElementById('discover-topic-row');
+  const customInput  = document.getElementById('discover-custom-topic');
+  const summaryEl    = document.getElementById('discover-summary');
+  const genBtn       = document.getElementById('btn-discover-generate');
+
+  if (discoverMode === 'online') {
+    noteEl.innerHTML = `🌐 Tra trực tiếp qua <strong>Datamuse</strong> (gợi ý từ theo chủ đề), <strong>Free Dictionary API</strong> (phiên âm) và <strong>MyMemory</strong> (dịch tiếng Việt) — cần kết nối internet. Mức A1–B2 chỉ là <em>ước lượng theo độ phổ biến của từ</em>, không phải chuẩn CEFR chính thức, và bản dịch tiếng Việt là dịch máy nên đôi khi chưa chuẩn — bạn nên xem lại trước khi thêm.`;
+    const topics = Object.keys(ONLINE_TOPIC_KEYWORDS);
+    topicRow.innerHTML = topics.map(t => `
+      <div class="discover-topic-chip ${discoverOnlineTopic === t ? 'active' : ''}" onclick="setDiscoverOnlineTopic('${t}')">${TOPIC_ICONS[t]||'📚'} ${t}</div>
+    `).join('') + `<div class="discover-topic-chip ${discoverOnlineTopic === 'custom' ? 'active' : ''}" onclick="setDiscoverOnlineTopic('custom')">✏️ Chủ đề khác</div>`;
+    customInput.style.display = discoverOnlineTopic === 'custom' ? '' : 'none';
+    customInput.value = discoverCustomTopic;
+
+    const topicLabel = discoverOnlineTopic === 'custom' ? (discoverCustomTopic.trim() || '(chưa nhập)') : discoverOnlineTopic;
+    summaryEl.innerHTML = `Sẽ tra 10 từ mới chưa có trong bộ thẻ, chủ đề <strong>${topicLabel}</strong>, mức <strong>${discoverLevel}</strong>.`;
+    genBtn.disabled = discoverOnlineTopic === 'custom' && !discoverCustomTopic.trim();
+  } else {
+    noteEl.innerHTML = `📦 Kho từ vựng soạn sẵn trong app — hoạt động offline hoàn toàn, không cần internet, nhưng mỗi chủ đề/cấp độ chỉ có một số lượng từ cố định.`;
+    const topics = getDiscoverTopics();
+    if (!discoverTopic) discoverTopic = topics[0];
+    topicRow.innerHTML = topics.map(t => `
+      <div class="discover-topic-chip ${t === discoverTopic ? 'active' : ''}" onclick="setDiscoverTopic('${t}')">${TOPIC_ICONS[t]||'📚'} ${t}</div>
+    `).join('');
+    customInput.style.display = 'none';
+
+    const remaining = getRemainingWords(discoverTopic, discoverLevel);
+    summaryEl.innerHTML = remaining.length === 0
+      ? `Bạn đã thêm hết từ ở mức <strong>${discoverLevel}</strong> trong chủ đề <strong>${discoverTopic}</strong> rồi! Thử chủ đề hoặc cấp độ khác nhé.`
+      : `Còn <strong>${remaining.length} từ</strong> chưa học ở mức <strong>${discoverLevel}</strong> — chủ đề <strong>${discoverTopic}</strong>.`;
+    genBtn.disabled = remaining.length === 0;
+  }
+
+  discoverBatch   = [];
+  discoverError   = null;
+  discoverLoading = false;
+  document.getElementById('discover-batch').innerHTML = '';
+}
+
+function generateDiscoverBatch() {
+  if (discoverMode === 'online') { fetchOnlineDiscoverBatch(); return; }
+  const remaining = getRemainingWords(discoverTopic, discoverLevel);
+  shuffle(remaining);
+  discoverBatch = remaining.slice(0, 10).map(w => ({ ...w, picked: true }));
+  renderDiscoverBatch();
+}
+
+// ── ONLINE: real dictionary lookup (Datamuse + Free Dictionary API + MyMemory) ──
+async function fetchOnlineDiscoverBatch() {
+  discoverLoading = true;
+  discoverError   = null;
+  discoverBatch   = [];
+  renderDiscoverBatch();
+
+  try {
+    const topicLabel = discoverOnlineTopic === 'custom' ? discoverCustomTopic.trim() : discoverOnlineTopic;
+    const keyword     = discoverOnlineTopic === 'custom' ? discoverCustomTopic.trim() : ONLINE_TOPIC_KEYWORDS[discoverOnlineTopic];
+    if (!keyword) throw new Error('Chưa chọn chủ đề');
+
+    const dmRes = await fetch(`https://api.datamuse.com/words?ml=${encodeURIComponent(keyword)}&topics=${encodeURIComponent(keyword)}&md=fp&max=100`);
+    if (!dmRes.ok) throw new Error('Datamuse không phản hồi');
+    const dmWords = await dmRes.json();
+
+    const haveEn   = new Set(loadCards().map(c => c.en.trim().toLowerCase()));
+    const [lo, hi] = LEVEL_FREQ_RANGE[discoverLevel];
+
+    const candidates = (dmWords || []).filter(w => {
+      if (!/^[a-zA-Z]+$/.test(w.word)) return false; // chỉ lấy từ đơn, không lấy cụm từ/số
+      if (haveEn.has(w.word.toLowerCase())) return false;
+      const fTag = (w.tags || []).find(t => t.startsWith('f:'));
+      const freq = fTag ? parseFloat(fTag.slice(2)) : 0;
+      return freq >= lo && freq < hi;
+    });
+
+    if (candidates.length === 0) throw new Error('Không tìm thấy từ phù hợp với chủ đề/mức này, hãy thử chủ đề hoặc mức khác');
+
+    shuffle(candidates);
+    const picks    = candidates.slice(0, 15); // lấy dư vài từ vì có thể vài từ tra từ điển/dịch không ra
+    const enriched = await Promise.all(picks.map(w => enrichDiscoverWord(w.word)));
+    discoverBatch  = enriched
+      .filter(Boolean)
+      .slice(0, 10)
+      .map(w => ({ ...w, topic: topicLabel, lvl: discoverLevel, picked: true }));
+
+    if (discoverBatch.length === 0) throw new Error('Tra được từ nhưng không lấy được nghĩa tiếng Việt, hãy thử lại');
+  } catch (err) {
+    discoverError = `Không tra được từ điển trực tuyến — ${err.message || 'lỗi mạng'}. Kiểm tra kết nối internet, hoặc chuyển sang "📦 Kho có sẵn trong app" để dùng offline.`;
+  }
+
+  discoverLoading = false;
+  renderDiscoverBatch();
+}
+
+// Looks up one English word's phonetic/part-of-speech/example (Free Dictionary API)
+// and its Vietnamese meaning (MyMemory). Returns null if no Vietnamese meaning is found.
+async function enrichDiscoverWord(word) {
+  let phonetic = '', type = '', example = '';
+  try {
+    const dRes = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+    if (dRes.ok) {
+      const dData  = await dRes.json();
+      const entry   = dData[0];
+      phonetic = entry.phonetic || (entry.phonetics || []).map(p => p.text).find(Boolean) || '';
+      const meaning = (entry.meanings || [])[0];
+      if (meaning) {
+        const typeMap = { noun:'n', verb:'v', adjective:'adj', adverb:'adv' };
+        type = typeMap[meaning.partOfSpeech] || 'other';
+        const def = (meaning.definitions || [])[0];
+        if (def && def.example) example = def.example;
+      }
+    }
+  } catch (e) { /* phiên âm/loại từ là phụ — vẫn tiếp tục nếu lỗi */ }
+
+  let vi = '';
+  try {
+    const tRes = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=en|vi`);
+    if (tRes.ok) {
+      const tData = await tRes.json();
+      vi = (tData && tData.responseData && tData.responseData.translatedText) || '';
+    }
+  } catch (e) { /* không dịch được thì bỏ qua từ này */ }
+
+  if (!vi || /^[A-Z\s]+$/.test(vi)) return null; // MyMemory trả về toàn hoa thường là không dịch được
+  return { en: word, vi, ph: phonetic, type: type || 'other', ex: example };
+}
+
+function renderDiscoverBatch() {
+  const box = document.getElementById('discover-batch');
+  if (discoverLoading) {
+    box.innerHTML = `<div class="discover-loading">🔄 Đang tra từ điển trực tuyến, vui lòng đợi vài giây...</div>`;
+    return;
+  }
+  if (discoverError) {
+    box.innerHTML = `<div class="discover-error">⚠️ ${discoverError}</div>`;
+    return;
+  }
+  if (discoverBatch.length === 0) {
+    box.innerHTML = `<div class="discover-empty">Bấm "🔍 Tìm 10 từ mới" ở trên để bắt đầu.</div>`;
+    return;
+  }
+  const pickedCount = discoverBatch.filter(w => w.picked).length;
+  box.innerHTML = `
+    <div class="discover-batch-grid">
+      ${discoverBatch.map((w, i) => `
+        <div class="dw-card ${w.picked ? '' : 'unpicked'}" onclick="toggleDiscoverPick(${i})">
+          <div class="dw-chk">${w.picked ? '✓' : ''}</div>
+          <div class="dw-main">
+            <div class="dw-en">${w.en}<span class="dw-type">${w.type}</span></div>
+            ${(w.ph || w.lvl) ? `<div class="dw-ph">${[w.ph, w.lvl].filter(Boolean).join(' · ')}</div>` : ''}
+            <div class="dw-vi">${w.vi}</div>
+            ${w.ex ? `<div class="dw-ex">"${w.ex}"</div>` : ''}
+          </div>
+        </div>`).join('')}
+    </div>
+    <div class="discover-batch-actions">
+      <div class="dba-links">
+        <button class="dba-link" onclick="discoverPickAll(true)">Chọn tất cả</button>
+        <button class="dba-link" onclick="discoverPickAll(false)">Bỏ chọn tất cả</button>
+        <button class="dba-link" onclick="generateDiscoverBatch()">🔄 Đổi 10 từ khác</button>
+      </div>
+      <button class="btn-add" onclick="addDiscoverPicked()" ${pickedCount === 0 ? 'disabled' : ''}>➕ Thêm ${pickedCount} từ vào hôm nay</button>
+    </div>`;
+}
+
+function toggleDiscoverPick(i) {
+  discoverBatch[i].picked = !discoverBatch[i].picked;
+  renderDiscoverBatch();
+}
+
+function discoverPickAll(v) {
+  discoverBatch.forEach(w => w.picked = v);
+  renderDiscoverBatch();
+}
+
+// Adds the chosen words as real cards — filed into today's day folder, inside a
+// subfolder named after the topic, so they stay neatly organized like everything else.
+function addDiscoverPicked() {
+  const picked = discoverBatch.filter(w => w.picked);
+  if (picked.length === 0) return;
+  const cards = loadCards();
+  const now   = Date.now();
+  const topicLabel = picked[0].topic || discoverTopic || 'Khám phá';
+  picked.forEach((w, i) => {
+    cards.push({
+      id: (now + i).toString(),
+      en: w.en, vi: w.vi,
+      phonetic: w.ph, type: w.type, example: w.ex,
+      createdAt: now,
+      subfolder: w.topic || topicLabel,
+      interval: 0, easiness: 2.5, repetitions: 0, cycleStep: 0,
+      lastReview: null, nextReview: null,
+    });
+  });
+  saveCards(cards);
+  updateBadge();
+
+  const t = document.getElementById('discover-toast');
+  t.textContent = `✓ Đã thêm ${picked.length} từ mới vào thư mục con "${topicLabel}" hôm nay`;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+
+  renderDiscoverSetup(); // refresh remaining count + clear batch
 }
 
 // ═══════════════════════════════════════════
@@ -2047,7 +2616,8 @@ document.addEventListener('keydown', e => {
 // ═══════════════════════════════════════════
 let bossSelectedDays       = new Set();
 let bossSelectedSubfolders = new Set(); // composite keys "day::subfolderName" — picking small folders
-let bossPhaseMode     = 'both'; // 'p1' | 'p2' | 'both' — which phase(s) to fight
+let bossPhaseMode     = 'both';   // 'p1' | 'p2' | 'both' — which phase(s) to fight
+let bossP2Direction   = 'vi2en';  // 'vi2en' | 'en2vi' — translation direction for Phase 2 (essay)
 let bossState         = null;
 let bossTimerInterval = null;
 
@@ -2055,6 +2625,8 @@ const BOSS_TIME_LIMIT_P1 = 20; // giây cho mỗi câu hỏi Phase 1
 const BOSS_AVATARS       = ['👹','🐉','👾','🧟','💀','🦂','🐍','🦑'];
 const BOSS_HP_BASE       = 350; // máu tối thiểu của Boss (pool nhỏ)
 const BOSS_HP_PER_WORD   = 15;  // mỗi từ trong pool cộng thêm máu — pool lớn thì Boss trâu hơn để ôn được nhiều từ hơn
+const BOSS_WEIGHT_MIN    = 0.4; // tỉ lệ xuất hiện thấp nhất (trả lời đúng nhiều sẽ giảm về mức này)
+const BOSS_WEIGHT_MAX    = 8;   // tỉ lệ xuất hiện cao nhất (trả lời sai nhiều sẽ tăng lên mức này)
 
 // Boss HP scales with how many words are in the fight, so a bigger word pool
 // gives a longer (tougher) battle instead of running out before you've seen every word.
@@ -2068,6 +2640,32 @@ function setBossPhaseMode(mode) {
     b.classList.toggle('active', b.dataset.mode === mode);
   });
   renderBossSummary();
+}
+
+function setBossDirection(dir) {
+  bossP2Direction = dir;
+  document.querySelectorAll('#boss-direction-select .phase-opt').forEach(b => {
+    b.classList.toggle('active', b.dataset.dir === dir);
+  });
+}
+
+// ── Adaptive word weighting: wrong answer → appears more often, correct → appears less ──
+function bossBumpWeight(cardId, isCorrect) {
+  if (!bossState.weights) bossState.weights = {};
+  const cur = bossState.weights[cardId] || 1;
+  bossState.weights[cardId] = isCorrect
+    ? Math.max(BOSS_WEIGHT_MIN, cur * 0.55)   // đúng → giảm tỉ lệ ra lại
+    : Math.min(BOSS_WEIGHT_MAX, cur + 1.5);   // sai → tăng tỉ lệ ra lại
+}
+
+function weightedBossPick(pool, weights) {
+  const total = pool.reduce((sum, c) => sum + (weights[c.id] || 1), 0);
+  let r = Math.random() * total;
+  for (const c of pool) {
+    r -= (weights[c.id] || 1);
+    if (r <= 0) return c;
+  }
+  return pool[pool.length - 1];
 }
 
 function renderBossSetup() {
@@ -2156,6 +2754,7 @@ function makeBossState(pool) {
   const startPhase = bossPhaseMode === 'p2' ? 2 : 1;
   return {
     pool, queue: [],
+    weights: {}, // cardId -> trọng số xuất hiện (sai tăng, đúng giảm)
     phase: startPhase,
     bossHP: bossMaxHP, bossMaxHP,
     playerHP: 100, playerMaxHP: 100,
@@ -2182,10 +2781,15 @@ function restartBossFight() {
   nextBossQuestion();
 }
 
+// Builds the next round of questions. Uses weighted random sampling (with
+// replacement) instead of a plain shuffle, so words answered wrong recently
+// are more likely to come up again, and words answered right show up less.
 function refillBossQueue() {
-  const q = bossState.pool.slice();
-  shuffle(q);
-  bossState.queue = q;
+  const s = bossState;
+  const n = s.pool.length;
+  const q = [];
+  for (let i = 0; i < n; i++) q.push(weightedBossPick(s.pool, s.weights));
+  s.queue = q;
 }
 
 function genBossChoices(card) {
@@ -2269,6 +2873,7 @@ function resolveBossAnswerP1(idx) {
   const correctIdx = bossState.choices.findIndex(c => c.isCorrect);
   const isCorrect  = idx === correctIdx;
   bossState.totalAnswered++;
+  bossBumpWeight(card.id, isCorrect);
 
   let dmg = 0, playerDmg = 0;
 
@@ -2316,17 +2921,27 @@ function enterPhase2() {
     <div class="bb-phase-transition">
       <div class="pt-emoji">🔥</div>
       <h3>Boss chuyển sang Phase 2!</h3>
-      <p>Boss đã hồi máu và trở nên nguy hiểm hơn. Giờ bạn phải <strong>gõ tiếng Anh</strong> từ nghĩa tiếng Việt được đưa ra — không giới hạn thời gian, nhưng mỗi câu đúng sẽ gây <strong>30 dame</strong>!</p>
+      <p>Boss đã hồi máu và trở nên nguy hiểm hơn. Giờ bạn phải <strong>${bossP2Direction === 'en2vi' ? 'gõ nghĩa tiếng Việt' : 'gõ tiếng Anh'}</strong> từ ${bossP2Direction === 'en2vi' ? 'từ tiếng Anh' : 'nghĩa tiếng Việt'} được đưa ra — không giới hạn thời gian, nhưng mỗi câu đúng sẽ gây <strong>30 dame</strong>!</p>
       <button class="btn-bb-retry" onclick="nextBossQuestion()">⚔️ Vào Phase 2</button>
     </div>`;
 }
 
-// ── PHASE 2: ESSAY (Vietnamese -> English typing) ──
+// ── PHASE 2: ESSAY (typed answer, direction chosen by the player) ──
 function normalizeAnswer(str) {
   return str
     .toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // strip accents just in case
     .replace(/[^a-z0-9]/g, ''); // remove spaces and special characters
+}
+
+// VI→EN compares against the English word; EN→VI accepts any comma-separated
+// alternative meaning in the Vietnamese field (e.g. "mơ hồ, không rõ ràng").
+function checkP2Answer(card, rawAnswer, dir) {
+  if (dir === 'en2vi') {
+    const alts = card.vi.split(',').map(s => normalizeAnswer(s)).filter(Boolean);
+    return alts.includes(normalizeAnswer(rawAnswer));
+  }
+  return normalizeAnswer(rawAnswer) === normalizeAnswer(card.en);
 }
 
 function submitEssayAnswer() {
@@ -2339,8 +2954,9 @@ function submitEssayAnswer() {
 function resolveBossAnswerP2(rawAnswer) {
   bossState.answered = true;
   const card      = bossState.current;
-  const isCorrect = normalizeAnswer(rawAnswer) === normalizeAnswer(card.en);
+  const isCorrect = checkP2Answer(card, rawAnswer, bossP2Direction);
   bossState.totalAnswered++;
+  bossBumpWeight(card.id, isCorrect);
 
   let dmg = 0, playerDmg = 0;
 
@@ -2399,17 +3015,23 @@ function renderBossBattle(answeredIdx, correctIdx, dmg, playerDmg, isCorrect, ra
         : `<div class="bb-feedback bad">✕ ${answeredIdx === -1 ? 'Hết giờ!' : 'Sai rồi!'} Boss phản công ${playerDmg} dame.</div>`;
     }
   } else {
-    const inputCls = s.answered ? (isCorrect ? 'correct' : 'wrong') : '';
+    const inputCls   = s.answered ? (isCorrect ? 'correct' : 'wrong') : '';
+    const isEn2Vi    = bossP2Direction === 'en2vi';
+    const promptSub  = isEn2Vi ? 'Dịch sang tiếng Việt' : 'Dịch sang tiếng Anh';
+    const promptWord = isEn2Vi ? card.en : card.vi;
+    const placeholder = isEn2Vi ? 'Gõ đáp án tiếng Việt...' : 'Gõ đáp án tiếng Anh...';
+    const correctAnswerDisplay = isEn2Vi ? card.vi : card.en;
     questionAreaHTML = `
       <div class="bb-question-card phase2">
         ${s.answered && isCorrect ? `<div class="bb-float-dmg show">-${dmg}</div>` : ''}
-        <div class="bb-q-sub">Dịch sang tiếng Anh</div>
-        <div class="bb-q-vi">${card.vi}</div>
+        <div class="bb-q-sub">${promptSub}</div>
+        <div class="bb-q-vi">${promptWord}</div>
+        ${isEn2Vi && card.phonetic ? `<div class="bb-q-phonetic">${card.phonetic}</div>` : ''}
         <div class="bb-q-type">${card.type}</div>
       </div>
       <div class="bb-essay-wrap">
         <input type="text" id="bb-essay-input" class="bb-essay-input ${inputCls}"
-          placeholder="Gõ đáp án tiếng Anh..." autocomplete="off" spellcheck="false"
+          placeholder="${placeholder}" autocomplete="off" spellcheck="false"
           ${s.answered ? 'disabled' : ''} value="${s.answered ? (rawAnswer||'') : ''}">
         <button class="btn-essay-submit" ${s.answered ? 'disabled' : ''} onclick="submitEssayAnswer()">⚔️ Trả lời</button>
       </div>`;
@@ -2417,7 +3039,7 @@ function renderBossBattle(answeredIdx, correctIdx, dmg, playerDmg, isCorrect, ra
     if (s.answered) {
       feedbackHTML = isCorrect
         ? `<div class="bb-feedback good">✓ Chính xác! Gây ${dmg} dame lên Boss.</div>`
-        : `<div class="bb-feedback bad">✕ Sai rồi! Đáp án đúng: "${card.en}". Boss phản công ${playerDmg} dame.</div>`;
+        : `<div class="bb-feedback bad">✕ Sai rồi! Đáp án đúng: "${correctAnswerDisplay}". Boss phản công ${playerDmg} dame.</div>`;
     }
   }
 
