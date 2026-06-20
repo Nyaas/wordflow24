@@ -583,6 +583,25 @@ textarea { min-height: 72px; }
 .boss-summary { font-size: 0.85rem; color: var(--text-soft); }
 .boss-summary strong { color: var(--text); }
 
+.phase-select-wrap { margin-bottom: 18px; }
+.phase-select-label { font-size: 0.78rem; color: var(--text-dim); margin-bottom: 8px; font-weight: 600; }
+.phase-select-row { display: flex; gap: 8px; }
+.phase-opt {
+  flex: 1; background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--r-sm); padding: 11px 10px; font-size: 0.82rem; font-weight: 600;
+  color: var(--text-soft); cursor: pointer; transition: all 0.15s; text-align: center;
+}
+.phase-opt:hover { border-color: var(--border2); color: var(--text); }
+.phase-opt.active { border-color: var(--accent); background: var(--glow); color: var(--accent2); }
+
+.bb-continue-wrap { text-align: center; margin-top: 16px; }
+.btn-bb-continue {
+  background: var(--accent); color: #fff; border: none; border-radius: var(--r-sm);
+  padding: 13px 28px; font-size: 0.92rem; font-weight: 700; cursor: pointer;
+  transition: all 0.15s; box-shadow: 0 4px 16px rgba(124,92,255,0.35);
+}
+.btn-bb-continue:hover { transform: translateY(-1px); }
+
 .boss-folder-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 22px; }
 .boss-day-block { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--r-sm); overflow: hidden; }
 .boss-folder-item {
@@ -936,7 +955,17 @@ textarea { min-height: 72px; }
         <div>
           <h4>Boss Từ Vựng — 2 Phase</h4>
           <p><strong>Phase 1 (Trắc nghiệm):</strong> 20 giây/câu, trả lời đúng gây 10–15 dame, sai hoặc hết giờ bị Boss phản công.<br>
-          <strong>Phase 2 (Tự luận — tự mở khi hạ hết máu Phase 1):</strong> Gõ tiếng Anh từ nghĩa tiếng Việt, không giới hạn thời gian, mỗi câu đúng gây 30 dame!</p>
+          <strong>Phase 2 (Tự luận — mở khi hạ hết máu Phase 1, hoặc chơi riêng):</strong> Gõ tiếng Anh từ nghĩa tiếng Việt, không giới hạn thời gian, mỗi câu đúng gây 30 dame!<br>
+          <span style="color:var(--text-dim)">Máu Boss tự tăng theo số từ bạn chọn — pool nhiều từ thì Boss trâu hơn để bạn ôn được nhiều từ hơn. Sau mỗi câu, trận đấu dừng lại để bạn đọc đáp án — bấm "Câu tiếp theo" khi đã sẵn sàng.</span></p>
+        </div>
+      </div>
+
+      <div class="phase-select-wrap">
+        <div class="phase-select-label">Chọn chế độ đấu</div>
+        <div class="phase-select-row" id="boss-phase-select">
+          <button class="phase-opt" data-mode="p1" onclick="setBossPhaseMode('p1')">🥉 Chỉ Phase 1<br><span style="font-weight:400;opacity:0.7">(trắc nghiệm)</span></button>
+          <button class="phase-opt" data-mode="p2" onclick="setBossPhaseMode('p2')">🥈 Chỉ Phase 2<br><span style="font-weight:400;opacity:0.7">(tự luận)</span></button>
+          <button class="phase-opt active" data-mode="both" onclick="setBossPhaseMode('both')">🏆 Cả 2 Phase<br><span style="font-weight:400;opacity:0.7">(đầy đủ)</span></button>
         </div>
       </div>
 
@@ -1701,7 +1730,7 @@ function renderStudy() {
     el.innerHTML = `<div class="done-wrap">
       <div class="done-emoji">🏆</div>
       <h3>Xong rồi!</h3>
-      <p>Bạn vừa ôn <strong>${total} thẻ</strong>${studyMode==='manual' ? ' (ôn thủ công — SR không thay đổi)' : ' theo lịch SR'}.</p>
+      <p>Bạn vừa ôn <strong>${total} thẻ</strong> — lịch ôn SR của các thẻ này đã được cập nhật.</p>
       <button class="btn-done" onclick="showView('${prevView}')">← Quay lại</button>
     </div>`;
     return;
@@ -1724,7 +1753,7 @@ function renderStudy() {
     <div class="study-top">
       <button class="study-back" onclick="showView('${prevView}')">← Quay lại</button>
       <div class="study-info">${studyIdx+1} / ${total}</div>
-      <div class="study-mode-badge">${isSR ? '🔁 SR' : '📅 Ôn thủ công'}</div>
+      <div class="study-mode-badge">${isSR ? '🔁 SR' : '📂 Ôn theo thư mục'}</div>
     </div>
     <div class="prog-bar-wrap"><div class="prog-bar" style="width:${pct}%"></div></div>
 
@@ -1762,8 +1791,7 @@ function renderStudy() {
       : ''}
 
     ${isFlipped
-      ? (isSR
-        ? `<div class="rating-wrap">
+      ? `<div class="rating-wrap">
             <div class="rating-label">Bạn nhớ từ này như thế nào?</div>
             <div class="rating-btns">
               <button class="r-btn r-again" onclick="rateCard(0)"><div class="ri">😰</div><div class="rl">Không nhớ</div><div class="rn">Ôn lại ngay</div></button>
@@ -1772,14 +1800,10 @@ function renderStudy() {
               <button class="r-btn r-easy"  onclick="rateCard(3)"><div class="ri">🚀</div><div class="rl">Dễ quá!</div><div class="rn">${intervalStr(3,card)}</div></button>
             </div>
           </div>`
-        : `<div class="manual-rating-wrap">
-            <button class="btn-next-manual" style="margin-right:8px" onclick="prevManual()" ${studyIdx===0?'disabled':''}>← Thẻ trước</button>
-            <button class="btn-next-manual" onclick="nextManual()">Thẻ tiếp theo →</button>
-          </div>`)
       : `<div class="flip-hint-row">Nhấn vào thẻ để xem nghĩa</div>`
     }
 
-    <div class="kbd-hint-row">⌨ <kbd>←</kbd> <kbd>→</kbd> ${studyMode==='manual' ? 'để chuyển thẻ' : 'điều hướng'} • <kbd>Space</kbd> / <kbd>Enter</kbd> để lật thẻ${isSR ? ' • <kbd>1</kbd>–<kbd>4</kbd> để chọn mức nhớ' : ''}</div>
+    <div class="kbd-hint-row">⌨ <kbd>Space</kbd> / <kbd>Enter</kbd> để lật thẻ • <kbd>1</kbd>–<kbd>4</kbd> để chọn mức nhớ</div>
   `;
 }
 
@@ -1789,6 +1813,8 @@ function flipCard() {
   renderStudy();
 }
 
+// Rating ALWAYS updates the card's SR schedule — both "Ôn SR" and "Ôn theo thư mục"
+// feed the same spaced-repetition data, so studying from the calendar keeps your due dates accurate too.
 function rateCard(q) {
   const cards = loadCards();
   const card  = studyQueue[studyIdx];
@@ -1802,18 +1828,6 @@ function rateCard(q) {
   pushSessionDot(dotColors[q]);
   studyMicState = { listening: false, result: null };
   studyIdx++; isFlipped = false; renderStudy(); updateBadge();
-}
-
-function nextManual() {
-  pushSessionDot(studyMicState.result ? (studyMicState.result.ok ? 'var(--green)' : 'var(--red)') : 'var(--text-dim)');
-  studyMicState = { listening: false, result: null };
-  studyIdx++; isFlipped = false; renderStudy();
-}
-
-function prevManual() {
-  if (studyIdx <= 0) return;
-  studyMicState = { listening: false, result: null };
-  studyIdx--; isFlipped = false; renderStudy();
 }
 
 // ═══════════════════════════════════════════
@@ -2008,26 +2022,23 @@ document.addEventListener('click', e => {
 // ═══════════════════════════════════════════
 document.addEventListener('keydown', e => {
   if (currentView === 'boss-battle') {
+    if (bossState && bossState.answered && e.key === 'Enter') { bossContinue(); return; }
     if (bossState && bossState.phase === 1 && !bossState.answered && ['1','2','3','4'].includes(e.key)) {
       const idx = parseInt(e.key, 10) - 1;
       if (idx < bossState.choices.length) chooseBossAnswer(idx);
     }
-    if (bossState && bossState.phase === 2 && e.key === 'Enter') {
+    if (bossState && bossState.phase === 2 && !bossState.answered && e.key === 'Enter') {
       submitEssayAnswer();
     }
     return;
   }
   if (currentView !== 'study') return;
   if ((e.key === ' ' || e.key === 'Enter') && !isFlipped) { e.preventDefault(); flipCard(); }
-  if (isFlipped && studyMode === 'sr') {
+  if (isFlipped) {
     if (e.key === '1') rateCard(0);
     if (e.key === '2') rateCard(1);
     if (e.key === '3') rateCard(2);
     if (e.key === '4') rateCard(3);
-  }
-  if (studyMode === 'manual') {
-    if (e.key === 'ArrowRight') nextManual();
-    if (e.key === 'ArrowLeft')  prevManual();
   }
 });
 
@@ -2036,12 +2047,28 @@ document.addEventListener('keydown', e => {
 // ═══════════════════════════════════════════
 let bossSelectedDays       = new Set();
 let bossSelectedSubfolders = new Set(); // composite keys "day::subfolderName" — picking small folders
+let bossPhaseMode     = 'both'; // 'p1' | 'p2' | 'both' — which phase(s) to fight
 let bossState         = null;
 let bossTimerInterval = null;
 
 const BOSS_TIME_LIMIT_P1 = 20; // giây cho mỗi câu hỏi Phase 1
 const BOSS_AVATARS       = ['👹','🐉','👾','🧟','💀','🦂','🐍','🦑'];
-const BOSS_HP_PER_PHASE  = 350; // máu Boss cố định cho cả Phase 1 và Phase 2
+const BOSS_HP_BASE       = 350; // máu tối thiểu của Boss (pool nhỏ)
+const BOSS_HP_PER_WORD   = 15;  // mỗi từ trong pool cộng thêm máu — pool lớn thì Boss trâu hơn để ôn được nhiều từ hơn
+
+// Boss HP scales with how many words are in the fight, so a bigger word pool
+// gives a longer (tougher) battle instead of running out before you've seen every word.
+function bossMaxHPFor(pool) {
+  return BOSS_HP_BASE + pool.length * BOSS_HP_PER_WORD;
+}
+
+function setBossPhaseMode(mode) {
+  bossPhaseMode = mode;
+  document.querySelectorAll('#boss-phase-select .phase-opt').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+  renderBossSummary();
+}
 
 function renderBossSetup() {
   const cards = loadCards();
@@ -2116,18 +2143,20 @@ function getBossPool() {
 
 function renderBossSummary() {
   const pool  = getBossPool();
-  const total = bossSelectedDays.size + bossSelectedSubfolders.size;
+  const hp    = bossMaxHPFor(pool);
+  const modeLabel = bossPhaseMode === 'p1' ? 'Chỉ Phase 1' : bossPhaseMode === 'p2' ? 'Chỉ Phase 2' : 'Cả 2 Phase';
   document.getElementById('boss-summary').innerHTML = pool.length === 0
     ? `Chưa chọn thư mục nào.`
-    : `Đã chọn <strong>${bossSelectedDays.size} thư mục lớn</strong> + <strong>${bossSelectedSubfolders.size} thư mục nhỏ</strong> — <strong>${pool.length} từ</strong> sẽ được mang vào trận đấu.`;
+    : `Đã chọn <strong>${bossSelectedDays.size} thư mục lớn</strong> + <strong>${bossSelectedSubfolders.size} thư mục nhỏ</strong> — <strong>${pool.length} từ</strong> · ${modeLabel} · Boss <strong>${hp} HP</strong>/phase.`;
   document.getElementById('btn-boss-start').disabled = pool.length === 0;
 }
 
 function makeBossState(pool) {
-  const bossMaxHP = BOSS_HP_PER_PHASE; // máu Boss cố định 350 cho cả Phase 1 và Phase 2
+  const bossMaxHP  = bossMaxHPFor(pool); // máu Boss tăng theo số từ — pool nhiều từ thì trận đấu dài hơn
+  const startPhase = bossPhaseMode === 'p2' ? 2 : 1;
   return {
     pool, queue: [],
-    phase: 1,
+    phase: startPhase,
     bossHP: bossMaxHP, bossMaxHP,
     playerHP: 100, playerMaxHP: 100,
     streak: 0, answered: false,
@@ -2256,13 +2285,20 @@ function resolveBossAnswerP1(idx) {
   }
 
   renderBossBattle(idx, correctIdx, dmg, playerDmg, isCorrect);
+  // No auto-advance — the player reads the reveal/feedback and presses "Câu tiếp theo" themselves.
+}
 
-  setTimeout(() => {
-    if (!bossState) return;
-    if (bossState.bossHP <= 0)   { enterPhase2(); return; }
-    if (bossState.playerHP <= 0) { endBossLose(); return; }
-    nextBossQuestion();
-  }, 1100);
+// Called by the "Câu tiếp theo →" button (and Enter) once an answer has been revealed.
+// Decides what happens next based on HP and which phase(s) the player chose to fight.
+function bossContinue() {
+  if (!bossState) return;
+  const s = bossState;
+  if (s.bossHP <= 0) {
+    if (s.phase === 1 && bossPhaseMode === 'both') { enterPhase2(); return; }
+    endBossWin(); return;
+  }
+  if (s.playerHP <= 0) { endBossLose(); return; }
+  nextBossQuestion();
 }
 
 // ── PHASE TRANSITION ──
@@ -2271,7 +2307,7 @@ function enterPhase2() {
   const s = bossState;
   // Boss "regenerates" HP pool for phase 2 — fresh bar, no time pressure, higher damage per hit
   s.phase    = 2;
-  s.bossMaxHP = BOSS_HP_PER_PHASE; // máu Boss cố định 350 ở Phase 2
+  s.bossMaxHP = bossMaxHPFor(s.pool); // máu Boss tăng theo số từ, áp dụng lại cho Phase 2
   s.bossHP    = s.bossMaxHP;
   s.streak    = 0;
   refillBossQueue();
@@ -2321,13 +2357,7 @@ function resolveBossAnswerP2(rawAnswer) {
   }
 
   renderBossBattle(null, null, dmg, playerDmg, isCorrect, rawAnswer);
-
-  setTimeout(() => {
-    if (!bossState) return;
-    if (bossState.bossHP <= 0)   { endBossWin();  return; }
-    if (bossState.playerHP <= 0) { endBossLose(); return; }
-    nextBossQuestion();
-  }, 1300);
+  // No auto-advance — the player reads the correct answer and presses "Câu tiếp theo" themselves.
 }
 
 function renderBossBattle(answeredIdx, correctIdx, dmg, playerDmg, isCorrect, rawAnswer) {
@@ -2391,6 +2421,17 @@ function renderBossBattle(answeredIdx, correctIdx, dmg, playerDmg, isCorrect, ra
     }
   }
 
+  let continueHTML = '';
+  if (s.answered) {
+    let label = 'Câu tiếp theo →';
+    if (s.bossHP <= 0) {
+      label = (s.phase === 1 && bossPhaseMode === 'both') ? '🔥 Vào Phase 2' : '🏆 Xem kết quả';
+    } else if (s.playerHP <= 0) {
+      label = '💀 Xem kết quả';
+    }
+    continueHTML = `<div class="bb-continue-wrap"><button class="btn-bb-continue" onclick="bossContinue()">${label}</button></div>`;
+  }
+
   document.getElementById('boss-battle-content').innerHTML = `
     <div class="bb-top">
       <button class="study-back" onclick="showView('boss')">← Quay lại</button>
@@ -2422,6 +2463,7 @@ function renderBossBattle(answeredIdx, correctIdx, dmg, playerDmg, isCorrect, ra
 
     ${questionAreaHTML}
     ${feedbackHTML}
+    ${continueHTML}
   `;
 
   if (!isP1 && !s.answered) {
