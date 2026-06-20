@@ -2427,7 +2427,11 @@ async function enrichDiscoverWord(word) {
     }
   } catch (e) { /* không dịch được thì bỏ qua từ này */ }
 
-  if (!vi || /^[A-Z\s]+$/.test(vi)) return null; // MyMemory trả về toàn hoa thường là không dịch được
+  vi = (vi || '').trim();
+  // Không cần dịch chuẩn 100% — chỉ bỏ qua khi rõ ràng là dịch thất bại
+  // (rỗng, báo lỗi "no translation", hoặc API trả về nguyên chữ tiếng Anh không đổi).
+  const failed = !vi || /no translation/i.test(vi) || vi.toLowerCase() === word.toLowerCase();
+  if (failed) return null;
   return { en: word, vi, ph: phonetic, type: type || 'other', ex: example };
 }
 
