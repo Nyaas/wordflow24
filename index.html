@@ -830,6 +830,7 @@ textarea { min-height: 72px; }
 .bb-feedback { text-align: center; font-size: 0.85rem; font-weight: 600; margin-top: 14px; min-height: 20px; }
 .bb-feedback.good { color: var(--green); }
 .bb-feedback.bad  { color: var(--red); }
+.bb-feedback.checking { color: var(--accent2); font-weight: 500; }
 
 .bb-end-wrap { text-align: center; padding: 40px 20px; }
 .bb-end-emoji { font-size: 4.2rem; margin-bottom: 16px; }
@@ -1025,7 +1026,7 @@ textarea { min-height: 72px; }
           <h4>Boss Từ Vựng — 2 Phase</h4>
           <p><strong>Phase 1 (Trắc nghiệm):</strong> 20 giây/câu, trả lời đúng gây 10–15 dame, sai hoặc hết giờ bị Boss phản công.<br>
           <strong>Phase 2 (Tự luận — mở khi hạ hết máu Phase 1, hoặc chơi riêng):</strong> Gõ tiếng Anh từ nghĩa tiếng Việt, không giới hạn thời gian, mỗi câu đúng gây 30 dame!<br>
-          <span style="color:var(--text-dim)">Máu Boss tự tăng theo số từ bạn chọn — pool nhiều từ thì Boss trâu hơn để bạn ôn được nhiều từ hơn. Từ nào bạn trả lời sai sẽ xuất hiện lại nhiều hơn, từ nào trả lời đúng sẽ ít xuất hiện hơn. Sau mỗi câu, trận đấu dừng lại để bạn đọc đáp án — bấm "Câu tiếp theo" khi đã sẵn sàng.</span></p>
+          <span style="color:var(--text-dim)">Máu Boss tự tăng theo số từ bạn chọn — pool nhiều từ thì Boss trâu hơn để bạn ôn được nhiều từ hơn. Từ nào bạn trả lời sai sẽ xuất hiện lại nhiều hơn, từ chưa ra sẽ ưu tiên ra trước, từ trả lời đúng sẽ ít xuất hiện hơn. Ở chế độ Anh → Việt, đáp án chấp nhận từ đồng nghĩa, không cần khớp chính xác 100%. Sau mỗi câu, trận đấu dừng lại để bạn đọc đáp án — bấm "Câu tiếp theo" khi đã sẵn sàng.</span></p>
         </div>
       </div>
 
@@ -2705,13 +2706,17 @@ function setBossDirection(dir) {
   });
 }
 
-// ── Adaptive word weighting: wrong answer → appears more often, correct → appears less ──
+// ── Adaptive word weighting — 3 mức ưu tiên xuất hiện ──
+// • Từ CHƯA RA lần nào: giữ mức mặc định (1.0)
+// • Từ đã trả lời ĐÚNG: giảm dần tỉ lệ ra lại (xuống tới BOSS_WEIGHT_MIN)
+// • Từ đã trả lời SAI: tăng tỉ lệ ra lại MẠNH hơn cả mức mặc định (lên tới BOSS_WEIGHT_MAX)
+// → Thứ tự ưu tiên xuất hiện: Sai > Chưa ra > Đã trả lời đúng.
 function bossBumpWeight(cardId, isCorrect) {
   if (!bossState.weights) bossState.weights = {};
   const cur = bossState.weights[cardId] || 1;
   bossState.weights[cardId] = isCorrect
-    ? Math.max(BOSS_WEIGHT_MIN, cur * 0.55)   // đúng → giảm tỉ lệ ra lại
-    : Math.min(BOSS_WEIGHT_MAX, cur + 1.5);   // sai → tăng tỉ lệ ra lại
+    ? Math.max(BOSS_WEIGHT_MIN, cur * 0.5)    // đúng → giảm tỉ lệ ra lại
+    : Math.min(BOSS_WEIGHT_MAX, cur + 2);     // sai → tăng tỉ lệ ra lại, mạnh hơn mức mặc định
 }
 
 function weightedBossPick(pool, weights) {
@@ -2990,27 +2995,80 @@ function normalizeAnswer(str) {
     .replace(/[^a-z0-9]/g, ''); // remove spaces and special characters
 }
 
-// VI→EN compares against the English word; EN→VI accepts any comma-separated
-// alternative meaning in the Vietnamese field (e.g. "mơ hồ, không rõ ràng").
-function checkP2Answer(card, rawAnswer, dir) {
-  if (dir === 'en2vi') {
-    const alts = card.vi.split(',').map(s => normalizeAnswer(s)).filter(Boolean);
-    return alts.includes(normalizeAnswer(rawAnswer));
+// Same idea as normalizeAnswer but keeps word boundaries (spaces), for word-overlap checks.
+function normalizeKeepSpaces(str) {
+  return str
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s]/g, '')
+    .replace(/\s+/g, ' ').trim();
+}
+
+// Accepts: exact match · the answer/alt containing one another · or enough shared
+// words with any comma-separated alternative meaning — so wording differences,
+// extra/missing words, or listed synonyms on the card are all accepted, not just
+// one exact string.
+function isLenientMeaningMatch(rawAnswer, fieldValue) {
+  const ans = normalizeAnswer(rawAnswer);
+  if (!ans) return false;
+  const alts = fieldValue.split(/[,;]/).map(s => s.trim()).filter(Boolean);
+  for (const altRaw of alts) {
+    const alt = normalizeAnswer(altRaw);
+    if (!alt) continue;
+    if (ans === alt) return true;
+    if (alt.length >= 3 && (ans.includes(alt) || alt.includes(ans))) return true;
+
+    const ansWords = normalizeKeepSpaces(rawAnswer).split(' ').filter(Boolean);
+    const altWords = normalizeKeepSpaces(altRaw).split(' ').filter(w => w.length >= 2); // bỏ từ đệm 1 ký tự
+    if (altWords.length === 0) continue;
+    const overlap = altWords.filter(w => ansWords.includes(w)).length;
+    if (overlap / altWords.length >= 0.5) return true; // trùng ít nhất nửa số từ chính
   }
+  return false;
+}
+
+// VI→EN compares against the English word exactly (spelling matters here);
+// EN→VI accepts any listed alternative meaning, with lenient word-overlap matching.
+function checkP2Answer(card, rawAnswer, dir) {
+  if (dir === 'en2vi') return isLenientMeaningMatch(rawAnswer, card.vi);
   return normalizeAnswer(rawAnswer) === normalizeAnswer(card.en);
 }
 
+// Last-resort synonym check for Anh→Việt: translates the player's Vietnamese answer
+// back to English via MyMemory and compares it against the card's English word.
+// Lets a valid synonym that isn't literally written on the card still count as correct.
+async function synonymRoundTripCheck(viAnswer, expectedEn) {
+  const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(viAnswer)}&langpair=vi|en`);
+  if (!res.ok) return false;
+  const data = await res.json();
+  const backEn = (data && data.responseData && data.responseData.translatedText) || '';
+  if (!backEn) return false;
+  return isLenientMeaningMatch(backEn, expectedEn) || isLenientMeaningMatch(expectedEn, backEn);
+}
+
 function submitEssayAnswer() {
-  if (!bossState || bossState.answered || bossState.phase !== 2) return;
+  if (!bossState || bossState.answered || bossState.checking || bossState.phase !== 2) return;
   const input = document.getElementById('bb-essay-input');
   const raw   = input ? input.value : '';
   resolveBossAnswerP2(raw);
 }
 
-function resolveBossAnswerP2(rawAnswer) {
+async function resolveBossAnswerP2(rawAnswer) {
+  const card = bossState.current;
+  let isCorrect = checkP2Answer(card, rawAnswer, bossP2Direction);
+
+  // Local match failed for Anh→Việt — double-check via an online synonym round-trip
+  // before counting it wrong, since the card may not list every valid synonym.
+  if (!isCorrect && bossP2Direction === 'en2vi' && rawAnswer.trim()) {
+    bossState.checking = true;
+    renderBossBattle(null, null, 0, 0, false, rawAnswer);
+    try {
+      isCorrect = await synonymRoundTripCheck(rawAnswer.trim(), card.en);
+    } catch (e) { /* mất mạng — giữ kết quả từ kiểm tra cục bộ (sai) */ }
+    bossState.checking = false;
+  }
+
   bossState.answered = true;
-  const card      = bossState.current;
-  const isCorrect = checkP2Answer(card, rawAnswer, bossP2Direction);
   bossState.totalAnswered++;
   bossBumpWeight(card.id, isCorrect);
 
@@ -3071,6 +3129,8 @@ function renderBossBattle(answeredIdx, correctIdx, dmg, playerDmg, isCorrect, ra
         : `<div class="bb-feedback bad">✕ ${answeredIdx === -1 ? 'Hết giờ!' : 'Sai rồi!'} Boss phản công ${playerDmg} dame.</div>`;
     }
   } else {
+    const checking   = !!s.checking;
+    const locked     = s.answered || checking;
     const inputCls   = s.answered ? (isCorrect ? 'correct' : 'wrong') : '';
     const isEn2Vi    = bossP2Direction === 'en2vi';
     const promptSub  = isEn2Vi ? 'Dịch sang tiếng Việt' : 'Dịch sang tiếng Anh';
@@ -3088,11 +3148,13 @@ function renderBossBattle(answeredIdx, correctIdx, dmg, playerDmg, isCorrect, ra
       <div class="bb-essay-wrap">
         <input type="text" id="bb-essay-input" class="bb-essay-input ${inputCls}"
           placeholder="${placeholder}" autocomplete="off" spellcheck="false"
-          ${s.answered ? 'disabled' : ''} value="${s.answered ? (rawAnswer||'') : ''}">
-        <button class="btn-essay-submit" ${s.answered ? 'disabled' : ''} onclick="submitEssayAnswer()">⚔️ Trả lời</button>
+          ${locked ? 'disabled' : ''} value="${locked ? (rawAnswer||'') : ''}">
+        <button class="btn-essay-submit" ${locked ? 'disabled' : ''} onclick="submitEssayAnswer()">${checking ? '🔄 Đang kiểm tra...' : '⚔️ Trả lời'}</button>
       </div>`;
 
-    if (s.answered) {
+    if (checking) {
+      feedbackHTML = `<div class="bb-feedback checking">🔄 Đáp án chưa khớp với gợi ý sẵn — đang kiểm tra xem có phải từ đồng nghĩa không...</div>`;
+    } else if (s.answered) {
       feedbackHTML = isCorrect
         ? `<div class="bb-feedback good">✓ Chính xác! Gây ${dmg} dame lên Boss.</div>`
         : `<div class="bb-feedback bad">✕ Sai rồi! Đáp án đúng: "${correctAnswerDisplay}". Boss phản công ${playerDmg} dame.</div>`;
