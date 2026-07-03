@@ -735,6 +735,7 @@ textarea { min-height: 72px; }
 }
 .bb-phase-badge.p1 { background: rgba(124,106,255,0.18); color: var(--accent2); }
 .bb-phase-badge.p2 { background: rgba(255,107,107,0.18); color: var(--red); }
+.bb-phase-badge.p3 { background: rgba(62,207,142,0.18); color: var(--green); }
 
 .bb-streak {
   display: inline-flex; align-items: center; gap: 5px;
@@ -994,10 +995,12 @@ textarea { min-height: 72px; }
         <button class="btn-study-sel" id="btn-study-sel" onclick="startManualStudy()">Ôn tập ngay →</button>
       </div>
 
-      <div class="boss-actions-row" style="margin-bottom:16px">
+      <div class="boss-actions-row" style="margin-bottom:16px;flex-wrap:wrap;gap:8px">
         <button class="btn-pick-mode" id="btn-pick-mode" onclick="togglePickMode()">☑ Chọn nhiều thẻ</button>
-        <button onclick="openMoveModal()">📁 Thư mục con</button>
-        <button onclick="moveOutOfSubfolder()">↩ Đưa thẻ ra ngoài</button>
+        <button class="btn-pick-mode" id="btn-pick-all" onclick="pickAllVisibleCards()" style="display:none">✅ Chọn tất cả</button>
+        <button class="btn-pick-mode" id="btn-open-move" onclick="openMoveModal()" style="display:none">📁 Thư mục con</button>
+        <button class="btn-pick-mode" id="btn-move-out" onclick="moveOutOfSubfolder()" style="display:none">↩ Đưa ra ngoài</button>
+        <button class="btn-pick-mode danger" id="btn-delete-picked" onclick="deletePickedCards()" style="display:none;color:var(--red)">🗑 Xoá thẻ đã chọn</button>
       </div>
 
       <div id="cal-folder-view"></div>
@@ -1023,10 +1026,11 @@ textarea { min-height: 72px; }
       <div class="boss-preview-card">
         <div class="boss-preview-avatar">👹</div>
         <div>
-          <h4>Boss Từ Vựng — 2 Phase</h4>
-          <p><strong>Phase 1 (Trắc nghiệm):</strong> 20 giây/câu, trả lời đúng gây 10–15 dame, sai hoặc hết giờ bị Boss phản công.<br>
-          <strong>Phase 2 (Tự luận — mở khi hạ hết máu Phase 1, hoặc chơi riêng):</strong> Gõ tiếng Anh từ nghĩa tiếng Việt, không giới hạn thời gian, mỗi câu đúng gây 30 dame!<br>
-          <span style="color:var(--text-dim)">Máu Boss tự tăng theo số từ bạn chọn — pool nhiều từ thì Boss trâu hơn để bạn ôn được nhiều từ hơn. Từ nào bạn trả lời sai sẽ xuất hiện lại nhiều hơn, từ chưa ra sẽ ưu tiên ra trước, từ trả lời đúng sẽ ít xuất hiện hơn. Ở chế độ Anh → Việt, đáp án chấp nhận từ đồng nghĩa, không cần khớp chính xác 100%. Sau mỗi câu, trận đấu dừng lại để bạn đọc đáp án — bấm "Câu tiếp theo" khi đã sẵn sàng.</span></p>
+          <h4>Boss Từ Vựng — 3 Phase</h4>
+          <p><strong>Phase 1 (Trắc nghiệm):</strong> 20s/câu, chọn nghĩa đúng, đúng gây 10–15 dame.<br>
+          <strong>Phase 2 (Tự luận):</strong> Gõ bản dịch, không giới hạn thời gian, đúng gây 30 dame.<br>
+          <strong>Phase 3 (Chữ na ná 🆕):</strong> Chọn đúng từ tiếng Anh trong các từ viết gần giống nhau — kiểm tra chính tả và phân biệt từ dễ nhầm, đúng gây 20 dame.<br>
+          <span style="color:var(--text-dim)">✨ Từ trả lời đúng trong Boss → SR tự nghỉ 2 tiếng, sau đó nổi lại bình thường.</span></p>
         </div>
       </div>
 
@@ -1035,7 +1039,9 @@ textarea { min-height: 72px; }
         <div class="phase-select-row" id="boss-phase-select">
           <button class="phase-opt" data-mode="p1" onclick="setBossPhaseMode('p1')">🥉 Chỉ Phase 1<br><span style="font-weight:400;opacity:0.7">(trắc nghiệm)</span></button>
           <button class="phase-opt" data-mode="p2" onclick="setBossPhaseMode('p2')">🥈 Chỉ Phase 2<br><span style="font-weight:400;opacity:0.7">(tự luận)</span></button>
-          <button class="phase-opt active" data-mode="both" onclick="setBossPhaseMode('both')">🏆 Cả 2 Phase<br><span style="font-weight:400;opacity:0.7">(đầy đủ)</span></button>
+          <button class="phase-opt" data-mode="p3" onclick="setBossPhaseMode('p3')">🔤 Chỉ Phase 3<br><span style="font-weight:400;opacity:0.7">(chữ na ná)</span></button>
+          <button class="phase-opt active" data-mode="all3" onclick="setBossPhaseMode('all3')">🏆 Cả 3 Phase<br><span style="font-weight:400;opacity:0.7">(đầy đủ)</span></button>
+          <button class="phase-opt" data-mode="both" onclick="setBossPhaseMode('both')">⚔️ Phase 1+2<br><span style="font-weight:400;opacity:0.7">(không P3)</span></button>
         </div>
       </div>
 
@@ -1231,6 +1237,22 @@ const formatDateLabel = str => {
   let prefix = diff === 0 ? 'Hôm nay' : diff === -1 ? 'Hôm qua' : days[date.getDay()];
   return `${prefix}, ${d} ${months[m-1]} ${y}`;
 };
+
+const BOSS_SR_COOLDOWN_MS = 2 * 60 * 60 * 1000; // 2 giờ
+
+// A card seen + answered correctly in Boss → snooze SR for 2h so it doesn't
+// immediately pop up again in the SR queue. After 2h it resurfaces normally.
+function bossSnoozeSR(cardId) {
+  const cards = loadCards();
+  const idx   = cards.findIndex(c => c.id === cardId);
+  if (idx === -1) return;
+  // Only snooze if the card would currently be "due" (we don't want to push
+  // a far-future review back into the near future accidentally).
+  if (!cards[idx].nextReview || Date.now() >= cards[idx].nextReview) {
+    cards[idx].nextReview = Date.now() + BOSS_SR_COOLDOWN_MS;
+    saveCards(cards);
+  }
+}
 
 const isDue = c => !c.nextReview || Date.now() >= c.nextReview;
 
@@ -1592,11 +1614,45 @@ function togglePickMode() {
 
   const btn = document.getElementById('btn-pick-mode');
   btn.classList.toggle('active', pickMode);
-  btn.textContent = pickMode
-    ? '❌ Thoát chọn'
-    : '☑ Chọn nhiều thẻ';
+  btn.textContent = pickMode ? '❌ Thoát chọn' : '☑ Chọn nhiều thẻ';
+
+  const show = v => { const el = document.getElementById(v); if (el) el.style.display = pickMode ? '' : 'none'; };
+  show('btn-pick-all'); show('btn-open-move'); show('btn-move-out'); show('btn-delete-picked');
 
   refreshFolderArea();
+}
+
+function pickAllVisibleCards() {
+  if (!pickMode) return;
+  const cards  = loadCards();
+  const byDay  = groupByDay(cards);
+  // pick all cards currently visible (selected days or current month)
+  let visibleIds = [];
+  if (selectedDays.size > 0) {
+    selectedDays.forEach(d => (byDay[d]||[]).forEach(c => visibleIds.push(c.id)));
+  } else {
+    const prefix = `${calYear}-${String(calMonth+1).padStart(2,'0')}`;
+    Object.keys(byDay).filter(d => d.startsWith(prefix))
+      .forEach(d => (byDay[d]||[]).forEach(c => visibleIds.push(c.id)));
+  }
+  const allPicked = visibleIds.every(id => pickedCards.has(id));
+  if (allPicked) pickedCards.clear(); // toggle off if all already picked
+  else visibleIds.forEach(id => pickedCards.add(id));
+  refreshFolderArea();
+}
+
+function deletePickedCards() {
+  if (pickedCards.size === 0) return;
+  if (!confirm(`Xoá ${pickedCards.size} thẻ đã chọn? Hành động này không thể hoàn tác.`)) return;
+  saveCards(loadCards().filter(c => !pickedCards.has(c.id)));
+  pickedCards.clear();
+  pickMode = false;
+  const btn = document.getElementById('btn-pick-mode');
+  if (btn) { btn.classList.remove('active'); btn.textContent = '☑ Chọn nhiều thẻ'; }
+  ['btn-pick-all','btn-open-move','btn-move-out','btn-delete-picked'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.style.display = 'none';
+  });
+  renderFolderView(); renderHome(); updateBadge();
 }
 
 function toggleCardPick(id) {
@@ -2699,6 +2755,81 @@ function setBossPhaseMode(mode) {
   renderBossSummary();
 }
 
+// Phase 3: generate 4 similar-looking English words (the card's word + 3 near-lookalikes)
+// Uses character-substitution tricks: swap letters, add/remove double letters, etc.
+function genSimilarSpellingChoices(card) {
+  const target = card.en.trim();
+  // Helper: mutate a word slightly
+  const mutate = (w) => {
+    const ops = [];
+    // swap adjacent letters
+    for (let i = 0; i < w.length - 1; i++) {
+      ops.push(w.slice(0,i) + w[i+1] + w[i] + w.slice(i+2));
+    }
+    // double a letter
+    for (let i = 0; i < w.length; i++) {
+      ops.push(w.slice(0,i) + w[i] + w[i] + w.slice(i+1));
+    }
+    // remove a double letter
+    for (let i = 0; i < w.length - 1; i++) {
+      if (w[i] === w[i+1]) ops.push(w.slice(0,i) + w.slice(i+1));
+    }
+    // common vowel swaps
+    const vowelSwap = {a:'e',e:'i',i:'o',o:'u',u:'a',y:'i'};
+    for (let i = 0; i < w.length; i++) {
+      const sub = vowelSwap[w[i]];
+      if (sub) ops.push(w.slice(0,i) + sub + w.slice(i+1));
+    }
+    // ie/ei swap
+    ops.push(w.replace(/ie/g,'ei').replace(/ei/g,'ie'));
+    // tion/sion swap
+    ops.push(w.replace(/tion/g,'sion'), w.replace(/sion/g,'tion'));
+    // add/remove trailing e
+    if (w.endsWith('e')) ops.push(w.slice(0,-1));
+    else ops.push(w + 'e');
+    return ops.filter(o => o !== w && o.length >= 2 && /^[a-z]+$/.test(o));
+  };
+
+  const allCards = loadCards();
+  const similar  = [];
+  const seen     = new Set([target.toLowerCase()]);
+
+  // First try other real English words from the pool that look similar
+  const pool = allCards.filter(c => c.id !== card.id && c.en.length >= target.length - 2 && c.en.length <= target.length + 2);
+  shuffle(pool);
+  for (const c of pool) {
+    if (similar.length >= 3) break;
+    const w = c.en.trim().toLowerCase();
+    if (seen.has(w)) continue;
+    // crude Levenshtein-like: same first 2 chars, or close length, or shares mutation
+    const mutations = new Set(mutate(target.toLowerCase()));
+    if (mutations.has(w) || (w.slice(0,2) === target.toLowerCase().slice(0,2) && Math.abs(w.length-target.length)<=1)) {
+      seen.add(w); similar.push(c.en.trim());
+    }
+  }
+
+  // Fill remaining with synthetic mutations
+  if (similar.length < 3) {
+    const muts = mutate(target.toLowerCase()).filter(m => !seen.has(m));
+    shuffle(muts);
+    for (const m of muts) {
+      if (similar.length >= 3) break;
+      // Capitalize same way as target
+      const displayMut = target[0] === target[0].toUpperCase() ? m.charAt(0).toUpperCase() + m.slice(1) : m;
+      seen.add(m); similar.push(displayMut);
+    }
+  }
+  // Final fallback
+  while (similar.length < 3) {
+    const idx = similar.length;
+    similar.push(target.slice(0,-1) + 'xyz'.charAt(idx));
+  }
+
+  const choices = [...similar, target];
+  shuffle(choices);
+  return choices;
+}
+
 function setBossDirection(dir) {
   bossP2Direction = dir;
   document.querySelectorAll('#boss-direction-select .phase-opt').forEach(b => {
@@ -2811,11 +2942,11 @@ function renderBossSummary() {
 }
 
 function makeBossState(pool) {
-  const bossMaxHP  = bossMaxHPFor(pool); // máu Boss tăng theo số từ — pool nhiều từ thì trận đấu dài hơn
-  const startPhase = bossPhaseMode === 'p2' ? 2 : 1;
+  const bossMaxHP  = bossMaxHPFor(pool);
+  const startPhase = bossPhaseMode === 'p2' ? 2 : bossPhaseMode === 'p3' ? 3 : 1;
   return {
     pool, queue: [],
-    weights: {}, // cardId -> trọng số xuất hiện (sai tăng, đúng giảm)
+    weights: {},
     phase: startPhase,
     bossHP: bossMaxHP, bossMaxHP,
     playerHP: 100, playerMaxHP: 100,
@@ -2824,6 +2955,7 @@ function makeBossState(pool) {
     totalAnswered: 0, totalCorrect: 0, totalDamage: 0,
     timeLeft: BOSS_TIME_LIMIT_P1, qStart: 0,
     current: null, choices: [],
+    cardStats: {},  // cardId -> { card, seen, correct }
   };
 }
 
@@ -2877,6 +3009,7 @@ function nextBossQuestion() {
   if (bossState.queue.length === 0) refillBossQueue();
   bossState.current  = bossState.queue.shift();
   bossState.answered = false;
+  bossState.checking = false;
 
   if (bossState.phase === 1) {
     bossState.choices  = genBossChoices(bossState.current);
@@ -2884,6 +3017,9 @@ function nextBossQuestion() {
     bossState.qStart   = Date.now();
     renderBossBattle();
     startBossTimer();
+  } else if (bossState.phase === 3) {
+    bossState.choices  = genSimilarSpellingChoices(bossState.current);
+    renderBossBattle();
   } else {
     renderBossBattle();
     setTimeout(() => {
@@ -2891,6 +3027,25 @@ function nextBossQuestion() {
       if (inp) inp.focus();
     }, 50);
   }
+}
+
+// ── PHASE 3 TRANSITION ──
+function enterPhase3() {
+  stopBossTimer();
+  const s = bossState;
+  s.phase    = 3;
+  s.bossMaxHP = bossMaxHPFor(s.pool);
+  s.bossHP    = s.bossMaxHP;
+  s.streak    = 0;
+  refillBossQueue();
+
+  document.getElementById('boss-battle-content').innerHTML = `
+    <div class="bb-phase-transition">
+      <div class="pt-emoji">🔤</div>
+      <h3>Phase 3 — Chữ Na Ná!</h3>
+      <p>Boss dùng chiêu mới: các từ tiếng Anh trông <strong>giống nhau</strong> nhưng khác nghĩa hoàn toàn. Đọc nghĩa tiếng Việt và chọn đúng từ tiếng Anh — cẩn thận chính tả! Mỗi câu đúng gây <strong>20 dame</strong>. Không giới hạn thời gian.</p>
+      <button class="btn-bb-retry" onclick="nextBossQuestion()">🔤 Vào Phase 3</button>
+    </div>`;
 }
 
 function startBossTimer() {
@@ -2922,9 +3077,39 @@ function bossTimeUp() {
 }
 
 function chooseBossAnswer(idx) {
-  if (!bossState || bossState.answered || bossState.phase !== 1) return;
-  stopBossTimer();
-  resolveBossAnswerP1(idx);
+  if (!bossState || bossState.answered) return;
+  if (bossState.phase === 1) { stopBossTimer(); resolveBossAnswerP1(idx); }
+  else if (bossState.phase === 3) { resolveBossAnswerP3(idx); }
+}
+
+// ── PHASE 3 RESOLUTION (similar spelling, 20 damage) ──
+function resolveBossAnswerP3(idx) {
+  bossState.answered = true;
+  const card       = bossState.current;
+  const correctIdx = bossState.choices.indexOf(card.en.trim());
+  const isCorrect  = idx === correctIdx;
+  bossState.totalAnswered++;
+  bossBumpWeight(card.id, isCorrect);
+
+  let dmg = 0, playerDmg = 0;
+  if (isCorrect) {
+    bossState.totalCorrect++;
+    dmg = 20;
+    bossState.streak++;
+    bossState.bossHP = Math.max(0, bossState.bossHP - dmg);
+    bossState.totalDamage += dmg;
+    bossSnoozeSR(card.id);
+  } else {
+    bossState.streak = 0;
+    playerDmg = 8 + Math.floor(Math.random() * 7); // 8-14
+    bossState.playerHP = Math.max(0, bossState.playerHP - playerDmg);
+  }
+
+  if (!bossState.cardStats[card.id]) bossState.cardStats[card.id] = { card, seen: 0, correct: 0 };
+  bossState.cardStats[card.id].seen++;
+  if (isCorrect) bossState.cardStats[card.id].correct++;
+
+  renderBossBattle(idx, correctIdx, dmg, playerDmg, isCorrect);
 }
 
 // ── PHASE 1 RESOLUTION (multiple choice, 20s, 10-15 dmg) ──
@@ -2944,11 +3129,18 @@ function resolveBossAnswerP1(idx) {
     bossState.streak++;
     bossState.bossHP   = Math.max(0, bossState.bossHP - dmg);
     bossState.totalDamage += dmg;
+    bossSnoozeSR(card.id); // đã thấy + trả lời đúng → snooze SR 2h
   } else {
     bossState.streak  = 0;
     playerDmg = 8 + Math.floor(Math.random() * 8); // 8-15
     bossState.playerHP = Math.max(0, bossState.playerHP - playerDmg);
   }
+
+  // Track per-card encounter for end-screen stats
+  if (!bossState.cardStats) bossState.cardStats = {};
+  if (!bossState.cardStats[card.id]) bossState.cardStats[card.id] = { card, seen: 0, correct: 0 };
+  bossState.cardStats[card.id].seen++;
+  if (isCorrect) bossState.cardStats[card.id].correct++;
 
   renderBossBattle(idx, correctIdx, dmg, playerDmg, isCorrect);
   // No auto-advance — the player reads the reveal/feedback and presses "Câu tiếp theo" themselves.
@@ -2960,7 +3152,9 @@ function bossContinue() {
   if (!bossState) return;
   const s = bossState;
   if (s.bossHP <= 0) {
-    if (s.phase === 1 && bossPhaseMode === 'both') { enterPhase2(); return; }
+    if (s.phase === 1 && (bossPhaseMode === 'both' || bossPhaseMode === 'all3')) { enterPhase2(); return; }
+    if (s.phase === 2 && bossPhaseMode === 'all3') { enterPhase3(); return; }
+    if (s.phase === 1 && bossPhaseMode === 'p1_p3') { enterPhase3(); return; }
     endBossWin(); return;
   }
   if (s.playerHP <= 0) { endBossLose(); return; }
@@ -3080,11 +3274,18 @@ async function resolveBossAnswerP2(rawAnswer) {
     bossState.streak++;
     bossState.bossHP = Math.max(0, bossState.bossHP - dmg);
     bossState.totalDamage += dmg;
+    bossSnoozeSR(card.id); // đã thấy + trả lời đúng → snooze SR 2h
   } else {
     bossState.streak  = 0;
     playerDmg = 10 + Math.floor(Math.random() * 10); // 10-19, phase 2 hits harder
     bossState.playerHP = Math.max(0, bossState.playerHP - playerDmg);
   }
+
+  // Track per-card encounter for end-screen stats
+  if (!bossState.cardStats) bossState.cardStats = {};
+  if (!bossState.cardStats[card.id]) bossState.cardStats[card.id] = { card, seen: 0, correct: 0 };
+  bossState.cardStats[card.id].seen++;
+  if (isCorrect) bossState.cardStats[card.id].correct++;
 
   renderBossBattle(null, null, dmg, playerDmg, isCorrect, rawAnswer);
   // No auto-advance — the player reads the correct answer and presses "Câu tiếp theo" themselves.
@@ -3098,10 +3299,37 @@ function renderBossBattle(answeredIdx, correctIdx, dmg, playerDmg, isCorrect, ra
   const playerPct = Math.round((s.playerHP / s.playerMaxHP) * 100);
   const isP1 = s.phase === 1;
 
+  const isP3 = s.phase === 3;
   let questionAreaHTML = '';
   let feedbackHTML = '';
 
-  if (isP1) {
+  if (isP3) {
+    // Phase 3: show Vietnamese meaning, pick the right English word from similar-looking options
+    const correctIdx3 = s.choices.indexOf(s.current.en.trim());
+    const choicesHTML3 = s.choices.map((w, i) => {
+      let cls = 'bb-choice';
+      if (s.answered) {
+        if (i === correctIdx3) cls += ' correct';
+        else if (i === answeredIdx) cls += ' wrong';
+      }
+      return `<button class="${cls}" ${s.answered ? 'disabled' : ''} onclick="chooseBossAnswer(${i})" style="font-family:monospace;font-size:1.05rem;letter-spacing:0.5px">${w}</button>`;
+    }).join('');
+
+    questionAreaHTML = `
+      <div class="bb-question-card phase2" style="background:linear-gradient(145deg,#1a2a10 0%,#0d1a08 60%,#060f04 100%);border-color:rgba(62,207,142,0.3)">
+        ${s.answered && isCorrect ? `<div class="bb-float-dmg show" style="color:var(--green)">-${dmg}</div>` : ''}
+        <div class="bb-q-sub">Chọn từ tiếng Anh đúng với nghĩa</div>
+        <div class="bb-q-vi" style="color:var(--green)">${s.current.vi}</div>
+        <div class="bb-q-type">${s.current.type}</div>
+      </div>
+      <div class="bb-choices">${choicesHTML3}</div>`;
+
+    if (s.answered) {
+      feedbackHTML = isCorrect
+        ? `<div class="bb-feedback good">✓ Đúng! "<strong>${s.current.en}</strong>" — gây ${dmg} dame lên Boss.</div>`
+        : `<div class="bb-feedback bad">✕ Sai! Đáp án đúng: "<strong>${s.current.en}</strong>". Boss phản công ${playerDmg} dame.</div>`;
+    }
+  } else if (isP1) {
     const choicesHTML = s.choices.map((c, i) => {
       let cls = 'bb-choice';
       if (s.answered) {
@@ -3165,12 +3393,18 @@ function renderBossBattle(answeredIdx, correctIdx, dmg, playerDmg, isCorrect, ra
   if (s.answered) {
     let label = 'Câu tiếp theo →';
     if (s.bossHP <= 0) {
-      label = (s.phase === 1 && bossPhaseMode === 'both') ? '🔥 Vào Phase 2' : '🏆 Xem kết quả';
+      if (s.phase === 1 && (bossPhaseMode === 'both' || bossPhaseMode === 'all3')) label = '🔥 Vào Phase 2';
+      else if (s.phase === 2 && bossPhaseMode === 'all3') label = '🔤 Vào Phase 3';
+      else if (s.phase === 1 && bossPhaseMode === 'p1_p3') label = '🔤 Vào Phase 3';
+      else label = '🏆 Xem kết quả';
     } else if (s.playerHP <= 0) {
       label = '💀 Xem kết quả';
     }
     continueHTML = `<div class="bb-continue-wrap"><button class="btn-bb-continue" onclick="bossContinue()">${label}</button></div>`;
   }
+
+  const phaseBadgeMap = { 1: 'p1', 2: 'p2', 3: 'p3' };
+  const phaseLabelMap = { 1: '⚔️ PHASE 1 — TRẮC NGHIỆM', 2: '🔥 PHASE 2 — TỰ LUẬN', 3: '🔤 PHASE 3 — CHỮ NA NÁ' };
 
   document.getElementById('boss-battle-content').innerHTML = `
     <div class="bb-top">
@@ -3178,7 +3412,7 @@ function renderBossBattle(answeredIdx, correctIdx, dmg, playerDmg, isCorrect, ra
       <div class="study-info">Câu ${s.totalAnswered + (s.answered?0:1)}</div>
     </div>
 
-    <div class="bb-phase-badge ${isP1 ? 'p1' : 'p2'}">${isP1 ? '⚔️ PHASE 1 — TRẮC NGHIỆM' : '🔥 PHASE 2 — TỰ LUẬN'}</div>
+    <div class="bb-phase-badge ${phaseBadgeMap[s.phase]||'p1'}">${phaseLabelMap[s.phase]||''}</div>
 
     <div class="bb-combatant">
       <div class="bb-combatant-head">
@@ -3215,21 +3449,48 @@ function renderBossBattle(answeredIdx, correctIdx, dmg, playerDmg, isCorrect, ra
   }
 }
 
+function buildCardStatsHTML(s) {
+  const stats = Object.values(s.cardStats || {});
+  if (stats.length === 0) return '';
+  // Sort: worst accuracy first
+  stats.sort((a,b) => (a.correct/a.seen) - (b.correct/b.seen));
+  return `
+    <div style="margin:20px 0 0;text-align:left">
+      <div style="font-size:0.75rem;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px">📊 Từng thẻ trong trận</div>
+      <div style="display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto">
+        ${stats.map(st => {
+          const acc = Math.round((st.correct/st.seen)*100);
+          const bar = `<div style="flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden"><div style="width:${acc}%;height:100%;background:${acc>=80?'var(--green)':acc>=50?'var(--yellow)':'var(--red)'};border-radius:3px"></div></div>`;
+          return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:0.82rem">
+            <span style="font-weight:600;min-width:90px">${st.card.en}</span>
+            <span style="color:var(--text-soft);font-size:0.72rem;min-width:28px">${st.seen}x</span>
+            ${bar}
+            <span style="font-size:0.72rem;font-weight:700;min-width:34px;color:${acc>=80?'var(--green)':acc>=50?'var(--yellow)':'var(--red)'}">${acc}%</span>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="font-size:0.72rem;color:var(--text-dim);margin-top:8px">✨ Từ trả lời đúng trong boss → SR nghỉ 2h, sau đó tự nổi lại</div>
+    </div>`;
+}
+
 function endBossWin() {
   stopBossTimer();
   const s   = bossState;
   const acc = s.totalAnswered ? Math.round((s.totalCorrect / s.totalAnswered) * 100) : 0;
+  const phaseText = s.phase >= 3 ? 'cả 3 phase' : s.phase === 2 ? 'cả 2 phase' : 'Phase 1';
   document.getElementById('boss-battle-content').innerHTML = `
     <div class="bb-end-wrap">
       <div class="bb-end-emoji">🏆</div>
       <h3>Hạ Boss thành công!</h3>
-      <p>Bạn đã đánh bại Boss Từ Vựng qua cả 2 phase. Làm tốt lắm!</p>
+      <p>Bạn đã đánh bại Boss Từ Vựng qua ${phaseText}. Làm tốt lắm!</p>
       <div class="bb-end-stats">
         <div class="bb-end-stat"><div class="es-v">${s.totalAnswered}</div><div class="es-l">Câu hỏi</div></div>
         <div class="bb-end-stat"><div class="es-v">${acc}%</div><div class="es-l">Độ chính xác</div></div>
         <div class="bb-end-stat"><div class="es-v">${s.totalDamage}</div><div class="es-l">Tổng dame</div></div>
+        <div class="bb-end-stat"><div class="es-v">${Object.keys(s.cardStats||{}).length}</div><div class="es-l">Từ đã gặp</div></div>
       </div>
-      <div class="bb-end-btns">
+      ${buildCardStatsHTML(s)}
+      <div class="bb-end-btns" style="margin-top:20px">
         <button class="btn-bb-retry" onclick="startBossFight()">⚔️ Đấu Boss mới</button>
         <button class="btn-bb-back" onclick="showView('boss')">← Chọn thư mục khác</button>
       </div>
@@ -3239,12 +3500,20 @@ function endBossWin() {
 function endBossLose() {
   stopBossTimer();
   const s = bossState;
+  const phaseLabel = {1:'Phase 1',2:'Phase 2',3:'Phase 3'}[s.phase]||'Phase 1';
+  const acc = s.totalAnswered ? Math.round((s.totalCorrect / s.totalAnswered) * 100) : 0;
   document.getElementById('boss-battle-content').innerHTML = `
     <div class="bb-end-wrap">
       <div class="bb-end-emoji">💀</div>
       <h3>Bạn đã thua!</h3>
-      <p>Boss vẫn còn ${s.bossHP} / ${s.bossMaxHP} HP ở ${s.phase === 1 ? 'Phase 1' : 'Phase 2'}. Trả lời nhanh và chính xác liên tục để gây nhiều dame hơn nhé!</p>
-      <div class="bb-end-btns">
+      <p>Boss vẫn còn ${s.bossHP} / ${s.bossMaxHP} HP ở ${phaseLabel}. Trả lời nhanh và chính xác hơn nhé!</p>
+      <div class="bb-end-stats">
+        <div class="bb-end-stat"><div class="es-v">${s.totalAnswered}</div><div class="es-l">Câu hỏi</div></div>
+        <div class="bb-end-stat"><div class="es-v">${acc}%</div><div class="es-l">Độ chính xác</div></div>
+        <div class="bb-end-stat"><div class="es-v">${Object.keys(s.cardStats||{}).length}</div><div class="es-l">Từ đã gặp</div></div>
+      </div>
+      ${buildCardStatsHTML(s)}
+      <div class="bb-end-btns" style="margin-top:20px">
         <button class="btn-bb-retry" onclick="restartBossFight()">⟲ Bắt đầu lại</button>
         <button class="btn-bb-back" onclick="showView('boss')">← Chọn thư mục khác</button>
       </div>
