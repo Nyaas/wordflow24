@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WordFlow — Học từ vựng tiếng Anh</title>
+<title>WordFlow</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
 
@@ -245,6 +245,19 @@ body {
 .subfolder-tab .sf-cnt { font-size: 0.68rem; opacity: 0.75; }
 .subfolder-tab .sf-del { font-size: 0.7rem; opacity: 0.5; margin-left: 2px; }
 .subfolder-tab .sf-del:hover { opacity: 1; color: var(--red); }
+.subfolder-tab .sf-rename-btn {
+  font-size: 0.65rem; opacity: 0; margin-left: 2px; cursor: pointer;
+  transition: opacity 0.15s; padding: 0 2px;
+}
+.subfolder-tab:hover .sf-rename-btn { opacity: 0.6; }
+.subfolder-tab .sf-rename-btn:hover { opacity: 1; color: var(--yellow); }
+.sf-rename-input {
+  background: var(--surface); border: 1.5px solid var(--accent);
+  border-radius: 6px; color: var(--text); font-family: 'DM Sans', sans-serif;
+  font-size: 0.78rem; font-weight: 600; padding: 2px 8px;
+  outline: none; width: 110px;
+}
+.sf-rename-input:focus { box-shadow: 0 0 0 2px var(--glow); }
 .subfolder-tab .sf-pick {
   width: 14px; height: 14px; border-radius: 4px;
   border: 1.5px solid currentColor; opacity: 0.55;
@@ -715,44 +728,6 @@ textarea { min-height: 72px; }
 .btn-boss-start:hover { box-shadow: 0 6px 22px rgba(255,107,107,0.3); transform: translateY(-1px); }
 .btn-boss-start:disabled { opacity: 0.35; cursor: default; transform: none; box-shadow: none; }
 
-/* ── BOSS WORD-COUNT SELECTOR ── */
-.boss-word-count-wrap {
-  background: var(--surface); border: 1.5px solid var(--border2);
-  border-radius: var(--r-sm); padding: 16px 18px;
-  margin-bottom: 18px; display: none;
-}
-.boss-word-count-wrap.show { display: block; }
-.boss-word-count-label {
-  font-size: 0.78rem; font-weight: 600; color: var(--text-soft);
-  text-transform: uppercase; letter-spacing: 0.7px;
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 12px;
-}
-.boss-word-count-label span { color: var(--accent2); font-size: 1rem; font-family: 'DM Serif Display', serif; }
-.boss-count-slider {
-  width: 100%; -webkit-appearance: none; appearance: none;
-  height: 5px; border-radius: 50px;
-  background: linear-gradient(90deg, var(--accent) var(--pct,50%), var(--border2) var(--pct,50%));
-  outline: none; cursor: pointer;
-}
-.boss-count-slider::-webkit-slider-thumb {
-  -webkit-appearance: none; appearance: none;
-  width: 18px; height: 18px; border-radius: 50%;
-  background: var(--accent2); border: 2px solid var(--surface);
-  box-shadow: 0 0 8px var(--glow); cursor: pointer;
-}
-.boss-count-presets { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
-.boss-count-preset {
-  background: var(--surface2); border: 1.5px solid var(--border2);
-  border-radius: 50px; padding: 4px 13px; font-size: 0.78rem; font-weight: 600;
-  color: var(--text-soft); cursor: pointer; transition: all 0.15s;
-}
-.boss-count-preset:hover { color: var(--text); border-color: var(--border); }
-.boss-count-preset.active { background: var(--glow); border-color: var(--accent); color: var(--accent2); }
-
-/* difficulty badge inside choice */
-.bc-difficulty { font-size: 0.6rem; opacity: 0.6; margin-left: 3px; }
-
 /* ── BOSS BATTLE — COMBAT ── */
 #boss-battle-view { max-width: 620px; }
 .bb-top { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
@@ -981,6 +956,9 @@ textarea { min-height: 72px; }
     <div class="nav-item" data-view="discover">
       <span class="icon">🔍</span> Khám phá từ
     </div>
+    <div class="nav-item" data-view="shooter">
+      <span class="icon">🔫</span> Bắn súng
+    </div>
     <div class="sidebar-footer">
       Dữ liệu lưu trên trình duyệt này.<br>Không cần đăng nhập.
     </div>
@@ -994,6 +972,7 @@ textarea { min-height: 72px; }
     <div class="nav-item" data-view="boss"><span class="icon">⚔️</span> Boss</div>
     <div class="nav-item" data-view="add"><span class="icon">＋</span> Thêm</div>
     <div class="nav-item" data-view="discover"><span class="icon">🔍</span> Khám phá</div>
+    <div class="nav-item" data-view="shooter"><span class="icon">🔫</span> Bắn</div>
   </div>
 
   <!-- CONTENT -->
@@ -1091,23 +1070,6 @@ textarea { min-height: 72px; }
       </div>
 
       <div class="boss-folder-list" id="boss-folder-list"></div>
-
-      <!-- Word count selector (shown once folders are picked) -->
-      <div class="boss-word-count-wrap" id="boss-word-count-wrap">
-        <div class="boss-word-count-label">
-          Số từ mang vào trận
-          <span id="boss-count-display">20</span>
-        </div>
-        <input type="range" class="boss-count-slider" id="boss-count-slider"
-          min="5" max="100" step="5" value="20"
-          oninput="onBossCountSlide(this.value)">
-        <div class="boss-count-presets">
-          <div class="boss-count-preset" data-n="10" onclick="setBossWordCount(10)">10 từ<br><span style="opacity:0.6;font-size:0.65rem">nhanh</span></div>
-          <div class="boss-count-preset active" data-n="20" onclick="setBossWordCount(20)">20 từ<br><span style="opacity:0.6;font-size:0.65rem">tiêu chuẩn</span></div>
-          <div class="boss-count-preset" data-n="40" onclick="setBossWordCount(40)">40 từ<br><span style="opacity:0.6;font-size:0.65rem">dài hơn</span></div>
-          <div class="boss-count-preset" data-n="0" onclick="setBossWordCount(0)">Tất cả<br><span style="opacity:0.6;font-size:0.65rem">toàn bộ pool</span></div>
-        </div>
-      </div>
 
       <div class="boss-actions-row" style="justify-content:space-between">
         <div class="boss-summary" id="boss-summary"></div>
@@ -1225,6 +1187,11 @@ ambiguous | mơ hồ, không rõ ràng" oninput="renderBulkPreview()"></textarea
 
       <div id="discover-batch"></div>
       <div class="toast" id="discover-toast"></div>
+    </div>
+
+    <!-- SHOOTER GAME -->
+    <div class="view" id="shooter-view" style="padding:0;max-width:100%;margin-left:-36px;margin-right:-36px;margin-top:-32px;">
+      <div id="shooter-root"></div>
     </div>
 
   </main>
@@ -1610,10 +1577,13 @@ ${subNames.length > 0 ? `
   ${subNames.map(sf => {
     const key = `${dateStr}::${sf}`;
     const isSel = interactive && selectedSubfolders.has(key);
+    const safeSf = sf.replace(/'/g, "\\'");
+    const safeDate = dateStr.replace(/'/g, "\\'");
     return `
-      <div class="subfolder-tab ${isSel ? 'sf-selected' : ''}" onclick="openSubfolder('${dateStr}','${sf}')">
-        ${interactive ? `<span class="sf-pick" onclick="event.stopPropagation(); toggleSubfolderPick('${dateStr}','${sf}')">${isSel ? '✓' : ''}</span>` : ''}
-        📁 ${sf} <span class="sf-cnt">${subCounts[sf]}</span>
+      <div class="subfolder-tab ${isSel ? 'sf-selected' : ''}" id="sftab-${dateStr}-${sf.replace(/[^a-zA-Z0-9]/g,'_')}" onclick="openSubfolder('${safeDate}','${safeSf}')">
+        ${interactive ? `<span class="sf-pick" onclick="event.stopPropagation(); toggleSubfolderPick('${safeDate}','${safeSf}')">${isSel ? '✓' : ''}</span>` : ''}
+        📁 <span class="sf-label">${sf}</span> <span class="sf-cnt">${subCounts[sf]}</span>
+        ${interactive ? `<span class="sf-rename-btn" onclick="event.stopPropagation(); startRenameSubfolder('${safeDate}','${safeSf}',this)" title="Đổi tên">✏️</span>` : ''}
       </div>
     `;
   }).join('')}
@@ -2730,7 +2700,6 @@ let bossSelectedDays       = new Set();
 let bossSelectedSubfolders = new Set(); // composite keys "day::subfolderName" — picking small folders
 let bossPhaseMode     = 'both';   // 'p1' | 'p2' | 'both' — which phase(s) to fight
 let bossP2Direction   = 'vi2en';  // 'vi2en' | 'en2vi' — translation direction for Phase 2 (essay)
-let bossWordCount     = 20;       // 0 = all cards in pool; otherwise limit to this many (shuffled)
 let bossState         = null;
 let bossTimerInterval = null;
 
@@ -2771,8 +2740,111 @@ function bossBumpWeight(cardId, isCorrect) {
   if (!bossState.weights) bossState.weights = {};
   const cur = bossState.weights[cardId] || 1;
   bossState.weights[cardId] = isCorrect
-    ? Math.max(BOSS_WEIGHT_MIN, cur * 0.5)    // đúng → giảm tỉ lệ ra lại
-    : Math.min(BOSS_WEIGHT_MAX, cur + 2);     // sai → tăng tỉ lệ ra lại, mạnh hơn mức mặc định
+    ? Math.max(BOSS_WEIGHT_MIN, cur * 0.4)    // đúng → giảm mạnh hơn, ra ít lại
+    : Math.min(BOSS_WEIGHT_MAX, cur + 3);     // sai → tăng rất mạnh, ưu tiên ra lại ngay
+}
+
+// ═══════════════════════════════════════════
+// RENAME SUBFOLDER (calendar view)
+// ═══════════════════════════════════════════
+// Replaces the tab label with an inline input on click of ✏️
+function startRenameSubfolder(day, oldName, btnEl) {
+  // Find the tab element
+  const tab = btnEl.closest('.subfolder-tab');
+  if (!tab) return;
+  const labelEl = tab.querySelector('.sf-label');
+  if (!labelEl) return;
+
+  // Swap label for input
+  const input = document.createElement('input');
+  input.className = 'sf-rename-input';
+  input.value = oldName;
+  labelEl.replaceWith(input);
+  input.focus();
+  input.select();
+
+  const commit = () => {
+    const newName = input.value.trim();
+    if (newName && newName !== oldName) {
+      renameSubfolder(day, oldName, newName);
+    } else {
+      // restore if cancelled or no change
+      const span = document.createElement('span');
+      span.className = 'sf-label';
+      span.textContent = oldName;
+      input.replaceWith(span);
+    }
+  };
+
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    if (e.key === 'Escape') { input.value = oldName; input.blur(); }
+  });
+}
+
+// Renames all cards with subfolder === oldName (on the given day) to newName
+function renameSubfolder(day, oldName, newName) {
+  const cards = loadCards();
+  let changed = false;
+  cards.forEach(c => {
+    if (c.subfolder === oldName && toDateStr(c.createdAt) === day) {
+      c.subfolder = newName;
+      changed = true;
+    }
+  });
+  if (!changed) return;
+  saveCards(cards);
+
+  // Update selection state keys
+  const oldKey = `${day}::${oldName}`;
+  const newKey = `${day}::${newName}`;
+  if (selectedSubfolders.has(oldKey)) {
+    selectedSubfolders.delete(oldKey);
+    selectedSubfolders.add(newKey);
+  }
+  if (bossSelectedSubfolders.has(oldKey)) {
+    bossSelectedSubfolders.delete(oldKey);
+    bossSelectedSubfolders.add(newKey);
+  }
+  if (openSubfolderCtx && openSubfolderCtx.day === day && openSubfolderCtx.name === oldName) {
+    openSubfolderCtx.name = newName;
+  }
+
+  refreshFolderArea();
+  renderSelectionBar();
+}
+
+// Rename from boss setup view
+function startRenameBossSubfolder(day, oldName, btnEl) {
+  const item = btnEl.closest('.boss-subfolder-item');
+  if (!item) return;
+  const nameEl = item.querySelector('.boss-subfolder-name');
+  if (!nameEl) return;
+
+  const input = document.createElement('input');
+  input.className = 'sf-rename-input';
+  input.value = oldName;
+  input.style.cssText = 'width:130px;font-size:0.82rem;padding:3px 8px';
+  nameEl.textContent = '';
+  nameEl.appendChild(input);
+  input.focus();
+  input.select();
+
+  const commit = () => {
+    const newName = input.value.trim();
+    if (newName && newName !== oldName) {
+      renameSubfolder(day, oldName, newName);
+      renderBossSetup();
+    } else {
+      renderBossSetup();
+    }
+  };
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    if (e.key === 'Escape') { input.value = oldName; input.blur(); }
+  });
 }
 
 function weightedBossPick(pool, weights) {
@@ -2807,10 +2879,12 @@ function renderBossSetup() {
               const key = `${d}::${sf}`;
               const subChecked = bossSelectedSubfolders.has(key);
               const cnt = dayCards.filter(c=>c.subfolder===sf).length;
-              return `<div class="boss-subfolder-item ${subChecked?'checked':''}" onclick="event.stopPropagation(); toggleBossSubfolder('${d}','${sf}')">
+              const safeSf = sf.replace(/'/g,"\\'");
+              return `<div class="boss-subfolder-item ${subChecked?'checked':''}" onclick="event.stopPropagation(); toggleBossSubfolder('${d}','${safeSf}')">
                 <div class="boss-chk-sm">${subChecked ? '✓' : ''}</div>
                 <div class="boss-subfolder-name">📁 ${sf} <span style="opacity:0.6;font-weight:400">(thư mục nhỏ)</span></div>
                 <div class="boss-subfolder-cnt">${cnt} thẻ</div>
+                <button style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:0.75rem;padding:2px 4px" onclick="event.stopPropagation(); startRenameBossSubfolder('${d}','${safeSf}',this)" title="Đổi tên">✏️</button>
               </div>`;
             }).join('')}
           </div>` : ''}
@@ -2856,80 +2930,14 @@ function getBossPool() {
   return [...map.values()];
 }
 
-// Returns the actual pool to fight with (word count limited + shuffled)
-function getBossFightPool() {
-  const full = getBossPool();
-  if (bossWordCount <= 0 || bossWordCount >= full.length) return full.slice();
-  const shuffled = full.slice();
-  shuffle(shuffled);
-  return shuffled.slice(0, bossWordCount);
-}
-
-function onBossCountSlide(val) {
-  const n = parseInt(val);
-  bossWordCount = n;
-  updateBossCountUI(n);
-  renderBossSummary();
-}
-
-function setBossWordCount(n) {
-  bossWordCount = n;
-  const slider = document.getElementById('boss-count-slider');
-  const full = getBossPool().length;
-  if (slider) {
-    slider.max = Math.max(full, 5);
-    slider.value = n <= 0 ? slider.max : Math.min(n, full);
-    updateSliderGradient(slider);
-  }
-  document.querySelectorAll('.boss-count-preset').forEach(el => {
-    el.classList.toggle('active', parseInt(el.dataset.n) === n);
-  });
-  updateBossCountUI(n);
-  renderBossSummary();
-}
-
-function updateBossCountUI(n) {
-  const full = getBossPool().length;
-  const actual = (n <= 0 || n >= full) ? full : n;
-  const el = document.getElementById('boss-count-display');
-  if (el) el.textContent = n <= 0 ? `Tất cả (${full})` : `${Math.min(n, full)} / ${full}`;
-  updateSliderGradient(document.getElementById('boss-count-slider'));
-}
-
-function updateSliderGradient(slider) {
-  if (!slider) return;
-  const pct = ((slider.value - slider.min) / (slider.max - slider.min) * 100).toFixed(1);
-  slider.style.setProperty('--pct', pct + '%');
-}
-
 function renderBossSummary() {
-  const full = getBossPool();
-  const n    = (bossWordCount <= 0 || bossWordCount >= full.length) ? full.length : Math.min(bossWordCount, full.length);
-  const hp   = bossMaxHPFor(full.slice(0, n));
+  const pool  = getBossPool();
+  const hp    = bossMaxHPFor(pool);
   const modeLabel = bossPhaseMode === 'p1' ? 'Chỉ Phase 1' : bossPhaseMode === 'p2' ? 'Chỉ Phase 2' : 'Cả 2 Phase';
-  const hasPool = full.length > 0;
-
-  // Show/hide word-count control
-  const wcWrap = document.getElementById('boss-word-count-wrap');
-  if (wcWrap) {
-    wcWrap.classList.toggle('show', hasPool);
-    if (hasPool) {
-      const slider = document.getElementById('boss-count-slider');
-      if (slider) {
-        slider.max = Math.max(full.length, 5);
-        slider.min = Math.min(5, full.length);
-        slider.step = full.length <= 20 ? 1 : 5;
-        if (parseInt(slider.value) > full.length) slider.value = full.length;
-        updateSliderGradient(slider);
-      }
-      updateBossCountUI(bossWordCount);
-    }
-  }
-
-  document.getElementById('boss-summary').innerHTML = !hasPool
+  document.getElementById('boss-summary').innerHTML = pool.length === 0
     ? `Chưa chọn thư mục nào.`
-    : `<strong>${n} từ</strong> sẽ vào trận · ${modeLabel} · Boss <strong>${hp} HP</strong>/phase.`;
-  document.getElementById('btn-boss-start').disabled = !hasPool;
+    : `Đã chọn <strong>${bossSelectedDays.size} thư mục lớn</strong> + <strong>${bossSelectedSubfolders.size} thư mục nhỏ</strong> — <strong>${pool.length} từ</strong> · ${modeLabel} · Boss <strong>${hp} HP</strong>/phase.`;
+  document.getElementById('btn-boss-start').disabled = pool.length === 0;
 }
 
 function makeBossState(pool) {
@@ -2950,7 +2958,7 @@ function makeBossState(pool) {
 }
 
 function startBossFight() {
-  const pool = getBossFightPool();
+  const pool = getBossPool();
   if (pool.length === 0) return;
   bossState = makeBossState(pool);
   showView('boss-battle');
@@ -2975,50 +2983,20 @@ function refillBossQueue() {
   s.queue = q;
 }
 
-// Generates 4 multiple-choice options for Phase 1.
-// Distractor priority (hardest first):
-//   1. Cards in the same subfolder as the target (most confusable)
-//   2. Cards from the same day folder
-//   3. Cards from the battle pool (other words the player is studying)
-//   4. Any other card in the collection (easy fallback)
-// This makes distractors contextually related, so "meticulous / diligent / assiduous / fastidious"
-// rather than "meticulous / airport / rice / mouse" — much harder and more educational.
 function genBossChoices(card) {
-  const all        = loadCards();
-  const pool       = bossState ? bossState.pool : all;
-  const cardDay    = toDateStr(card.createdAt);
-  const cardSF     = card.subfolder || null;
-
-  // Build candidate tiers (excluding the card itself and duplicates on vi)
+  const all     = loadCards();
+  const others  = all.filter(c => c.id !== card.id && c.vi !== card.vi);
+  shuffle(others);
+  const distractors = []; // each: { vi, source: cardObj|null, isCorrect:false }
   const seen = new Set([card.vi]);
-  const tier = { same_sf: [], same_day: [], same_pool: [], any: [] };
-
-  for (const c of all) {
-    if (c.id === card.id) continue;
+  for (const c of others) {
+    if (distractors.length >= 3) break;
     if (seen.has(c.vi)) continue;
     seen.add(c.vi);
-    const obj = { vi: c.vi, source: c, isCorrect: false };
-    const cDay = toDateStr(c.createdAt);
-    const cSF  = c.subfolder || null;
-    if (cardSF && cSF === cardSF && cDay === cardDay) tier.same_sf.push(obj);
-    else if (cDay === cardDay) tier.same_day.push(obj);
-    else if (pool.some(p => p.id === c.id)) tier.same_pool.push(obj);
-    else tier.any.push(obj);
+    distractors.push({ vi: c.vi, source: c, isCorrect: false });
   }
-
-  // Shuffle each tier independently so we don't always pick the same ones
-  shuffle(tier.same_sf); shuffle(tier.same_day); shuffle(tier.same_pool); shuffle(tier.any);
-
-  const distractors = [];
-  for (const src of [...tier.same_sf, ...tier.same_day, ...tier.same_pool, ...tier.any]) {
-    if (distractors.length >= 3) break;
-    distractors.push(src);
-  }
-
-  // Absolute fallback if collection is tiny
-  const filler = ['(không có nghĩa khác)', '(chưa có dữ liệu)', '(bỏ qua đáp án này)'];
+  const filler = ['(không có nghĩa khác)','(chưa có dữ liệu)','(bỏ qua đáp án này)'];
   while (distractors.length < 3) distractors.push({ vi: filler[distractors.length], source: null, isCorrect: false });
-
   const choices = [...distractors, { vi: card.vi, source: card, isCorrect: true }];
   shuffle(choices);
   return choices;
@@ -3260,18 +3238,8 @@ function renderBossBattle(answeredIdx, correctIdx, dmg, playerDmg, isCorrect, ra
         if (i === correctIdx) cls += ' correct';
         else if (i === answeredIdx) cls += ' wrong';
       }
-      // Determine if this distractor is from the same subfolder/day (show a subtle hint on reveal)
-      let sameTopicHint = '';
-      if (s.answered && c.source && !c.isCorrect) {
-        const cDay  = toDateStr(c.source.createdAt);
-        const curDay = toDateStr(s.current.createdAt);
-        const sameSF  = c.source.subfolder && c.source.subfolder === s.current.subfolder;
-        const sameDay = cDay === curDay;
-        if (sameSF) sameTopicHint = `<span class="bc-difficulty">🔥 cùng thư mục</span>`;
-        else if (sameDay) sameTopicHint = `<span class="bc-difficulty">📅 cùng ngày</span>`;
-      }
       const reveal = (s.answered && c.source)
-        ? `<span class="bc-reveal">${c.source.en}${c.source.phonetic ? ' · ' + c.source.phonetic : ''}${sameTopicHint}</span>`
+        ? `<span class="bc-reveal">${c.source.en}${c.source.phonetic ? ' · ' + c.source.phonetic : ''}</span>`
         : '';
       return `<button class="${cls}" ${s.answered ? 'disabled' : ''} onclick="chooseBossAnswer(${i})"><span class="bc-vi">${c.vi}</span>${reveal}</button>`;
     }).join('');
@@ -3442,6 +3410,1083 @@ function checkDailyNotif() {
 updateBadge();
 renderHome();
 checkDailyNotif();
+</script>
+<!-- ══════════════════════════════════════════════════════════
+     WORDGUN — TOP-DOWN SHOOTER  (integrated into WordFlow)
+     ══════════════════════════════════════════════════════════ -->
+<style>
+/* ── Shooter outer shell ── */
+#shooter-root{position:relative;width:100%;background:#0a0a0f;font-family:'DM Sans',sans-serif;color:#e8e8f0;}
+.sh-screen{display:none;flex-direction:column;}
+.sh-screen.sh-active{display:flex;}
+
+/* ── Lobby ── */
+#sh-lobby{align-items:center;justify-content:center;min-height:calc(100vh - 60px);padding:32px 20px;background:radial-gradient(ellipse at 50% 30%,#1a0a2e 0%,#0a0a0f 70%);}
+.sh-logo{font-family:'DM Serif Display',serif;font-size:2.4rem;color:#a594ff;text-align:center;margin-bottom:6px;text-shadow:0 0 30px rgba(124,106,255,.5);}
+.sh-tagline{color:#7878a0;font-size:.88rem;text-align:center;margin-bottom:32px;}
+.sh-lobby-cols{display:flex;gap:20px;width:100%;max-width:820px;flex-wrap:wrap;justify-content:center;}
+.sh-panel{background:#18181f;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:20px;flex:1;min-width:240px;}
+.sh-panel-title{font-size:.72rem;font-weight:700;color:#7878a0;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;}
+/* gun selector */
+.sh-gun-list{display:flex;flex-direction:column;gap:8px;}
+.sh-gun-item{display:flex;align-items:center;gap:12px;background:#22222c;border:1.5px solid rgba(255,255,255,.07);border-radius:10px;padding:10px 14px;cursor:pointer;transition:all .15s;user-select:none;}
+.sh-gun-item:hover{border-color:rgba(124,106,255,.4);}
+.sh-gun-item.sh-gun-sel{border-color:#7c6aff;background:rgba(124,106,255,.15);}
+.sh-gun-item.sh-gun-locked{opacity:.38;cursor:not-allowed;}
+.sh-gi-icon{font-size:1.5rem;flex-shrink:0;}
+.sh-gi-name{font-weight:700;font-size:.88rem;}
+.sh-gi-stats{font-size:.68rem;color:#7878a0;}
+.sh-gi-price{font-size:.65rem;color:#f5c842;margin-top:1px;}
+/* folder picker */
+.sh-folder-list{display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;margin-bottom:12px;}
+.sh-fi{display:flex;align-items:center;gap:10px;background:#22222c;border:1.5px solid rgba(255,255,255,.07);border-radius:9px;padding:9px 12px;cursor:pointer;transition:all .15s;user-select:none;}
+.sh-fi:hover{border-color:rgba(255,255,255,.14);}
+.sh-fi.sh-fi-sel{border-color:#7c6aff;background:rgba(124,106,255,.14);}
+.sh-fi-chk{width:15px;height:15px;border-radius:4px;border:1.5px solid rgba(255,255,255,.2);background:#22222c;display:flex;align-items:center;justify-content:center;font-size:.6rem;flex-shrink:0;}
+.sh-fi.sh-fi-sel .sh-fi-chk{background:#7c6aff;border-color:#7c6aff;}
+.sh-fi-label{font-size:.82rem;font-weight:600;flex:1;}
+.sh-fi-cnt{font-size:.7rem;color:#7878a0;}
+/* diff & coin row */
+.sh-diff-row{display:flex;gap:6px;margin-bottom:12px;}
+.sh-diff-btn{flex:1;background:#22222c;border:1.5px solid rgba(255,255,255,.08);border-radius:8px;padding:8px 6px;text-align:center;cursor:pointer;font-size:.72rem;font-weight:600;color:#7878a0;transition:all .15s;}
+.sh-diff-btn:hover{border-color:rgba(255,255,255,.2);color:#e8e8f0;}
+.sh-diff-btn.sh-diff-sel{border-color:#7c6aff;background:rgba(124,106,255,.18);color:#a594ff;}
+.sh-coin-row{display:flex;align-items:center;justify-content:space-between;background:#22222c;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:.82rem;}
+.sh-coin-val{font-weight:700;color:#f5c842;font-size:1rem;}
+.sh-bet-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;}
+.sh-bet-btn{flex:1;min-width:55px;background:#22222c;border:1.5px solid rgba(255,255,255,.08);border-radius:8px;padding:7px 4px;text-align:center;cursor:pointer;font-size:.68rem;font-weight:600;color:#7878a0;transition:all .15s;}
+.sh-bet-btn:hover{border-color:#f5c842;}
+.sh-bet-btn.sh-bet-sel{border-color:#f5c842;background:rgba(245,200,66,.12);color:#f5c842;}
+.sh-start-btn{width:100%;margin-top:14px;background:linear-gradient(135deg,#7c6aff 0%,#9b8fff 100%);color:#fff;border:none;border-radius:50px;padding:13px;font-size:.88rem;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:.3px;}
+.sh-start-btn:hover{box-shadow:0 6px 22px rgba(124,106,255,.4);transform:translateY(-1px);}
+.sh-start-btn:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none;}
+.sh-summary{font-size:.75rem;color:#7878a0;text-align:center;padding:8px;background:#22222c;border-radius:8px;line-height:1.6;}
+.sh-summary strong{color:#e8e8f0;}
+
+/* ── HUD (in-game overlay) ── */
+#sh-hud{position:absolute;inset:0;pointer-events:none;z-index:20;}
+.sh-hud-tl,.sh-hud-tr,.sh-hud-bl,.sh-hud-br{position:absolute;display:flex;flex-direction:column;gap:4px;}
+.sh-hud-tl{top:12px;left:12px;}
+.sh-hud-tr{top:12px;right:12px;align-items:flex-end;}
+.sh-hud-bl{bottom:12px;left:12px;}
+.sh-hud-br{bottom:12px;right:12px;align-items:flex-end;}
+.sh-hud-pill{background:rgba(0,0,0,.65);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:5px 10px;font-size:.72rem;font-weight:600;backdrop-filter:blur(4px);}
+.sh-hp-bar{width:140px;height:8px;background:rgba(255,255,255,.15);border-radius:50px;overflow:hidden;}
+.sh-hp-fill{height:100%;background:linear-gradient(90deg,#3ecf8e,#4ecdc4);border-radius:50px;transition:width .3s;}
+.sh-hp-fill.low{background:linear-gradient(90deg,#ff6b6b,#ff9f43);}
+.sh-ammo-row{display:flex;gap:3px;flex-wrap:wrap;max-width:120px;}
+.sh-bullet-pip{width:5px;height:12px;border-radius:2px;background:#a594ff;box-shadow:0 0 4px #7c6aff;}
+.sh-bullet-pip.empty{background:rgba(255,255,255,.18);box-shadow:none;}
+.sh-wave-pill{background:rgba(124,106,255,.3);border:1px solid #7c6aff;color:#a594ff;}
+.sh-coin-pill{background:rgba(245,200,66,.15);border:1px solid #f5c842;color:#f5c842;}
+.sh-reload-indicator{color:#f5c842;animation:sh-blink .4s infinite;}
+@keyframes sh-blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+/* minimap */
+#sh-minimap{position:absolute;bottom:12px;right:12px;width:100px;height:100px;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.15);border-radius:6px;overflow:hidden;}
+
+/* ── Crosshair ── */
+#sh-crosshair{position:absolute;pointer-events:none;z-index:25;transform:translate(-50%,-50%);}
+.sh-ch-default svg{filter:drop-shadow(0 0 3px rgba(255,255,255,.7));}
+.sh-ch-scope{width:120px;height:120px;}
+.sh-ch-scope circle{stroke:#a594ff;fill:none;stroke-width:1.5;}
+.sh-ch-scope line{stroke:#a594ff;stroke-width:1;}
+
+/* ── Vocab popup (when hit) ── */
+#sh-vocab-popup{position:absolute;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);z-index:50;display:none;align-items:center;justify-content:center;}
+#sh-vocab-popup.sh-pop-show{display:flex;}
+.sh-pop-card{background:#18181f;border:2px solid rgba(255,107,107,.4);border-radius:16px;padding:28px 24px;max-width:420px;width:90%;text-align:center;animation:sh-pop-in .22s ease-out;}
+@keyframes sh-pop-in{from{transform:scale(.85);opacity:0;}to{transform:scale(1);opacity:1;}}
+.sh-pop-title{font-size:.7rem;color:#ff6b6b;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;}
+.sh-pop-word{font-family:'DM Serif Display',serif;font-size:1.9rem;color:#fff;margin-bottom:6px;}
+.sh-pop-ph{font-size:.82rem;color:#a594ff;margin-bottom:14px;}
+.sh-pop-timer{height:4px;background:rgba(255,255,255,.15);border-radius:50px;margin-bottom:16px;overflow:hidden;}
+.sh-pop-timer-fill{height:100%;background:linear-gradient(90deg,#ff6b6b,#ff9f43);border-radius:50px;transition:width .1s linear;}
+.sh-pop-choices{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.sh-pop-choice{background:#22222c;border:1.5px solid rgba(255,255,255,.1);border-radius:10px;padding:11px;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .15s;}
+.sh-pop-choice:hover:not(:disabled){border-color:#7c6aff;background:rgba(124,106,255,.18);}
+.sh-pop-choice.sh-c-ok{background:rgba(62,207,142,.18);border-color:#3ecf8e;color:#3ecf8e;}
+.sh-pop-choice.sh-c-bad{background:rgba(255,107,107,.18);border-color:#ff6b6b;color:#ff6b6b;}
+.sh-pop-choice:disabled{cursor:default;}
+.sh-pop-feedback{margin-top:10px;font-size:.82rem;font-weight:600;min-height:18px;}
+.sh-pop-feedback.ok{color:#3ecf8e;}
+.sh-pop-feedback.bad{color:#ff6b6b;}
+
+/* ── Wave clear / game over overlays ── */
+.sh-overlay{position:absolute;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(5px);z-index:40;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;display:none;}
+.sh-overlay.sh-ov-show{display:flex;}
+.sh-ov-emoji{font-size:3.5rem;}
+.sh-ov-title{font-family:'DM Serif Display',serif;font-size:1.8rem;text-align:center;}
+.sh-ov-sub{color:#7878a0;font-size:.88rem;text-align:center;max-width:340px;line-height:1.6;}
+.sh-ov-btn{background:#7c6aff;color:#fff;border:none;border-radius:50px;padding:11px 28px;font-size:.88rem;font-weight:700;cursor:pointer;transition:all .15s;}
+.sh-ov-btn:hover{background:#a594ff;}
+.sh-ov-btn.secondary{background:none;border:1px solid rgba(255,255,255,.2);color:#7878a0;}
+.sh-ov-btn.secondary:hover{color:#e8e8f0;}
+.sh-ov-stats{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+.sh-ov-stat{background:#22222c;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 14px;text-align:center;min-width:80px;}
+.sh-ov-stat .v{font-family:'DM Serif Display',serif;font-size:1.3rem;color:#a594ff;}
+.sh-ov-stat .l{font-size:.62rem;color:#7878a0;text-transform:uppercase;letter-spacing:.6px;}
+
+/* ── Canvas ── */
+#sh-canvas-wrap{position:relative;width:100%;cursor:none;overflow:hidden;}
+#sh-canvas{display:block;width:100%;image-rendering:pixelated;}
+</style>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// WORDGUN — TOP-DOWN SHOOTER
+// ═══════════════════════════════════════════════════════
+
+(function(){
+'use strict';
+
+// ── Constants ──
+const TILE = 40;
+const MAP_W = 32, MAP_H = 22;
+const CANVAS_W = MAP_W * TILE, CANVAS_H = MAP_H * TILE;
+const PLAYER_SPD = 160, BULLET_SPD = 400;
+const ENEMY_AVAT = ['👹','🐉','👾','🧟','💀','🦂','🤖','👻'];
+
+const GUNS_DEF = [
+  {id:'pistol',  name:'Pistol',    icon:'🔫', price:0,   dmg:25, fireRate:0.45, magSize:8,  reloadTime:1.5, spread:0.12, hasScope:false, bulletColor:'#a594ff'},
+  {id:'smg',     name:'SMG',       icon:'💥', price:200, dmg:14, fireRate:0.12, magSize:20, reloadTime:2.0, spread:0.18, hasScope:false, bulletColor:'#ff9f43'},
+  {id:'shotgun', name:'Shotgun',   icon:'🪃', price:350, dmg:18, fireRate:0.8,  magSize:5,  reloadTime:2.5, spread:0.0,  hasScope:false, bulletColor:'#f5c842', pellets:5},
+  {id:'sniper',  name:'Sniper',    icon:'🎯', price:500, dmg:90, fireRate:1.4,  magSize:4,  reloadTime:2.8, spread:0.02, hasScope:true,  bulletColor:'#4ecdc4'},
+  {id:'rifle',   name:'Assault',   icon:'⚡', price:450, dmg:30, fireRate:0.18, magSize:25, reloadTime:2.2, spread:0.09, hasScope:true,  bulletColor:'#3ecf8e'},
+  {id:'laser',   name:'Laser Gun', icon:'🔆', price:900, dmg:55, fireRate:0.25, magSize:12, reloadTime:1.8, spread:0.03, hasScope:true,  bulletColor:'#ff6b6b'},
+];
+
+const DIFF_DEF = {
+  easy:  {name:'Dễ 😊',  enemyHp:60,  enemySpd:55,  enemyDmg:15, enemyFireRate:1.8, waves:3, enemiesPerWave:3, mult:2},
+  medium:{name:'TB 😐',   enemyHp:90,  enemySpd:75,  enemyDmg:22, enemyFireRate:1.2, waves:4, enemiesPerWave:4, mult:3},
+  hard:  {name:'Khó 😤', enemyHp:130, enemySpd:95,  enemyDmg:32, enemyFireRate:0.85,waves:5, enemiesPerWave:5, mult:4},
+  insane:{name:'Ác 💀',  enemyHp:180, enemySpd:120, enemyDmg:45, enemyFireRate:0.55,waves:6, enemiesPerWave:7, mult:5},
+};
+
+// ── Persistent save ──
+const SH_KEY = 'wordgun_sh';
+let shSave = loadShSave();
+function loadShSave(){
+  try{return JSON.parse(localStorage.getItem(SH_KEY))||{coins:200,ownedGuns:['pistol'],wins:0,losses:0};}
+  catch{return{coins:200,ownedGuns:['pistol'],wins:0,losses:0};}
+}
+function saveShPersist(){localStorage.setItem(SH_KEY,JSON.stringify(shSave));}
+function shAddCoins(n){shSave.coins=Math.max(0,shSave.coins+n);saveShPersist();renderShCoinDisplay();}
+function renderShCoinDisplay(){
+  const el=document.getElementById('sh-coins-display');
+  if(el) el.textContent=shSave.coins;
+}
+
+// ── Load vocab from WordFlow ──
+function loadWFCards(){
+  try{return JSON.parse(localStorage.getItem('wf2_cards'))||[];}catch{return[];}
+}
+function groupWFByFolder(cards){
+  const m={};
+  cards.forEach(c=>{
+    const k=c.subfolder?`📁 ${c.subfolder}`:`📅 ${fmtDate(c.createdAt)}`;
+    (m[k]=m[k]||[]).push(c);
+  });
+  return m;
+}
+function fmtDate(ms){const d=new Date(ms);return`${d.getDate()}/${d.getMonth()+1}`;}
+
+// ── Game state ──
+let G = null; // active game state
+let selGunId = 'pistol';
+let selFolders = new Set();
+let selDiff = 'easy';
+let betMode = false;
+let betAmt  = 0;
+
+// ── DOM refs (set after lobby render) ──
+let canvas, ctx, canvasWrap;
+let animId = null;
+let keys = {};
+let mouseX = 0, mouseY = 0;
+let mouseDown = false;
+let lastShot = 0;
+let reloading = false;
+let reloadStart = 0;
+
+// ════════════════════════════
+// LOBBY
+// ════════════════════════════
+function renderShooterLobby(){
+  renderShCoinDisplay();
+  const cards = loadWFCards();
+  const folders = groupWFByFolder(cards);
+  const folderKeys = Object.keys(folders);
+
+  // Gun list
+  const gunListHTML = GUNS_DEF.map(g=>{
+    const owned = shSave.ownedGuns.includes(g.id);
+    const sel   = selGunId === g.id;
+    return `<div class="sh-gun-item ${sel?'sh-gun-sel':''} ${!owned?'sh-gun-locked':''}"
+      onclick="${owned?`shSelectGun('${g.id}')`:''}" title="${!owned?`Mua ${g.price}🪙`:''}">
+      <div class="sh-gi-icon">${g.icon}</div>
+      <div><div class="sh-gi-name">${g.name}${g.hasScope?' 🔭':''}</div>
+      <div class="sh-gi-stats">💥${g.dmg} | 📦${g.magSize} | ⚡${(1/g.fireRate).toFixed(1)}/s</div>
+      ${!owned?`<div class="sh-gi-price">🔒 ${g.price}🪙</div>`:''}</div>
+    </div>`;
+  }).join('');
+
+  // Folder list
+  const folderHTML = folderKeys.length === 0
+    ? '<div style="color:#4a4a68;font-size:.8rem;padding:8px 0">Chưa có từ vựng — vào Thêm thẻ</div>'
+    : folderKeys.map(k=>{
+        const sel = selFolders.has(k);
+        return `<div class="sh-fi ${sel?'sh-fi-sel':''}" onclick="shToggleFolder('${k.replace(/'/g,"\\'")}')">
+          <div class="sh-fi-chk">${sel?'✓':''}</div>
+          <div class="sh-fi-label">${k}</div>
+          <div class="sh-fi-cnt">${folders[k].length}</div>
+        </div>`;
+      }).join('');
+
+  // Diff
+  const diffHTML = Object.entries(DIFF_DEF).map(([k,d])=>
+    `<div class="sh-diff-btn ${selDiff===k?'sh-diff-sel':''}" onclick="shSetDiff('${k}')">${d.name}</div>`
+  ).join('');
+
+  // Total vocab
+  let totalVocab=0;
+  selFolders.forEach(k=>totalVocab+=(folders[k]||[]).length);
+  const canStart = totalVocab >= 3;
+  const d = DIFF_DEF[selDiff];
+  const summaryTxt = totalVocab===0
+    ? 'Chọn ít nhất 1 thư mục từ vựng (≥3 từ)'
+    : `<strong>${totalVocab} từ</strong> làm đạn · Boss <strong>${d.enemiesPerWave} địch/wave</strong> · <strong>${d.waves} wave</strong>`;
+
+  document.getElementById('shooter-root').innerHTML = `
+<div id="sh-lobby" class="sh-screen sh-active" style="display:flex">
+  <div class="sh-logo">🔫 WORDGUN</div>
+  <div class="sh-tagline">Dùng từ vựng làm đạn · Né đạn · Đánh bại Boss</div>
+  <div class="sh-lobby-cols">
+    <div>
+      <div class="sh-panel">
+        <div class="sh-panel-title">🔫 Chọn súng</div>
+        <div class="sh-gun-list">${gunListHTML}</div>
+      </div>
+      <div class="sh-panel" style="margin-top:14px">
+        <div class="sh-panel-title">🪙 Coin: <span id="sh-coins-display" style="color:#f5c842">${shSave.coins}</span>
+          &nbsp;·&nbsp; Thắng: ${shSave.wins} &nbsp;·&nbsp; Thua: ${shSave.losses}</div>
+        <div class="sh-panel-title" style="margin-top:8px">⚡ Độ khó</div>
+        <div class="sh-diff-row">${diffHTML}</div>
+        <div class="sh-panel-title" style="margin-top:10px">🎲 Cược (tuỳ chọn)</div>
+        <div class="sh-bet-row">
+          <div class="sh-bet-btn ${betAmt===0?'sh-bet-sel':''}" onclick="shSetBet(0)">Không cược</div>
+          <div class="sh-bet-btn ${betAmt===50?'sh-bet-sel':''}" onclick="shSetBet(50)">50🪙 x${d.mult}</div>
+          <div class="sh-bet-btn ${betAmt===150?'sh-bet-sel':''}" onclick="shSetBet(150)">150🪙 x${d.mult}</div>
+          <div class="sh-bet-btn ${betAmt===300?'sh-bet-sel':''}" onclick="shSetBet(300)">300🪙 x${d.mult}</div>
+        </div>
+        <div style="font-size:.68rem;color:#7878a0;margin-top:4px">
+          ${betAmt>0?`Thắng +${betAmt*d.mult}🪙 · Thua -${betAmt}🪙`:'Chơi free — thắng nhận 30🪙'}
+        </div>
+        <div style="margin-top:14px">
+          <div class="sh-panel-title">💡 Mua súng từ coin</div>
+          ${GUNS_DEF.filter(g=>!shSave.ownedGuns.includes(g.id)).map(g=>
+            `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+              <span style="font-size:.8rem">${g.icon} ${g.name}</span>
+              <button onclick="shBuyGun('${g.id}')" style="background:${shSave.coins>=g.price?'#7c6aff':'#22222c'};color:#fff;border:none;border-radius:50px;padding:5px 14px;font-size:.72rem;cursor:pointer;">
+                ${shSave.coins>=g.price?`🛒 ${g.price}🪙`:`🔒 ${g.price}🪙`}
+              </button>
+            </div>`
+          ).join('') || '<div style="font-size:.75rem;color:#3ecf8e;padding:6px 0">✓ Đã sở hữu tất cả súng!</div>'}
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="sh-panel">
+        <div class="sh-panel-title">📦 Từ vựng làm đạn</div>
+        <div class="sh-folder-list">${folderHTML}</div>
+        <div class="sh-summary">${summaryTxt}</div>
+        <button class="sh-start-btn" ${canStart?'':'disabled'} onclick="shStartGame()">⚔️ BẮT ĐẦU</button>
+      </div>
+      <div class="sh-panel" style="margin-top:14px">
+        <div class="sh-panel-title">🎮 Điều khiển</div>
+        <div style="font-size:.78rem;color:#7878a0;line-height:2">
+          <b style="color:#e8e8f0">WASD</b> Di chuyển<br>
+          <b style="color:#e8e8f0">Chuột</b> Ngắm bắn<br>
+          <b style="color:#e8e8f0">Click trái</b> Bắn<br>
+          <b style="color:#e8e8f0">R</b> Nạp đạn<br>
+          <b style="color:#e8e8f0">Esc</b> Thoát game<br>
+          <b style="color:#ff6b6b">Trúng đạn</b> → Trả lời từ vựng để giảm dame<br>
+          <b style="color:#a594ff">Súng 🔭</b> có ngắm scope (sniper/rifle/laser)
+        </div>
+      </div>
+    </div>
+  </div>
+</div>`;
+}
+
+window.shSelectGun = id => { selGunId = id; renderShooterLobby(); };
+window.shToggleFolder = k => {
+  if(selFolders.has(k)) selFolders.delete(k); else selFolders.add(k);
+  renderShooterLobby();
+};
+window.shSetDiff = d => { selDiff = d; renderShooterLobby(); };
+window.shSetBet  = n => { betAmt = n; renderShooterLobby(); };
+window.shBuyGun  = id => {
+  const g = GUNS_DEF.find(x=>x.id===id);
+  if(!g||shSave.ownedGuns.includes(id)) return;
+  if(shSave.coins<g.price){alert('Không đủ coin!'); return;}
+  shAddCoins(-g.price);
+  shSave.ownedGuns.push(id);
+  saveShPersist();
+  renderShooterLobby();
+};
+
+// ════════════════════════════
+// MAP GENERATION
+// ════════════════════════════
+function generateMap(){
+  // 0=floor, 1=wall, 2=cover(low wall)
+  const m = Array.from({length:MAP_H},()=>Array(MAP_W).fill(0));
+  // border walls
+  for(let x=0;x<MAP_W;x++){m[0][x]=1;m[MAP_H-1][x]=1;}
+  for(let y=0;y<MAP_H;y++){m[y][0]=1;m[y][MAP_W-1]=1;}
+  // random room dividers + cover objects
+  const seed = Date.now();
+  const rng = (n,s)=>Math.floor(((Math.sin(n*s+seed)*43758.5453)%1+1)%1*n);
+  // vertical walls with gaps
+  for(let i=0;i<4;i++){
+    const wx = 5+i*6+rng(3,i*7);
+    const gapY = 3+rng(MAP_H-8,i*13);
+    for(let y=1;y<MAP_H-1;y++){
+      if(y<gapY||y>gapY+3) m[y][wx]=1;
+    }
+  }
+  // cover boxes
+  for(let i=0;i<18;i++){
+    const cx = 2+rng(MAP_W-4,i*3+1);
+    const cy = 2+rng(MAP_H-4,i*5+2);
+    if(cx>1&&cy>1&&cx<MAP_W-2&&cy<MAP_H-2) m[cy][cx]=2;
+  }
+  // clear spawn zones
+  for(let dy=-2;dy<=2;dy++) for(let dx=-2;dx<=2;dx++){
+    const x=3+dx, y=Math.floor(MAP_H/2)+dy;
+    if(x>0&&y>0&&x<MAP_W-1&&y<MAP_H-1) m[y][x]=0;
+  }
+  return m;
+}
+
+// ════════════════════════════
+// GAME INIT
+// ════════════════════════════
+window.shStartGame = () => {
+  const cards = loadWFCards();
+  const folders = groupWFByFolder(cards);
+  let pool = [];
+  selFolders.forEach(k=>{pool=pool.concat(folders[k]||[]);});
+  shShuffle(pool);
+  if(pool.length<3){alert('Cần ít nhất 3 từ!');return;}
+
+  if(betAmt>0&&shSave.coins<betAmt){alert('Không đủ coin để cược!');return;}
+
+  const gunDef = GUNS_DEF.find(g=>g.id===selGunId)||GUNS_DEF[0];
+  const diff   = DIFF_DEF[selDiff];
+
+  // Build canvas UI
+  document.getElementById('shooter-root').innerHTML = `
+<div id="sh-game" class="sh-screen sh-active" style="display:flex;flex-direction:column;position:relative;min-height:calc(100vh - 60px)">
+  <div id="sh-canvas-wrap">
+    <canvas id="sh-canvas"></canvas>
+    <div id="sh-hud">
+      <div class="sh-hud-tl">
+        <div class="sh-hud-pill">❤️ <span id="hud-hp">100</span>/100</div>
+        <div class="sh-hp-bar"><div class="sh-hp-fill" id="hud-hp-bar" style="width:100%"></div></div>
+        <div class="sh-hud-pill sh-wave-pill">Wave <span id="hud-wave">1</span>/<span id="hud-waves">${diff.waves}</span></div>
+      </div>
+      <div class="sh-hud-tr">
+        <div class="sh-hud-pill sh-coin-pill">🪙 <span id="hud-coins">${shSave.coins}</span></div>
+        <div class="sh-hud-pill">🎯 <span id="hud-kills">0</span> kills</div>
+      </div>
+      <div class="sh-hud-bl">
+        <div class="sh-hud-pill">${gunDef.icon} <span id="hud-ammo">${gunDef.magSize}</span>/<span>${gunDef.magSize}</span></div>
+        <div class="sh-ammo-row" id="hud-ammo-pips"></div>
+        <div id="hud-reload" class="sh-hud-pill sh-reload-indicator" style="display:none">⟳ Đang nạp...</div>
+      </div>
+    </div>
+    <div id="sh-crosshair"><svg width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="11" stroke="#fff" stroke-width="1.2" fill="none" opacity=".7"/><line x1="14" y1="2" x2="14" y2="9" stroke="#fff" stroke-width="1.4" opacity=".9"/><line x1="14" y1="19" x2="14" y2="26" stroke="#fff" stroke-width="1.4" opacity=".9"/><line x1="2" y1="14" x2="9" y2="14" stroke="#fff" stroke-width="1.4" opacity=".9"/><line x1="19" y1="14" x2="26" y2="14" stroke="#fff" stroke-width="1.4" opacity=".9"/><circle cx="14" cy="14" r="1.5" fill="#fff" opacity=".9"/></svg></div>
+    <div id="sh-scope-overlay" style="position:absolute;inset:0;display:none;pointer-events:none;z-index:22;">
+      <div style="position:absolute;inset:0;background:rgba(0,0,0,.7);"></div>
+      <svg style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)" width="220" height="220" viewBox="0 0 220 220">
+        <circle cx="110" cy="110" r="108" stroke="#a594ff" stroke-width="2" fill="none"/>
+        <line x1="110" y1="2" x2="110" y2="218" stroke="#a594ff" stroke-width=".8" opacity=".6"/>
+        <line x1="2" y1="110" x2="218" y2="110" stroke="#a594ff" stroke-width=".8" opacity=".6"/>
+        <circle cx="110" cy="110" r="3" fill="#a594ff"/>
+      </svg>
+    </div>
+    <div id="sh-minimap"><canvas id="sh-minimap-canvas" width="100" height="100"></canvas></div>
+    <div id="sh-vocab-popup">
+      <div class="sh-pop-card">
+        <div class="sh-pop-title">💥 TRÚNG ĐẠN — TRẢ LỜI ĐỂ GIẢM SÁT THƯƠNG!</div>
+        <div class="sh-pop-word" id="pop-word"></div>
+        <div class="sh-pop-ph" id="pop-ph"></div>
+        <div class="sh-pop-timer"><div class="sh-pop-timer-fill" id="pop-timer-fill"></div></div>
+        <div class="sh-pop-choices" id="pop-choices"></div>
+        <div class="sh-pop-feedback" id="pop-feedback"></div>
+      </div>
+    </div>
+    <div class="sh-overlay" id="sh-wave-clear">
+      <div class="sh-ov-emoji">✅</div>
+      <div class="sh-ov-title" id="sh-wc-title">Wave hoàn thành!</div>
+      <div class="sh-ov-sub" id="sh-wc-sub"></div>
+      <button class="sh-ov-btn" onclick="shNextWave()">▶ Wave tiếp theo</button>
+    </div>
+    <div class="sh-overlay" id="sh-gameover">
+      <div class="sh-ov-emoji" id="sh-go-emoji">💀</div>
+      <div class="sh-ov-title" id="sh-go-title">Game Over</div>
+      <div class="sh-ov-sub" id="sh-go-sub"></div>
+      <div class="sh-ov-stats" id="sh-go-stats"></div>
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <button class="sh-ov-btn" onclick="shRestartGame()">⟲ Chơi lại</button>
+        <button class="sh-ov-btn secondary" onclick="shExitToLobby()">← Về lobby</button>
+      </div>
+    </div>
+  </div>
+</div>`;
+
+  canvas = document.getElementById('sh-canvas');
+  canvasWrap = document.getElementById('sh-canvas-wrap');
+
+  // Size canvas to fill content area
+  const CW = Math.min(window.innerWidth - (window.innerWidth > 680 ? 220 : 0), CANVAS_W);
+  const scale = CW / CANVAS_W;
+  canvas.width  = CANVAS_W;
+  canvas.height = CANVAS_H;
+  canvas.style.width  = Math.round(CANVAS_W * scale) + 'px';
+  canvas.style.height = Math.round(CANVAS_H * scale) + 'px';
+  canvasWrap.style.height = Math.round(CANVAS_H * scale) + 'px';
+  ctx = canvas.getContext('2d');
+
+  // Init game state
+  G = {
+    map: generateMap(),
+    player: {
+      x: 3.5*TILE, y: (MAP_H/2)*TILE, hp:100, maxHp:100,
+      angle:0, speed:PLAYER_SPD,
+      gunDef, ammo:gunDef.magSize, maxAmmo:gunDef.magSize,
+      coins:0, kills:0,
+    },
+    enemies: [],
+    bullets: [],   // {x,y,vx,vy,dmg,owner:'player'|'enemy',r:4}
+    particles:[],
+    pool, poolIdx:0,
+    wave:1, maxWaves:diff.waves,
+    diff, waveDone:false, gameOver:false, victory:false,
+    totalCorrect:0, popOpen:false, pendingDmg:0,
+    popTimer:null, popTimerMax:6,
+    shotsFired:0, shotsHit:0,
+  };
+
+  spawnWave();
+  setupShControls();
+  if(animId) cancelAnimationFrame(animId);
+  lastTime = performance.now();
+  animId = requestAnimationFrame(shLoop);
+};
+
+// ════════════════════════════
+// ENEMY SPAWNING
+// ════════════════════════════
+function spawnWave(){
+  const g = G;
+  const d = g.diff;
+  const count = d.enemiesPerWave + g.wave - 1;
+  g.enemies = [];
+  const spawnPoints = [];
+  // Spawn on right side / corners away from player
+  for(let i=0;i<count;i++){
+    let sx, sy;
+    do{
+      sx = (MAP_W-4+Math.floor(Math.random()*3)) * TILE - TILE/2;
+      sy = (2+Math.floor(Math.random()*(MAP_H-4))) * TILE;
+    } while(isSolid(g.map, sx, sy) || dist(sx,sy,g.player.x,g.player.y)<5*TILE);
+    g.enemies.push({
+      x:sx, y:sy,
+      hp: d.enemyHp + (g.wave-1)*15,
+      maxHp: d.enemyHp + (g.wave-1)*15,
+      spd: d.enemySpd,
+      dmg: d.enemyDmg,
+      angle:Math.PI, fireRate:d.enemyFireRate,
+      lastShot:Math.random()*2,
+      avat: ENEMY_AVAT[Math.floor(Math.random()*ENEMY_AVAT.length)],
+      r:14,
+    });
+  }
+  document.getElementById('hud-wave').textContent = g.wave;
+}
+
+// ════════════════════════════
+// CONTROLS
+// ════════════════════════════
+function setupShControls(){
+  keys = {};
+  document.addEventListener('keydown', shKeyDown);
+  document.addEventListener('keyup',   shKeyUp);
+  canvas.addEventListener('mousemove', shMouseMove);
+  canvas.addEventListener('mousedown', shMouseDown);
+  canvas.addEventListener('mouseup',   e=>{ mouseDown=false; });
+  canvas.addEventListener('contextmenu', e=>e.preventDefault());
+  canvas.style.cursor = 'none';
+}
+
+function shKeyDown(e){
+  if(!G||G.gameOver) return;
+  keys[e.code] = true;
+  if(e.code==='KeyR' && !reloading) shStartReload();
+  if(e.code==='Escape') shExitToLobby();
+}
+function shKeyUp(e){ keys[e.code]=false; }
+
+function shMouseMove(e){
+  if(!canvas) return;
+  const r = canvas.getBoundingClientRect();
+  const scaleX = CANVAS_W / r.width, scaleY = CANVAS_H / r.height;
+  mouseX = (e.clientX - r.left) * scaleX;
+  mouseY = (e.clientY - r.top)  * scaleY;
+  // Move crosshair div
+  const ch = document.getElementById('sh-crosshair');
+  if(ch){ ch.style.left = e.clientX+'px'; ch.style.top = e.clientY+'px'; }
+}
+
+function shMouseDown(e){
+  if(e.button!==0||!G||G.popOpen||G.gameOver) return;
+  mouseDown = true;
+  shTryFire();
+}
+
+function shTryFire(){
+  if(!G||reloading||G.player.ammo<=0||G.popOpen) return;
+  const now = performance.now()/1000;
+  if(now - lastShot < G.player.gunDef.fireRate) return;
+  lastShot = now;
+
+  const p = G.player;
+  const angle = p.angle;
+  const gd = p.gunDef;
+  const pellets = gd.pellets || 1;
+
+  for(let i=0;i<pellets;i++){
+    const spread = (Math.random()-0.5)*gd.spread*(pellets>1?6:1);
+    const a = angle + spread;
+    G.bullets.push({
+      x:p.x, y:p.y,
+      vx:Math.cos(a)*BULLET_SPD, vy:Math.sin(a)*BULLET_SPD,
+      dmg:gd.dmg, owner:'player', r:4,
+      color:gd.bulletColor, life:2.5,
+    });
+  }
+  p.ammo--;
+  G.shotsFired++;
+  updateAmmoHUD();
+  if(p.ammo<=0) shStartReload();
+}
+
+function shStartReload(){
+  if(reloading||!G||G.player.ammo===G.player.maxAmmo) return;
+  reloading = true;
+  reloadStart = performance.now()/1000;
+  document.getElementById('hud-reload').style.display='';
+}
+
+// ════════════════════════════
+// GAME LOOP
+// ════════════════════════════
+let lastTime = 0;
+function shLoop(ts){
+  if(!G||!ctx){ animId=null; return; }
+  const dt = Math.min((ts - lastTime)/1000, 0.05);
+  lastTime = ts;
+
+  if(!G.gameOver && !G.waveDone && !G.popOpen){
+    updatePlayer(dt);
+    updateEnemies(dt);
+    updateBullets(dt);
+    updateParticles(dt);
+    checkReload(dt);
+  }
+
+  // Auto-fire
+  if(mouseDown && !G.popOpen) shTryFire();
+
+  drawFrame();
+  animId = requestAnimationFrame(shLoop);
+}
+
+// ── Player update ──
+function updatePlayer(dt){
+  const p = G.player;
+  let dx=0, dy=0;
+  if(keys['KeyW']||keys['ArrowUp'])    dy=-1;
+  if(keys['KeyS']||keys['ArrowDown'])  dy= 1;
+  if(keys['KeyA']||keys['ArrowLeft'])  dx=-1;
+  if(keys['KeyD']||keys['ArrowRight']) dx= 1;
+  if(dx&&dy){ dx*=0.707; dy*=0.707; }
+
+  const nx = p.x + dx*p.speed*dt;
+  const ny = p.y + dy*p.speed*dt;
+  if(!isSolid(G.map, nx, p.y, 10)) p.x = nx;
+  if(!isSolid(G.map, p.x, ny, 10)) p.y = ny;
+  p.angle = Math.atan2(mouseY - p.y, mouseX - p.x);
+
+  // Scope overlay
+  const scope = document.getElementById('sh-scope-overlay');
+  if(scope) scope.style.display = (G.player.gunDef.hasScope&&mouseDown)?'':'none';
+}
+
+// ── Enemy update ──
+function updateEnemies(dt){
+  const p = G.player;
+  G.enemies.forEach(e=>{
+    if(e.hp<=0) return;
+    // Pathfind toward player (simple steering)
+    const dx = p.x - e.x, dy = p.y - e.y;
+    const d2 = Math.sqrt(dx*dx+dy*dy);
+    if(d2 > 0){
+      const nx = e.x + (dx/d2)*e.spd*dt;
+      const ny = e.y + (dy/d2)*e.spd*dt;
+      if(!isSolid(G.map,nx,e.y,e.r)) e.x=nx;
+      if(!isSolid(G.map,e.x,ny,e.r)) e.y=ny;
+    }
+    e.angle = Math.atan2(p.y-e.y, p.x-e.x);
+    // Enemy fires
+    e.lastShot += dt;
+    if(e.lastShot >= e.fireRate && d2 < 10*TILE){
+      e.lastShot = 0;
+      const spread = (Math.random()-0.5)*0.15;
+      const ang = e.angle + spread;
+      G.bullets.push({x:e.x,y:e.y,vx:Math.cos(ang)*280,vy:Math.sin(ang)*280,
+        dmg:e.dmg,owner:'enemy',r:5,color:'#ff6b6b',life:3});
+    }
+  });
+  // Remove dead enemies & check wave
+  G.enemies = G.enemies.filter(e=>e.hp>0);
+  if(G.enemies.length===0 && !G.waveDone){
+    G.waveDone=true;
+    if(G.wave>=G.maxWaves){ showVictory(); }
+    else { showWaveClear(); }
+  }
+}
+
+// ── Bullet update ──
+function updateBullets(dt){
+  const p = G.player;
+  G.bullets.forEach(b=>{
+    b.x += b.vx*dt; b.y += b.vy*dt;
+    b.life -= dt;
+    if(b.life<=0||isSolid(G.map,b.x,b.y,b.r)){
+      b.dead=true;
+      spawnParticle(b.x,b.y,b.color||'#fff',6);
+      return;
+    }
+    if(b.owner==='player'){
+      G.enemies.forEach(e=>{
+        if(e.hp<=0) return;
+        if(dist(b.x,b.y,e.x,e.y)<e.r+b.r){
+          e.hp-=b.dmg; b.dead=true; G.shotsHit++;
+          spawnParticle(b.x,b.y,'#ff6b6b',8);
+          if(e.hp<=0){p.kills++;shAddCoins(5);updateHUD();}
+        }
+      });
+    } else {
+      if(dist(b.x,b.y,p.x,p.y)<12+b.r && !G.popOpen){
+        b.dead=true;
+        openVocabPopup(b.dmg);
+      }
+    }
+  });
+  G.bullets = G.bullets.filter(b=>!b.dead);
+}
+
+// ── Particles ──
+function spawnParticle(x,y,color,n){
+  for(let i=0;i<n;i++) G.particles.push({x,y,
+    vx:(Math.random()-0.5)*120,vy:(Math.random()-0.5)*120,
+    life:0.4+Math.random()*0.3,maxLife:0.7,color,r:2+Math.random()*2});
+}
+function updateParticles(dt){
+  G.particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;});
+  G.particles=G.particles.filter(p=>p.life>0);
+}
+
+// ── Reload ──
+function checkReload(dt){
+  if(!reloading) return;
+  const now = performance.now()/1000;
+  const elapsed = now - reloadStart;
+  if(elapsed >= G.player.gunDef.reloadTime){
+    reloading=false;
+    G.player.ammo = G.player.maxAmmo;
+    document.getElementById('hud-reload').style.display='none';
+    updateAmmoHUD();
+  }
+}
+
+// ════════════════════════════
+// DRAW
+// ════════════════════════════
+// Palette
+const COLORS = {wall:'#2a2a3a',cover:'#3a3a55',floor:'#16161f',floor2:'#1a1a28',
+  gridLine:'rgba(255,255,255,.03)',player:'#a594ff',playerStroke:'#7c6aff'};
+
+function drawFrame(){
+  if(!ctx||!G) return;
+  // Scroll camera to player
+  const camX = Math.max(0,Math.min(G.player.x - CANVAS_W/2, (MAP_W-1)*TILE - CANVAS_W));
+  const camY = Math.max(0,Math.min(G.player.y - CANVAS_H/2, (MAP_H-1)*TILE - CANVAS_H));
+
+  ctx.save();
+  ctx.translate(-camX, -camY);
+  ctx.clearRect(camX,camY,CANVAS_W,CANVAS_H);
+
+  drawMap(camX,camY);
+  drawBullets();
+  drawEnemies();
+  drawPlayer();
+  drawParticles();
+
+  ctx.restore();
+  drawMinimap();
+}
+
+function drawMap(cx,cy){
+  const startTX = Math.floor(cx/TILE), endTX = Math.ceil((cx+CANVAS_W)/TILE);
+  const startTY = Math.floor(cy/TILE), endTY = Math.ceil((cy+CANVAS_H)/TILE);
+  for(let ty=startTY;ty<=endTY;ty++){
+    for(let tx=startTX;tx<=endTX;tx++){
+      if(ty<0||ty>=MAP_H||tx<0||tx>=MAP_W) continue;
+      const cell=G.map[ty][tx];
+      const x=tx*TILE, y=ty*TILE;
+      if(cell===0){
+        ctx.fillStyle=(tx+ty)%2===0?COLORS.floor:COLORS.floor2;
+        ctx.fillRect(x,y,TILE,TILE);
+      } else if(cell===1){
+        ctx.fillStyle=COLORS.wall;
+        ctx.fillRect(x,y,TILE,TILE);
+        ctx.fillStyle='rgba(255,255,255,.04)';
+        ctx.fillRect(x,y,TILE,4);
+      } else if(cell===2){
+        ctx.fillStyle=COLORS.floor;
+        ctx.fillRect(x,y,TILE,TILE);
+        ctx.fillStyle=COLORS.cover;
+        ctx.fillRect(x+2,y+2,TILE-4,TILE-8);
+        ctx.fillStyle='rgba(255,255,255,.06)';
+        ctx.fillRect(x+2,y+2,TILE-4,3);
+      }
+    }
+  }
+}
+
+function drawPlayer(){
+  const p=G.player;
+  ctx.save();
+  ctx.translate(p.x,p.y);
+  // shadow
+  ctx.fillStyle='rgba(0,0,0,.3)';
+  ctx.beginPath();ctx.ellipse(0,4,10,5,0,0,Math.PI*2);ctx.fill();
+  // body
+  ctx.fillStyle=COLORS.player;
+  ctx.strokeStyle=COLORS.playerStroke;
+  ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(0,0,11,0,Math.PI*2);ctx.fill();ctx.stroke();
+  // gun direction
+  ctx.rotate(p.angle);
+  ctx.fillStyle='#7c6aff';
+  ctx.fillRect(6,-3,14,6);
+  ctx.fillStyle='#a594ff';
+  ctx.fillRect(16,-2,6,4);
+  ctx.restore();
+}
+
+function drawEnemies(){
+  G.enemies.forEach(e=>{
+    if(e.hp<=0) return;
+    ctx.save();
+    ctx.translate(e.x,e.y);
+    // shadow
+    ctx.fillStyle='rgba(0,0,0,.3)';
+    ctx.beginPath();ctx.ellipse(0,5,12,5,0,0,Math.PI*2);ctx.fill();
+    // body
+    ctx.fillStyle='#ff3333';
+    ctx.strokeStyle='#cc0000';
+    ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(0,0,13,0,Math.PI*2);ctx.fill();ctx.stroke();
+    // emoji face
+    ctx.font='16px serif';
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillText(e.avat,0,0);
+    // HP bar
+    const bw=26, bh=4;
+    ctx.fillStyle='rgba(0,0,0,.5)';
+    ctx.fillRect(-bw/2,-20,bw,bh);
+    ctx.fillStyle=e.hp/e.maxHp>0.5?'#3ecf8e':'#ff6b6b';
+    ctx.fillRect(-bw/2,-20,bw*(e.hp/e.maxHp),bh);
+    // gun
+    ctx.rotate(e.angle);
+    ctx.fillStyle='#cc3333';
+    ctx.fillRect(8,-3,12,6);
+    ctx.restore();
+  });
+}
+
+function drawBullets(){
+  G.bullets.forEach(b=>{
+    ctx.save();
+    ctx.fillStyle=b.color||'#fff';
+    ctx.shadowColor=b.color||'#fff';
+    ctx.shadowBlur=6;
+    ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  });
+}
+
+function drawParticles(){
+  G.particles.forEach(p=>{
+    const alpha=p.life/p.maxLife;
+    ctx.save();
+    ctx.globalAlpha=alpha;
+    ctx.fillStyle=p.color;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  });
+}
+
+function drawMinimap(){
+  const mc=document.getElementById('sh-minimap-canvas');
+  if(!mc) return;
+  const mctx=mc.getContext('2d');
+  const sw=100/MAP_W, sh=100/MAP_H;
+  mctx.clearRect(0,0,100,100);
+  for(let ty=0;ty<MAP_H;ty++){
+    for(let tx=0;tx<MAP_W;tx++){
+      const c=G.map[ty][tx];
+      mctx.fillStyle=c===1?'#2a2a3a':c===2?'#3a3a55':'rgba(255,255,255,.04)';
+      mctx.fillRect(tx*sw,ty*sh,sw,sh);
+    }
+  }
+  // player dot
+  mctx.fillStyle='#a594ff';
+  mctx.beginPath();mctx.arc(G.player.x/TILE*sw,G.player.y/TILE*sh,3,0,Math.PI*2);mctx.fill();
+  // enemy dots
+  mctx.fillStyle='#ff6b6b';
+  G.enemies.forEach(e=>{
+    mctx.beginPath();mctx.arc(e.x/TILE*sw,e.y/TILE*sh,2,0,Math.PI*2);mctx.fill();
+  });
+}
+
+// ════════════════════════════
+// VOCAB POPUP (on hit)
+// ════════════════════════════
+let popTimerInterval=null;
+function openVocabPopup(dmg){
+  if(!G||G.gameOver) return;
+  G.popOpen=true;
+  G.pendingDmg=dmg;
+  const card = G.pool[G.poolIdx % G.pool.length]; G.poolIdx++;
+  document.getElementById('pop-word').textContent=card.en;
+  document.getElementById('pop-ph').textContent=card.phonetic||'';
+  document.getElementById('pop-feedback').textContent='';
+
+  // Generate choices
+  const all=loadWFCards();
+  const others=all.filter(c=>c.id!==card.id&&c.vi!==card.vi);
+  shShuffle(others);
+  const dists=others.slice(0,3).map(c=>({vi:c.vi,ok:false}));
+  const choices=[...dists,{vi:card.vi,ok:true}];
+  shShuffle(choices);
+
+  document.getElementById('pop-choices').innerHTML=choices.map((c,i)=>
+    `<div class="sh-pop-choice" id="popc-${i}" onclick="shChoosePop(${i})">${c.vi}</div>`
+  ).join('');
+  window._popChoices=choices;
+  window._popCard=card;
+
+  const popup=document.getElementById('sh-vocab-popup');
+  popup.classList.add('sh-pop-show');
+
+  // Timer
+  let tLeft=6;
+  const fill=document.getElementById('pop-timer-fill');
+  fill.style.width='100%';
+  clearInterval(popTimerInterval);
+  popTimerInterval=setInterval(()=>{
+    tLeft-=0.1;
+    if(fill) fill.style.width=Math.max(0,tLeft/6*100)+'%';
+    if(tLeft<=0){ clearInterval(popTimerInterval); shPopTimeout(); }
+  },100);
+}
+
+window.shChoosePop = idx => {
+  clearInterval(popTimerInterval);
+  const ch=window._popChoices;
+  const ok=ch[idx].ok;
+  const correctIdx=ch.findIndex(c=>c.ok);
+  document.querySelectorAll('.sh-pop-choice').forEach((el,i)=>{
+    el.classList.add(i===correctIdx?'sh-c-ok':i===idx?'sh-c-bad':'');
+    el.setAttribute('disabled','');
+  });
+  const fb=document.getElementById('pop-feedback');
+  if(ok){
+    fb.className='sh-pop-feedback ok';
+    fb.textContent='✓ Đúng! Giảm 70% sát thương';
+    G.totalCorrect++;
+    shAddCoins(3);
+    applyHitDamage(Math.floor(G.pendingDmg*0.3));
+  } else {
+    fb.className='sh-pop-feedback bad';
+    fb.textContent=`✕ Sai! Đáp án: "${window._popCard.vi}" — Nhận full dame`;
+    applyHitDamage(G.pendingDmg);
+  }
+  setTimeout(closeVocabPopup, 900);
+};
+
+function shPopTimeout(){
+  applyHitDamage(G.pendingDmg);
+  const fb=document.getElementById('pop-feedback');
+  fb.className='sh-pop-feedback bad';
+  fb.textContent='⏰ Hết giờ — Nhận full dame!';
+  setTimeout(closeVocabPopup,700);
+}
+
+function applyHitDamage(dmg){
+  if(!G) return;
+  G.player.hp=Math.max(0,G.player.hp-dmg);
+  updateHUD();
+  if(G.player.hp<=0) setTimeout(showGameOver,400);
+}
+
+function closeVocabPopup(){
+  const popup=document.getElementById('sh-vocab-popup');
+  if(popup) popup.classList.remove('sh-pop-show');
+  G.popOpen=false;
+}
+
+// ════════════════════════════
+// WAVE / GAME END
+// ════════════════════════════
+function showWaveClear(){
+  const d=document.getElementById('sh-wave-clear');
+  document.getElementById('sh-wc-title').textContent=`Wave ${G.wave} hoàn thành! 🎉`;
+  document.getElementById('sh-wc-sub').textContent=`+50🪙 · Kills: ${G.player.kills} · ${G.wave+1}/${G.maxWaves} tiếp theo`;
+  d.classList.add('sh-ov-show');
+  shAddCoins(50);
+}
+window.shNextWave=()=>{
+  document.getElementById('sh-wave-clear').classList.remove('sh-ov-show');
+  G.wave++; G.waveDone=false;
+  // Heal 20% between waves
+  G.player.hp=Math.min(G.player.maxHp, G.player.hp+20);
+  G.player.ammo=G.player.maxAmmo; reloading=false;
+  spawnWave();
+  updateHUD(); updateAmmoHUD();
+};
+
+function showVictory(){
+  cancelAnimationFrame(animId); animId=null;
+  G.gameOver=true; G.victory=true;
+  shSave.wins++; saveShPersist();
+  let coinGain=100;
+  if(betAmt>0){ coinGain=betAmt*G.diff.mult; }
+  shAddCoins(coinGain);
+  const d=document.getElementById('sh-gameover');
+  document.getElementById('sh-go-emoji').textContent='🏆';
+  document.getElementById('sh-go-title').textContent='CHIẾN THẮNG!';
+  document.getElementById('sh-go-sub').textContent=`Bạn đã vượt qua tất cả ${G.maxWaves} wave!`;
+  document.getElementById('sh-go-stats').innerHTML=statsHTML(coinGain);
+  d.classList.add('sh-ov-show');
+}
+function showGameOver(){
+  cancelAnimationFrame(animId); animId=null;
+  G.gameOver=true;
+  shSave.losses++; saveShPersist();
+  let coinLoss=0;
+  if(betAmt>0){ coinLoss=betAmt; shAddCoins(-coinLoss); }
+  const d=document.getElementById('sh-gameover');
+  document.getElementById('sh-go-emoji').textContent='💀';
+  document.getElementById('sh-go-title').textContent='GAME OVER';
+  document.getElementById('sh-go-sub').textContent='Bạn đã bị hạ gục!'+( coinLoss?` Mất ${coinLoss}🪙`:'');
+  document.getElementById('sh-go-stats').innerHTML=statsHTML(-coinLoss);
+  d.classList.add('sh-ov-show');
+}
+
+function statsHTML(coinChange){
+  return `<div class="sh-ov-stat"><div class="v">${G.player.kills}</div><div class="l">Kills</div></div>
+  <div class="sh-ov-stat"><div class="v">${G.wave}</div><div class="l">Wave</div></div>
+  <div class="sh-ov-stat"><div class="v">${G.totalCorrect}</div><div class="l">Đúng</div></div>
+  <div class="sh-ov-stat"><div class="v">${coinChange>=0?'+':''}${coinChange}🪙</div><div class="l">Coin</div></div>`;
+}
+
+window.shRestartGame = ()=>{ cleanupControls(); shStartGame(); };
+window.shExitToLobby = ()=>{
+  cleanupControls();
+  if(animId){ cancelAnimationFrame(animId); animId=null; }
+  G=null; reloading=false; keys={};
+  renderShooterLobby();
+};
+
+function cleanupControls(){
+  document.removeEventListener('keydown',shKeyDown);
+  document.removeEventListener('keyup',shKeyUp);
+}
+
+// ════════════════════════════
+// HUD UPDATES
+// ════════════════════════════
+function updateHUD(){
+  if(!G) return;
+  const p=G.player;
+  const hpEl=document.getElementById('hud-hp');
+  const hpBar=document.getElementById('hud-hp-bar');
+  const killsEl=document.getElementById('hud-kills');
+  if(hpEl) hpEl.textContent=p.hp;
+  if(hpBar){ hpBar.style.width=(p.hp/p.maxHp*100)+'%'; hpBar.className='sh-hp-fill'+(p.hp<30?' low':''); }
+  if(killsEl) killsEl.textContent=p.kills;
+  renderShCoinDisplay();
+  const hc=document.getElementById('hud-coins');
+  if(hc) hc.textContent=shSave.coins;
+}
+function updateAmmoHUD(){
+  if(!G) return;
+  const p=G.player;
+  const el=document.getElementById('hud-ammo');
+  if(el) el.textContent=p.ammo;
+  const pips=document.getElementById('hud-ammo-pips');
+  if(pips) pips.innerHTML=Array.from({length:p.maxAmmo},(_,i)=>
+    `<div class="sh-bullet-pip${i<p.ammo?'':' empty'}"></div>`).join('');
+}
+
+// ════════════════════════════
+// UTILS
+// ════════════════════════════
+function isSolid(map,x,y,r=0){
+  const tx=Math.floor(x/TILE), ty=Math.floor(y/TILE);
+  // Check corners if radius given
+  const pts=r>0?[[x-r,y-r],[x+r,y-r],[x-r,y+r],[x+r,y+r]]:[[x,y]];
+  return pts.some(([px,py])=>{
+    const ttx=Math.floor(px/TILE), tty=Math.floor(py/TILE);
+    if(tty<0||tty>=MAP_H||ttx<0||ttx>=MAP_W) return true;
+    return map[tty][ttx]===1;
+  });
+}
+function dist(x1,y1,x2,y2){ return Math.sqrt((x2-x1)**2+(y2-y1)**2); }
+function shShuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} }
+
+// ════════════════════════════
+// ENTRY — hook into showView
+// ════════════════════════════
+const _origShowView = window.showView;
+window.showView = v => {
+  if(v!=='shooter'){
+    if(animId){ cancelAnimationFrame(animId); animId=null; }
+    cleanupControls();
+  }
+  _origShowView(v);
+  if(v==='shooter'){ G=null; reloading=false; renderShooterLobby(); }
+};
+
+})(); // end IIFE
 </script>
 </body>
 </html>
