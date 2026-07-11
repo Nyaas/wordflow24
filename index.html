@@ -4150,16 +4150,18 @@ function shLoop(ts){
   const dt = Math.min((ts - lastTime)/1000, 0.05);
   lastTime = ts;
 
-  if(!G.gameOver && !G.waveDone && !G.popOpen){
-    updatePlayer(dt);
-    updateEnemies(dt);
-    updateBullets(dt);
+  // When popup open (hit or reload): freeze enemies+bullets but keep rendering
+  if(!G.gameOver && !G.waveDone){
+    if(!G.popOpen){
+      updatePlayer(dt);
+      updateEnemies(dt);
+      updateBullets(dt);
+    }
     updateParticles(dt);
-    checkReload(dt);
   }
 
-  // Auto-fire
-  if(mouseDown && !G.popOpen) shTryFire();
+  // Auto-fire only when game active and no popup
+  if(mouseDown && !G.popOpen && !G.gameOver && !G.waveDone) shTryFire();
 
   drawFrame();
   animId = requestAnimationFrame(shLoop);
@@ -4233,18 +4235,31 @@ function updateBullets(dt){
     }
     if(b.owner==='player'){
       G.enemies.forEach(e=>{
-        if(e.hp<=0) return;
+        if(e.hp<=0||b.dead) return;
         if(dist(b.x,b.y,e.x,e.y)<e.r+b.r){
           e.hp-=b.dmg; b.dead=true; G.shotsHit++;
           spawnParticle(b.x,b.y,'#ff6b6b',8);
-          if(e.hp<=0){p.kills++;shAddCoins(5);updateHUD();}
+          if(e.hp<=0){ p.kills++; shAddCoins(5); updateHUD(); }
         }
       });
     } else {
-      if(dist(b.x,b.y,p.x,p.y)<12+b.r && !G.popOpen){
+      if(!b.dead && dist(b.x,b.y,p.x,p.y)<14+b.r){
         b.dead=true;
-        openVocabPopup(b.dmg);
+        if(!G.popOpen && !G.gameOver) openVocabPopup(b.dmg);
+        // if popup already open, just apply reduced damage silently
+        else if(G.popOpen){ p.hp=Math.max(0,p.hp-Math.round(b.dmg*0.3)); updateHUD(); }
       }
+    }
+    // Enemy body collision with player (touching)
+    if(!b.dead) {
+      G.enemies.forEach(e=>{
+        if(e.hp<=0) return;
+        if(dist(p.x,p.y,e.x,e.y)<22){
+          // push player away
+          const ang=Math.atan2(p.y-e.y,p.x-e.x);
+          p.x+=Math.cos(ang)*2; p.y+=Math.sin(ang)*2;
+        }
+      });
     }
   });
   G.bullets = G.bullets.filter(b=>!b.dead);
@@ -4261,18 +4276,8 @@ function updateParticles(dt){
   G.particles=G.particles.filter(p=>p.life>0);
 }
 
-// ── Reload ──
-function checkReload(dt){
-  if(!reloading) return;
-  const now = performance.now()/1000;
-  const elapsed = now - reloadStart;
-  if(elapsed >= G.player.gunDef.reloadTime){
-    reloading=false;
-    G.player.ammo = G.player.maxAmmo;
-    document.getElementById('hud-reload').style.display='none';
-    updateAmmoHUD();
-  }
-}
+// ── Reload ── (handled by vocab popup — this stub kept for loop compat)
+function checkReload(dt){ /* no-op: reload now uses shStartReload vocab popup */ }
 
 // ════════════════════════════
 // DRAW
@@ -4428,90 +4433,131 @@ function drawMinimap(){
 }
 
 // ════════════════════════════
-// VOCAB POPUP (on hit)
+// VOCAB POPUP (on hit) — text input Anh↔Việt
 // ════════════════════════════
 let popTimerInterval=null;
+let popAnswered=false; // guard against double-submit
+
 function openVocabPopup(dmg){
-  if(!G||G.gameOver) return;
+  if(!G||G.gameOver||G.popOpen) return;
   G.popOpen=true;
   G.pendingDmg=dmg;
+  popAnswered=false;
+
   const card = G.pool[G.poolIdx % G.pool.length]; G.poolIdx++;
-  document.getElementById('pop-word').textContent=card.en;
-  document.getElementById('pop-ph').textContent=card.phonetic||'';
+  // Alternate direction each hit
+  const isViToEn = (G.poolIdx % 2 === 0);
+  window._popCard = card;
+  window._popDir  = isViToEn ? 'vi2en' : 'en2vi';
+
+  const shownWord  = isViToEn ? card.vi : card.en;
+  const ph         = (!isViToEn && card.phonetic) ? card.phonetic : '';
+  const placeholder= isViToEn ? 'Gõ tiếng Anh...' : 'Gõ tiếng Việt...';
+  const dirLabel   = isViToEn ? '🇻🇳→🇬🇧 Dịch sang tiếng Anh' : '🇬🇧→🇻🇳 Dịch sang tiếng Việt';
+
+  document.getElementById('pop-word').textContent=shownWord;
+  document.getElementById('pop-ph').textContent=ph;
   document.getElementById('pop-feedback').textContent='';
+  document.getElementById('pop-feedback').className='sh-pop-feedback';
 
-  // Generate choices
-  const all=loadWFCards();
-  const others=all.filter(c=>c.id!==card.id&&c.vi!==card.vi);
-  shShuffle(others);
-  const dists=others.slice(0,3).map(c=>({vi:c.vi,ok:false}));
-  const choices=[...dists,{vi:card.vi,ok:true}];
-  shShuffle(choices);
+  // Reuse the popup card — replace choices area with input
+  const inp=document.getElementById('pop-input');
+  const btn=document.getElementById('pop-submit-btn');
+  if(inp){ inp.value=''; inp.disabled=false;
+    inp.style.cssText='width:100%;background:#22222c;border:1.5px solid rgba(255,255,255,.15);border-radius:10px;padding:12px 16px;font-size:1rem;color:#e8e8f0;outline:none;text-align:center;font-family:\'DM Sans\',sans-serif;margin-bottom:10px;';
+  }
+  if(btn){ btn.disabled=false; btn.textContent='⚔️ Trả lời'; }
 
-  document.getElementById('pop-choices').innerHTML=choices.map((c,i)=>
-    `<div class="sh-pop-choice" id="popc-${i}" onclick="shChoosePop(${i})">${c.vi}</div>`
-  ).join('');
-  window._popChoices=choices;
-  window._popCard=card;
+  // direction label — reuse ph slot
+  const phEl=document.getElementById('pop-ph');
+  if(phEl) phEl.textContent=ph ? `${ph} · ${dirLabel}` : dirLabel;
 
   const popup=document.getElementById('sh-vocab-popup');
-  popup.classList.add('sh-pop-show');
+  if(popup) popup.classList.add('sh-pop-show');
 
-  // Timer
-  let tLeft=6;
+  // Focus input after render
+  setTimeout(()=>{ const i=document.getElementById('pop-input'); if(i&&!i.disabled) i.focus(); },50);
+
+  // Timer 8s
+  let tLeft=8;
   const fill=document.getElementById('pop-timer-fill');
-  fill.style.width='100%';
+  if(fill) fill.style.width='100%';
   clearInterval(popTimerInterval);
   popTimerInterval=setInterval(()=>{
+    if(!G||!G.popOpen){ clearInterval(popTimerInterval); return; }
     tLeft-=0.1;
-    if(fill) fill.style.width=Math.max(0,tLeft/6*100)+'%';
+    const f=document.getElementById('pop-timer-fill');
+    if(f) f.style.width=Math.max(0,tLeft/8*100)+'%';
     if(tLeft<=0){ clearInterval(popTimerInterval); shPopTimeout(); }
   },100);
+
+  // Enter key
+  if(inp){
+    inp.onkeydown=e=>{ if(e.key==='Enter'){ e.preventDefault(); shSubmitHitAnswer(); } };
+  }
 }
 
-window.shChoosePop = idx => {
+window.shSubmitHitAnswer = () => {
+  if(!G||popAnswered) return;
   clearInterval(popTimerInterval);
-  const ch=window._popChoices;
-  const ok=ch[idx].ok;
-  const correctIdx=ch.findIndex(c=>c.ok);
-  document.querySelectorAll('.sh-pop-choice').forEach((el,i)=>{
-    el.classList.add(i===correctIdx?'sh-c-ok':i===idx?'sh-c-bad':'');
-    el.setAttribute('disabled','');
-  });
+  popAnswered=true;
+
+  const inp=document.getElementById('pop-input');
+  const btn=document.getElementById('pop-submit-btn');
+  if(inp) inp.disabled=true;
+  if(btn){ btn.disabled=true; btn.textContent='...'; }
+
+  const raw    = (inp ? inp.value : '').trim();
+  const card   = window._popCard;
+  const dir    = window._popDir;
+  const correct= dir==='vi2en' ? card.en : card.vi;
+  const ok     = shNormStr(raw)===shNormStr(correct) ||
+    (raw.length>1 && shNormStr(correct).includes(shNormStr(raw)) && raw.length>=correct.length*0.65);
+
   const fb=document.getElementById('pop-feedback');
   if(ok){
-    fb.className='sh-pop-feedback ok';
-    fb.textContent='✓ Đúng! Giảm 70% sát thương';
-    G.totalCorrect++;
-    shAddCoins(3);
-    applyHitDamage(Math.floor(G.pendingDmg*0.3));
+    if(inp){ inp.style.borderColor='#3ecf8e'; inp.style.color='#3ecf8e'; inp.value=correct; }
+    if(fb){ fb.className='sh-pop-feedback ok'; fb.textContent='✓ Đúng! Giảm 70% sát thương'; }
+    G.totalCorrect++; shAddCoins(3);
+    applyHitDamage(Math.max(1,Math.floor(G.pendingDmg*0.3)));
   } else {
-    fb.className='sh-pop-feedback bad';
-    fb.textContent=`✕ Sai! Đáp án: "${window._popCard.vi}" — Nhận full dame`;
+    if(inp){ inp.style.borderColor='#ff6b6b'; inp.style.color='#ff6b6b'; }
+    if(fb){ fb.className='sh-pop-feedback bad'; fb.textContent=`✕ Sai! Đáp án: "${correct}" — Nhận full dame`; }
     applyHitDamage(G.pendingDmg);
   }
-  setTimeout(closeVocabPopup, 900);
+  // Only close if still alive
+  if(G && G.player.hp > 0) setTimeout(closeVocabPopup, 950);
 };
 
 function shPopTimeout(){
-  applyHitDamage(G.pendingDmg);
+  if(!G||popAnswered) return;
+  popAnswered=true;
+  clearInterval(popTimerInterval);
   const fb=document.getElementById('pop-feedback');
-  fb.className='sh-pop-feedback bad';
-  fb.textContent='⏰ Hết giờ — Nhận full dame!';
-  setTimeout(closeVocabPopup,700);
+  if(fb){ fb.className='sh-pop-feedback bad'; fb.textContent='⏰ Hết giờ — Nhận full dame!'; }
+  const inp=document.getElementById('pop-input');
+  if(inp) inp.disabled=true;
+  applyHitDamage(G.pendingDmg);
+  if(G && G.player.hp > 0) setTimeout(closeVocabPopup, 700);
 }
 
 function applyHitDamage(dmg){
-  if(!G) return;
-  G.player.hp=Math.max(0,G.player.hp-dmg);
+  if(!G||G.gameOver) return;
+  G.player.hp=Math.max(0,G.player.hp-Math.round(dmg));
   updateHUD();
-  if(G.player.hp<=0) setTimeout(showGameOver,400);
+  if(G.player.hp<=0){
+    clearInterval(popTimerInterval);
+    closeVocabPopup();
+    setTimeout(showGameOver,300);
+  }
 }
 
 function closeVocabPopup(){
+  clearInterval(popTimerInterval);
+  popAnswered=false;
   const popup=document.getElementById('sh-vocab-popup');
   if(popup) popup.classList.remove('sh-pop-show');
-  G.popOpen=false;
+  if(G) G.popOpen=false;
 }
 
 // ════════════════════════════
