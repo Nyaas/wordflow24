@@ -443,7 +443,7 @@ async function fetchTasks(){
   for(var i=0;i<ls.length;i++){
     var pt='';
     do{
-      var d=await gapi(B+'lists/'+ls[i].id+'/tasks?showCompleted=true&showHidden=true&maxResults=100'+(pt?'&pageToken='+pt:''));
+      var d=await gapi(B+'lists/'+ls[i].id+'/tasks?showCompleted=true&showHidden=true&showAssigned=true&maxResults=100'+(pt?'&pageToken='+pt:''));
       (d.items||[]).forEach(function(t){all.push({id:t.id,list:ls[i].title,title:(t.title||'').trim(),due:t.due||'',done:t.status==='completed'&&t.completed?Date.parse(t.completed):null})});
       pt=d.nextPageToken;
     }while(pt);
@@ -482,13 +482,19 @@ function buildTasks(){
     var x=g[k];if(x.o.length<2)return;
     var bk=G.broke[k],b=bk?bk.at:0,run=0,best=0,nx=null;
     var o=x.o.filter(function(q){return q.ds>=b}).sort(function(p,q){return p.ds-q.ds});
+    var sd={},dd=[];
     o.forEach(function(q){
-      if(q.s==='ok'){run++;best=Math.max(best,run)}else if(q.s!=='pend')run=0;
       if(q.s==='pend'&&nx===null)nx=q.ds;
+      var u=sd[q.ds]||(sd[q.ds]={ok:0,late:0,miss:0,pend:0});u[q.s]++;
       var d=days[q.ds]||(days[q.ds]={ok:0,bad:0,pend:0});
       if(q.s==='ok')d.ok++;else if(q.s==='pend')d.pend++;else d.bad++;
     });
-    res.push({name:x.name,list:x.list,run:run,best:best,dots:o.slice(-14).map(function(q){return q.s}),n:x.o.length,bk:bk,nx:nx});
+    Object.keys(sd).sort(function(p,q){return p-q}).forEach(function(t){
+      var u=sd[t],s=u.miss?'miss':u.late?'late':u.pend?'pend':'ok';
+      if(s==='ok'){run++;best=Math.max(best,run)}else if(s!=='pend')run=0;
+      dd.push(s);
+    });
+    res.push({name:x.name,list:x.list,run:run,best:best,dots:dd.slice(-14),n:x.o.length,bk:bk,nx:nx});
   });
   var dr=0,db=0;
   Object.keys(days).sort(function(p,q){return p-q}).forEach(function(t){var d=days[t];if(d.bad)dr=0;else if(!d.pend&&d.ok){dr++;db=Math.max(db,dr)}});
@@ -504,12 +510,16 @@ function renderTasks(){
   $('#tk-tiles').innerHTML=tile('Chuỗi ngày','🔥 '+r.dr,'ngày','Tốt nhất '+r.db+' ngày')+tile('Đúng hạn',tot?Math.round(st.ok/tot*100):0,'%',st.ok+'/'+tot+' task đã tới hạn')+tile('Bỏ lỡ',st.miss,'task','Quá hạn, chưa xong')+tile('Hoàn thành muộn',st.late,'task','Không được tính chuỗi');
   var h='';
   if(r.today.length)h+='<h2 class="sec-h">Cần xong hôm nay</h2><div class="tasks">'+r.today.map(function(t){return '<div class="row"><div class="n"><span>'+esc(t.title)+'</span><small>'+esc(t.list)+'</small></div></div>'}).join('')+'</div>';
-  h+='<div class="chart-h"><h2>Chuỗi từng nhiệm vụ lặp lại</h2><span>Hoàn thành trong ngày hạn để giữ chuỗi</span></div>';
+  h+='<div class="chart-h"><h2>Chuỗi từng nhiệm vụ lặp lại</h2><span>Mỗi ô là một ngày. Mọi lần trong ngày đều xong đúng hạn mới được tính</span></div>';
   if(!r.res.length)h+='<div class="empty">Chưa thấy nhiệm vụ lặp lại nào (cùng tên, cùng danh sách, có ngày hạn, từ 2 lần trở lên).</div>';
   h+='<div class="tasks">'+r.res.map(function(x){
-    return '<div class="row"><div class="n"><span>'+esc(x.name)+'</span><small>'+esc(x.list)+' · '+x.n+' lần'+(x.nx?' · hạn kế tiếp '+dm(new Date(x.nx)):'')+'</small></div><div class="h">🔥 '+x.run+'</div><div class="c">tốt nhất '+x.best+'</div>'
+    return '<div class="row"><div class="n"><span>'+esc(x.name)+'</span><small>'+esc(x.list)+' · '+x.n+' lần'+(x.nx?' · hạn kế tiếp '+dm(new Date(x.nx)):'')+'</small></div><div class="h">🔥 '+x.run+' ngày</div><div class="c">tốt nhất '+x.best+' ngày</div>'
       +'<div class="dots">'+x.dots.map(function(s){return '<i class="dt '+s+'" title="'+SN[s]+'"></i>'}).join('')+'</div>'
       +(x.bk?'<div class="why">Mất chuỗi ngày '+dm(new Date(x.bk.at))+': '+esc(x.bk.why)+'</div>':'')+'</div>'}).join('')+'</div>';
+  var ls={},nodue=0;TK.forEach(function(t){ls[t.list]=1;if(!t.due)nodue++});
+  var tr=TK.slice().sort(function(a,b){return (a.due||'').localeCompare(b.due||'')}).slice(-600).map(function(t){
+    return '<tr><td>'+esc(t.list)+'</td><td>'+esc(t.title||'(trống)')+'</td><td>'+(t.due?t.due.slice(0,10):'không có hạn')+'</td><td>'+(t.done?'xong '+new Date(t.done).toLocaleString('vi-VN'):'chưa xong')+'</td></tr>'}).join('');
+  h+='<details><summary>Dữ liệu đọc từ Google: '+Object.keys(ls).length+' danh sách, '+TK.length+' task ('+nodue+' task không có ngày hạn)</summary><div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:12px;width:100%"><tr><th align="left">Danh sách</th><th align="left">Tên</th><th align="left">Hạn</th><th align="left">Trạng thái</th></tr>'+tr+'</table></div></details>';
   el.innerHTML=h;
 }
 function tab(n){
