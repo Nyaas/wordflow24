@@ -1,148 +1,576 @@
-<!doctype html>
-<html lang="vi">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Chuỗi Google Tasks</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&display=swap" rel="stylesheet">
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Thống kê Calendar</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f6f7f9;--ink:#14212b;--mut:#64727e;--card:#fff;--line:#dfe4e9;--ok:#1f8f5f;--late:#e0a100;--miss:#d64545;--pend:#b8c1c9}
-@media(prefers-color-scheme:dark){:root{--bg:#10171d;--ink:#e8edf1;--mut:#8b9aa6;--card:#18222a;--line:#27333d}}
+/* Layout: một cột điều khiển phía trên, tóm tắt dạng ô số, hai biểu đồ cạnh nhau, danh sách task bên dưới. */
+:root{
+  --bg:#EDF0F6; --surface:#FFFFFF; --ink:#16203A; --muted:#5A6580; --line:#D9DEEA;
+  --accent:#3B5BDB; --accent-ink:#FFFFFF; --accent-soft:#E3E9FF; --warn-soft:#FFF1D6; --warn-ink:#7A4B00;
+  --c1:#3B5BDB; --c2:#0CA678; --c3:#E08A00; --c4:#D6336C; --c5:#7048E8; --c6:#1098AD; --c7:#E8590C; --c8:#5C940D; --c9:#8B94A8;
+  --font-display:'Bricolage Grotesque','Be Vietnam Pro',system-ui,sans-serif;
+  --font-body:'Be Vietnam Pro',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1322; --surface:#161D31; --ink:#E7EBF7; --muted:#9AA5C0; --line:#27304A;
+  --accent:#7F96F7; --accent-ink:#0E1322; --accent-soft:#222C52; --warn-soft:#3A2D10; --warn-ink:#F2C879;
+  --c1:#7F96F7; --c2:#2FD3A0; --c3:#F2A93B; --c4:#F06595; --c5:#A48BFA; --c6:#3BC9DB; --c7:#FF8A4C; --c8:#94D82D; --c9:#7B86A0; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1322; --surface:#161D31; --ink:#E7EBF7; --muted:#9AA5C0; --line:#27304A;
+  --accent:#7F96F7; --accent-ink:#0E1322; --accent-soft:#222C52; --warn-soft:#3A2D10; --warn-ink:#F2C879;
+  --c1:#7F96F7; --c2:#2FD3A0; --c3:#F2A93B; --c4:#F06595; --c5:#A48BFA; --c6:#3BC9DB; --c7:#FF8A4C; --c8:#94D82D; --c9:#7B86A0; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:14px;line-height:1.5;padding-inline:16px;padding-block:24px 56px}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Be Vietnam Pro",system-ui,sans-serif}
-.wrap{max-width:760px;margin:0 auto;padding:24px 16px 64px}
-h1{font-size:22px;margin:0 0 4px}
-.sub{color:var(--mut);margin:0 0 20px}
-button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:8px 14px;cursor:pointer}
-button.p{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:600}
-button:focus-visible{outline:2px solid var(--ok);outline-offset:2px}
-.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:20px}
-.st{color:var(--mut);font-size:13px}
-.hero{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:16px}
-.hero b{font-size:56px;font-weight:800;line-height:1}
-.hero span{color:var(--mut)}
-.row{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:8px}
-.top{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
-.top strong{font-weight:600}
-.top em{font-style:normal;font-weight:800;white-space:nowrap}
-.meta{color:var(--mut);font-size:12px;margin:2px 0 8px}
-.dots{display:flex;gap:4px;flex-wrap:wrap}
-.dt{width:12px;height:12px;border-radius:3px;background:var(--pend)}
-.dt.ok{background:var(--ok)}.dt.late{background:var(--late)}.dt.miss{background:var(--miss)}.dt.pend{opacity:.4}
-.lost{color:var(--miss);font-size:13px}
-h2{font-size:16px;margin:24px 0 8px}
-.err{color:var(--miss)}
+.wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1,h2{font-family:var(--font-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:clamp(26px,5vw,38px);line-height:1.1;font-weight:700}
+h2{font-size:17px;font-weight:600}
+.eyebrow{margin:0 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
+button,.btn{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:9px;padding:8px 14px;font-weight:500;line-height:1.2}
+button:hover,.btn:hover{border-color:var(--accent)}
+button:focus-visible,.btn:focus-within,input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+.btn.primary,button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.src{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.src-actions{display:flex;flex-wrap:wrap;gap:8px}
+.drop{border:1.5px dashed var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;margin-top:14px}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop p{margin:0;color:var(--muted);min-width:0;flex:1 1 260px}
+.file{position:relative;overflow:hidden}
+.file input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.note{background:var(--warn-soft);color:var(--warn-ink);border-radius:10px;padding:9px 14px;font-weight:500}
+.note.info{background:var(--accent-soft);color:var(--ink)}
+.status{color:var(--muted);margin:10px 0 0;min-height:1.4em}
+details{margin-top:12px;color:var(--muted)}
+summary{cursor:pointer;color:var(--ink);font-weight:500}
+details ol{margin:10px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.bar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;border-radius:0;padding:8px 18px;background:transparent}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.nav{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.range{font-family:var(--font-display);font-weight:600;font-size:18px;min-width:0}
+.chk{display:flex;gap:8px;align-items:center;color:var(--muted);cursor:pointer}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;min-width:0}
+.tile .k{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.tile .v{font-family:var(--font-display);font-size:34px;font-weight:700;line-height:1.15;margin-top:4px;font-variant-numeric:tabular-nums}
+.tile .v small{font-size:15px;font-weight:500;color:var(--muted);margin-left:4px}
+.tile .d{color:var(--muted);font-size:13px;margin-top:2px}
+.charts{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:12px}
+.chart-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.chart-h span{color:var(--muted);font-size:13px}
+.plot{position:relative;height:190px;margin-left:34px}
+.grid{position:absolute;inset:0;pointer-events:none}
+.grid i{position:absolute;left:0;right:0;border-top:1px solid var(--line)}
+.grid b{position:absolute;left:-34px;width:28px;text-align:right;transform:translateY(-50%);font-size:11px;color:var(--muted);font-weight:400;font-variant-numeric:tabular-nums}
+.cols{position:absolute;inset:0;display:flex;align-items:flex-end;gap:var(--gap,6px)}
+.col{flex:1;min-width:0;height:100%;display:flex;align-items:flex-end}
+.col span{display:block;width:100%;background:var(--accent);border-radius:4px 4px 0 0;min-height:0;transition:height .25s}
+.col.dim span{background:var(--c9);opacity:.55}
+.col.top span{background:var(--c3)}
+.axis{margin:6px 0 0 34px;display:flex;gap:var(--gap,6px);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.axis span{flex:1;min-width:0;text-align:center;white-space:nowrap;overflow:visible}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;color:var(--muted);font-size:12px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.tasks{display:flex;flex-direction:column}
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:4px 16px;padding:12px 0;border-top:1px solid var(--line);align-items:baseline}
+.row:first-child{border-top:0}
+.row .n{display:flex;gap:10px;align-items:center;min-width:0}
+.row .n i{width:10px;height:10px;border-radius:3px;flex:none}
+.row .n span{overflow-wrap:anywhere;font-weight:500}
+.row .h{font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+.row .c{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums;text-align:right;min-width:92px}
+.row .t{grid-column:1/-1;height:6px;border-radius:3px;background:var(--bg);overflow:hidden}
+.row .t b{display:block;height:100%;border-radius:3px}
+.empty{color:var(--muted);padding:26px 0;text-align:center}
+@media (max-width:760px){.charts{grid-template-columns:minmax(0,1fr)}.row .c{min-width:0}}
+@media (prefers-reduced-motion:reduce){.col span{transition:none}}
+[hidden]{display:none!important}
+#pg-stat,#pg-task{display:flex;flex-direction:column;gap:20px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tabs button{padding:9px 16px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-weight:600;cursor:pointer}
+.tabs button[aria-pressed=true]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row .n small{display:block;color:var(--muted);font-size:12px}
+.row .why{grid-column:1/-1;font-size:12px;color:var(--c4)}
+.sec-h{margin:0 0 8px}
+.sk-top{font-family:var(--font-display);margin-bottom:8px}.sk-top b{font-size:34px;color:var(--c3)}.sk-top small{color:var(--muted);font-size:13px}
+.dots{grid-column:1/-1;display:flex;gap:4px;align-items:center;flex-wrap:wrap}.dots button{margin-left:auto;padding:5px 10px}
+.dt{width:12px;height:12px;border-radius:3px;background:var(--c9)}.dt.ok{background:var(--c2)}.dt.late{background:var(--c3)}.dt.miss{background:var(--c4)}.dt.pend{opacity:.4}
 </style>
-</head>
-<body>
-<div class="wrap">
-  <h1>Chuỗi Google Tasks</h1>
-  <p class="sub">Đọc thẳng task từ tài khoản Google của bạn và tính chuỗi theo giờ hoàn thành thật.</p>
-  <div class="bar">
-    <button class="p" id="login">Đăng nhập Google</button>
-    <button id="refresh" hidden>Làm mới</button>
-    <span class="st" id="st" aria-live="polite"></span>
-  </div>
-  <div id="out"></div>
-</div>
-<script>
-// ===== CẤU HÌNH: dán Client ID tạo trong Google Cloud Console =====
-var CLIENT_ID='425760458480-j4aki3l5p9sad12o6mhob45jsu4766eg.apps.googleusercontent.com';
-// ===================================================================
-var SCOPE='https://www.googleapis.com/auth/tasks.readonly',LS='gtasks-streak-v1';
-var tok=null,tc=null,timer=null,S={seen:{},broke:{},consented:false};
-try{var s0=JSON.parse(localStorage.getItem(LS));if(s0)S=s0}catch(e){}
-function save(){try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}}
-function $(i){return document.getElementById(i)}
-function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
-function sod(t){var d=new Date(t);return new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime()}
-function say(t,e){$('st').textContent=t;$('st').className='st'+(e?' err':'')}
 
-function init(){
-  if(!window.google||!google.accounts){return setTimeout(init,300)}
-  if(CLIENT_ID.indexOf('DÁN_')===0){say('Chưa có Client ID. Mở file này và dán Client ID vào đầu phần script.',1);return}
-  tc=google.accounts.oauth2.initTokenClient({client_id:CLIENT_ID,scope:SCOPE,callback:onToken,error_callback:function(){say('Chưa đăng nhập. Bấm "Đăng nhập Google".',1)}});
-  if(S.consented)tc.requestAccessToken({prompt:''});
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Google Calendar · báo cáo thời gian</p>
+    <h1>Bạn đã dành thời gian cho việc gì?</h1>
+  </header>
+
+  <section class="panel" id="source">
+    <div class="src">
+      <div>
+        <h2>Nguồn dữ liệu</h2>
+        <p class="status" id="status" aria-live="polite"></p>
+        <p class="status" id="acct" aria-live="polite"></p>
+      </div>
+      <div class="src-actions">
+        <button id="btn-gcal" type="button" class="btn primary">Đăng nhập Google</button>
+        <button id="btn-cid" type="button">Đổi Client ID</button>
+        <button id="btn-clear" type="button">Xóa dữ liệu</button>
+      </div>
+    </div>
+    <div class="drop" id="drop">
+      <p>Kéo thả một hoặc nhiều file <b>.ics</b> vào đây. Dữ liệu được xử lý ngay trong trình duyệt, không gửi đi đâu.</p>
+      <label class="btn primary file">Chọn file .ics<input id="file" type="file" accept=".ics,text/calendar" multiple></label>
+    </div>
+    <details>
+      <summary>Cách lấy file từ Google Calendar</summary>
+      <ol>
+        <li>Mở Google Calendar trên máy tính, bấm biểu tượng bánh răng, chọn <b>Cài đặt</b>.</li>
+        <li>Chọn <b>Nhập và xuất</b>, rồi bấm <b>Xuất</b>.</li>
+        <li>Giải nén file .zip tải về, mỗi lịch là một file .ics.</li>
+        <li>Chọn các file .ics ở trên. Lịch lặp lại và sự kiện bị hủy được xử lý tự động.</li>
+      </ol>
+    </details>
+  </section>
+
+  <nav class="tabs" aria-label="Chọn tab">
+    <button type="button" id="t-stat" aria-pressed="true">Thống kê sự kiện</button>
+    <button type="button" id="t-task" aria-pressed="false">Task và chuỗi</button>
+  </nav>
+<div id="pg-stat">
+  <section class="bar" aria-label="Chọn kỳ thống kê">
+    <div class="seg" role="group" aria-label="Chế độ xem">
+      <button type="button" id="m-week" aria-pressed="true">Tuần</button>
+      <button type="button" id="m-month" aria-pressed="false">Tháng</button>
+    </div>
+    <div class="nav">
+      <button type="button" id="prev" aria-label="Kỳ trước">←</button>
+      <span class="range" id="range"></span>
+      <button type="button" id="next" aria-label="Kỳ sau">→</button>
+      <button type="button" id="today">Hôm nay</button>
+    </div>
+    <label class="chk" for="allday"><input type="checkbox" id="allday"> Tính cả sự kiện cả ngày (24 giờ)</label>
+  </section>
+
+  <div id="banner"></div>
+  <section class="tiles" id="tiles"></section>
+  <section class="charts">
+    <div class="panel" id="chart-days"></div>
+    <div class="panel" id="chart-trend"></div>
+  </section>
+  <section class="panel" id="task-panel"></section>
+</div>
+<div id="pg-task" hidden>
+  <section class="tiles" id="tk-tiles"></section>
+  <section class="panel" id="tk"></section>
+</div>
+</div>
+
+<script>
+(function(){
+var DAY=864e5, KEY='thong-ke-calendar-v1';
+var DOW=['T2','T3','T4','T5','T6','T7','CN'];
+var state={events:[],sample:false,mode:'week',anchor:new Date(),allday:false};
+
+/* ---------- tiện ích ngày ---------- */
+function sod(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate())}
+function addDays(d,n){return new Date(d.getFullYear(),d.getMonth(),d.getDate()+n)}
+function wStart(d){var x=sod(d);return addDays(x,-((x.getDay()+6)%7))}
+function pad(n){return n<10?'0'+n:''+n}
+function dm(d){return pad(d.getDate())+'/'+pad(d.getMonth()+1)}
+function isoWeek(d){var t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));var n=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-n);var y0=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil(((t-y0)/DAY+1)/7)}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function fh(ms){var h=ms/36e5;return h.toLocaleString('vi-VN',{maximumFractionDigits:1,minimumFractionDigits:h>0&&h<10?1:0})}
+
+/* ---------- đọc file .ics ---------- */
+function unfold(t){return t.replace(/\r\n/g,'\n').replace(/\r/g,'\n').replace(/\n[ \t]/g,'')}
+function unesc(s){return s.replace(/\\n/gi,' ').replace(/\\([,;\\])/g,'$1')}
+function parseLine(l){
+  var q=false,i=-1;
+  for(var k=0;k<l.length;k++){var c=l[k];if(c==='"')q=!q;else if(c===':'&&!q){i=k;break}}
+  if(i<0)return null;
+  var parts=l.slice(0,i).split(';'),params={};
+  parts.slice(1).forEach(function(p){var e=p.indexOf('=');if(e>0)params[p.slice(0,e).toUpperCase()]=p.slice(e+1).replace(/"/g,'')});
+  return {name:parts[0].toUpperCase(),params:params,val:l.slice(i+1)};
 }
-$('login').onclick=function(){if(tc)tc.requestAccessToken({prompt:S.consented?'':'consent'});else init()};
-$('refresh').onclick=run;
-function onToken(r){
-  if(r.error){say('Đăng nhập lỗi: '+r.error,1);return}
-  tok=r.access_token;S.consented=true;save();
-  $('login').hidden=true;$('refresh').hidden=false;
-  clearTimeout(timer);
-  timer=setTimeout(function(){tc.requestAccessToken({prompt:''})},Math.max(60,(r.expires_in||3600)-120)*1000);
-  run();
+function tzLocal(y,mo,d,h,mi,s,tz){
+  try{
+    var guess=Date.UTC(y,mo,d,h,mi,s);
+    var f=new Intl.DateTimeFormat('en-US',{timeZone:tz,hourCycle:'h23',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    var off=function(t){var o={};f.formatToParts(new Date(t)).forEach(function(x){o[x.type]=x.value});return Date.UTC(+o.year,+o.month-1,+o.day,+o.hour,+o.minute,+o.second)-t};
+    var t=guess-off(guess);t=guess-off(t);return t;
+  }catch(e){return new Date(y,mo,d,h,mi,s).getTime()}
 }
-async function api(u){
-  var r=await fetch('https://tasks.googleapis.com/tasks/v1/'+u,{headers:{Authorization:'Bearer '+tok}});
-  if(r.status===401){tok=null;$('login').hidden=false;$('refresh').hidden=true;throw new Error('Phiên đăng nhập hết hạn')}
-  if(!r.ok)throw new Error('Google trả lỗi '+r.status+'. Kiểm tra đã bật Google Tasks API chưa.');
+function parseDT(p){
+  var m=p.val.trim().match(/^(\d{4})(\d\d)(\d\d)(?:T(\d\d)(\d\d)(\d\d)?)?(Z)?$/);
+  if(!m)return null;
+  var y=+m[1],mo=+m[2]-1,d=+m[3];
+  if(m[4]===undefined)return {ms:new Date(y,mo,d).getTime(),allDay:true};
+  var h=+m[4],mi=+m[5],s=+(m[6]||0);
+  if(m[7])return {ms:Date.UTC(y,mo,d,h,mi,s)};
+  var tz=p.params&&p.params.TZID;
+  return {ms:tz?tzLocal(y,mo,d,h,mi,s,tz):new Date(y,mo,d,h,mi,s).getTime()};
+}
+function parseDur(v){
+  var m=v.match(/^P(?:(\d+)W)?(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/);
+  if(!m)return 0;
+  return ((+m[1]||0)*7+(+m[2]||0))*DAY+(+m[3]||0)*36e5+(+m[4]||0)*6e4+(+m[5]||0)*1e3;
+}
+function expand(sMs,rule,cap){
+  var s=new Date(sMs),interval=Math.max(1,+(rule.INTERVAL||1)),count=rule.COUNT?+rule.COUNT:Infinity,until=Infinity;
+  if(rule.UNTIL){var u=parseDT({val:rule.UNTIL,params:{}});if(u)until=u.allDay?u.ms+DAY-1:u.ms}
+  var hh=s.getHours(),mm=s.getMinutes(),ss=s.getSeconds();
+  var mk=function(y,mo,d){return new Date(y,mo,d,hh,mm,ss).getTime()};
+  var out=[],n=0;
+  var push=function(t){if(t<sMs)return true;if(t>until||t>cap||n>=count||out.length>4000)return false;n++;out.push(t);return true};
+  var f=rule.FREQ,i,k;
+  if(f==='DAILY'){for(i=0;i<5000;i++){if(!push(mk(s.getFullYear(),s.getMonth(),s.getDate()+i*interval)))break}}
+  else if(f==='WEEKLY'){
+    var map={MO:0,TU:1,WE:2,TH:3,FR:4,SA:5,SU:6},w0=(s.getDay()+6)%7;
+    var days=rule.BYDAY?rule.BYDAY.split(',').map(function(x){return map[x.slice(-2)]}).filter(function(x){return x!==undefined}).sort(function(a,b){return a-b}):[w0];
+    if(!days.length)days=[w0];
+    outer:for(k=0;k<3000;k++){for(var j=0;j<days.length;j++){
+      var t=mk(s.getFullYear(),s.getMonth(),s.getDate()-w0+k*7*interval+days[j]);
+      if(!push(t))break outer}}
+  }
+  else if(f==='MONTHLY'){for(i=0;i<1200;i++){var tm=mk(s.getFullYear(),s.getMonth()+i*interval,s.getDate());if(new Date(tm).getDate()!==s.getDate())continue;if(!push(tm))break}}
+  else if(f==='YEARLY'){for(i=0;i<200;i++){var ty=mk(s.getFullYear()+i*interval,s.getMonth(),s.getDate());if(new Date(ty).getMonth()!==s.getMonth())continue;if(!push(ty))break}}
+  else out=[sMs];
+  return out;
+}
+function parseICS(text,fallback){
+  var lines=unfold(text).split('\n'),cal=fallback,raw=[],cur=null,alarm=false;
+  lines.forEach(function(l){
+    if(!l)return;
+    var u=l.toUpperCase();
+    if(u==='BEGIN:VEVENT'){cur=[];alarm=false;return}
+    if(u==='END:VEVENT'){if(cur)raw.push(cur);cur=null;return}
+    if(!cur){if(u.indexOf('X-WR-CALNAME')===0){var p=parseLine(l);if(p&&p.val)cal=unesc(p.val)}return}
+    if(u==='BEGIN:VALARM'){alarm=true;return}
+    if(u==='END:VALARM'){alarm=false;return}
+    if(alarm)return;
+    var pl=parseLine(l);if(pl)cur.push(pl);
+  });
+  var cap=new Date(new Date().getFullYear()+1,11,31).getTime();
+  var items=raw.map(function(props){
+    var o={title:'(Không tiêu đề)',exd:{},uid:'',cal:cal};
+    props.forEach(function(p){
+      if(p.name==='SUMMARY')o.title=unesc(p.val).trim()||o.title;
+      else if(p.name==='UID')o.uid=p.val;
+      else if(p.name==='DTSTART')o.s=parseDT(p);
+      else if(p.name==='DTEND')o.e=parseDT(p);
+      else if(p.name==='DURATION')o.dur=parseDur(p.val);
+      else if(p.name==='STATUS')o.status=p.val.toUpperCase();
+      else if(p.name==='RRULE'){o.rule={};p.val.split(';').forEach(function(kv){var e=kv.indexOf('=');if(e>0)o.rule[kv.slice(0,e).toUpperCase()]=kv.slice(e+1)})}
+      else if(p.name==='EXDATE')p.val.split(',').forEach(function(v){var d=parseDT({val:v,params:p.params});if(d)o.exd[d.ms]=1});
+      else if(p.name==='RECURRENCE-ID'){var r=parseDT(p);if(r)o.rec=r.ms}
+    });
+    return o;
+  }).filter(function(o){return o.s});
+  var overrides={};
+  items.forEach(function(o){if(o.rec!==undefined)overrides[o.uid+'|'+o.rec]=1});
+  var out=[];
+  items.forEach(function(o){
+    if(o.status==='CANCELLED')return;
+    var s=o.s.ms,allDay=!!o.s.allDay,len;
+    if(o.e)len=o.e.ms-s;else if(o.dur!==undefined)len=o.dur;else len=allDay?DAY:0;
+    if(len<=0)return;
+    if(o.rule&&o.rec===undefined){
+      expand(s,o.rule,cap).forEach(function(t){
+        if(o.exd[t]||overrides[o.uid+'|'+t])return;
+        out.push([t,t+len,o.title,allDay?1:0,o.cal]);
+      });
+    }else out.push([s,s+len,o.title,allDay?1:0,o.cal]);
+  });
+  return out;
+}
+function dedupe(list){
+  var seen={},out=[];
+  list.forEach(function(e){var k=e[0]+'|'+e[1]+'|'+e[2]+'|'+e[4];if(!seen[k]){seen[k]=1;out.push(e)}});
+  return out;
+}
+
+/* ---------- dữ liệu từ Google Calendar (lấy 07/10/2026) ---------- */
+var SNAP=[[1772535600000,1772539199000,"Bia Tiger - Vào giật lì xì ngay!",0,"Lịch học và event"],[1784340000000,1784343600000,"Nộp tiền thanh toán bộ nguyện vọng",0,"Lịch học và event"],[1787358600000,1787371200000,"Sinh hoạt chung cấp Khoa",0,"Lịch học và event"],[1787531400000,1787545800000,"Hoá đại cương",0,"Lịch học và event"],[1787550300000,1787561400000,"Nhập môn điện điện tử",0,"Lịch học và event"],[1787617800000,1787629800000,"Nhập môn kỹ thuật điện điện tử",0,"Lịch học và event"],[1787702400000,1787788800000,"THAM GIA THƯỞNG THỨC VĂN HÓA ĐIỆN ẢNH ẤN ĐỘ ",1,"Lịch học và event"],[1788741000000,1788755400000,"Môn: Hoá đại cương (GCHE130603)",0,"Lịch học và event"],[1788759900000,1788771600000,"Môn: Nhập môn ngành CNKT Điện - Điện tử (IEET136345)",0,"Lịch học và event"],[1788913800000,1788925500000,"Môn: Giáo dục quốc phòng 1 (GDQP110131)",0,"Lịch học và event"],[1788935400000,1788947100000,"Môn: Giáo dục quốc phòng 1 (GDQP110131)",0,"Lịch học và event"],[1789086600000,1789101000000,"Môn: Vật lý 1 (PHYS130902)",0,"Lịch học và event"],[1789105500000,1789119900000,"Môn: Pháp luật đại cương (GELA236939)",0,"Lịch học và event"],[1789345800000,1789360200000,"Môn: Hoá đại cương (GCHE130603)",0,"Lịch học và event"],[1789364700000,1789376400000,"Môn: Nhập môn ngành CNKT Điện - Điện tử (IEET136345)",0,"Lịch học và event"],[1789475400000,1789479000000,"Nhập môn nộp bài",0,"Lịch học và event"],[1789482600000,1789486200000,"Cất đồ ăn",0,"Lịch học và event"],[1789518600000,1789530300000,"Môn: Giáo dục quốc phòng 1 (GDQP110131)",0,"Lịch học và event"],[1789540200000,1789551900000,"Môn: Giáo dục quốc phòng 1 (GDQP110131)",0,"Lịch học và event"],[1789691400000,1789705800000,"Môn: Vật lý 1 (PHYS130902)",0,"Lịch học và event"],[1789710300000,1789724700000,"Môn: Pháp luật đại cương (GELA236939)",0,"Lịch học và event"],[1789950600000,1789965000000,"Môn: Hoá đại cương (GCHE130603)",0,"Lịch học và event"],[1789969500000,1789981200000,"Môn: Nhập môn ngành CNKT Điện - Điện tử (IEET136345)",0,"Lịch học và event"],[1790123400000,1790135100000,"Môn: Giáo dục quốc phòng 1 (GDQP110131)",0,"Lịch học và event"],[1790145000000,1790156700000,"Môn: Giáo dục quốc phòng 1 (GDQP110131)",0,"Lịch học và event"],[1790296200000,1790310600000,"Môn: Vật lý 1 (PHYS130902)",0,"Lịch học và event"],[1790315100000,1790329500000,"Môn: Pháp luật đại cương (GELA236939)",0,"Lịch học và event"],[1790553600000,1790640000000,"Tìm việc",1,"Lịch học và event"],[1790555400000,1790569800000,"Môn: Hoá đại cương (GCHE130603)",0,"Lịch học và event"],[1790574300000,1790586000000,"Môn: Nhập môn ngành CNKT Điện - Điện tử (IEET136345)",0,"Lịch học và event"],[1790596800000,1790611200000,"Chạy deadline",0,"Lịch học và event"],[1790668800000,1790672400000,"Điền form nhà",0,"Lịch học và event"],[1790683200000,1790697600000,"Chạy deadline",0,"Lịch học và event"],[1790688600000,1790690400000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1790726400000,1790812800000,"Tìm việc",1,"Lịch học và event"],[1790726400000,1790812800000,"Ôn thi nhập môn",1,"Lịch học và event"],[1790728200000,1790739900000,"Môn: Giáo dục quốc phòng 1 (GDQP110131)",0,"Lịch học và event"],[1790749800000,1790761500000,"Môn: Giáo dục quốc phòng 1 (GDQP110131)",0,"Lịch học và event"],[1790769600000,1790784000000,"Chạy deadline",0,"Lịch học và event"],[1790775000000,1790776800000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1790776800000,1790780400000,"Làm quốc phòng",0,"Lịch học và event"],[1790812800000,1790899200000,"Ôn thi nhập môn",1,"Lịch học và event"],[1790856000000,1790870400000,"Chạy deadline",0,"Lịch học và event"],[1790861400000,1790863200000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1790899200000,1790985600000,"Tìm việc",1,"Lịch học và event"],[1790899200000,1790985600000,"Ôn thi nhập môn",1,"Lịch học và event"],[1790901000000,1790915400000,"Ktr lí 1 ",0,"Lịch học và event"],[1790901000000,1790915400000,"Môn: Vật lý 1 (PHYS130902)",0,"Lịch học và event"],[1790919900000,1790934300000,"Môn: Pháp luật đại cương (GELA236939)",0,"Lịch học và event"],[1790942400000,1790956800000,"Chạy deadline",0,"Lịch học và event"],[1790947800000,1790949600000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1790985600000,1791072000000,"Ôn thi nhập môn",1,"Lịch học và event"],[1790985600000,1791036000000,"Đi lấy đồ",0,"Lịch học và event"],[1791025200000,1791028800000,"Duyệt chương trình",0,"Lịch học và event"],[1791028800000,1791043200000,"Chạy deadline",0,"Lịch học và event"],[1791034200000,1791036000000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1791072000000,1791158400000,"Ôn thi nhập môn",1,"Lịch học và event"],[1791072000000,1791122400000,"Sự kiện trường",0,"Lịch học và event"],[1791097200000,1791106200000,"Điểm rèn luyện",0,"Lịch học và event"],[1791115200000,1791129600000,"Chạy deadline",0,"Lịch học và event"],[1791120600000,1791122400000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1791158400000,1791244800000,"Tìm việc",1,"Lịch học và event"],[1791160200000,1791174600000,"Môn: Hoá đại cương (GCHE130603)",0,"Lịch học và event"],[1791179100000,1791190800000,"Thi cuối kì nhập môn",0,"Lịch học và event"],[1791179100000,1791190800000,"Môn: Nhập môn ngành CNKT Điện - Điện tử (IEET136345)",0,"Lịch học và event"],[1791201600000,1791216000000,"Chạy deadline",0,"Lịch học và event"],[1791207000000,1791208800000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1791288000000,1791302400000,"Chạy deadline",0,"Lịch học và event"],[1791293400000,1791295200000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1791331200000,1791417600000,"Tìm việc",1,"Lịch học và event"],[1791333000000,1791344700000,"Môn: Giáo dục quốc phòng 1 (GDQP110131)",0,"Lịch học và event"],[1791354600000,1791366300000,"Môn: Giáo dục quốc phòng 1 (GDQP110131)",0,"Lịch học và event"],[1791374400000,1791388800000,"Chạy deadline",0,"Lịch học và event"],[1791379800000,1791381600000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1791460800000,1791475200000,"Chạy deadline",0,"Lịch học và event"],[1791466200000,1791468000000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1791504000000,1791590400000,"Tìm việc",1,"Lịch học và event"],[1791505800000,1791520200000,"Môn: Vật lý 1 (PHYS130902)",0,"Lịch học và event"],[1791524700000,1791539100000,"Môn: Pháp luật đại cương (GELA236939)",0,"Lịch học và event"],[1791547200000,1791561600000,"Chạy deadline",0,"Lịch học và event"],[1791552600000,1791554400000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1791633600000,1791648000000,"Chạy deadline",0,"Lịch học và event"],[1791639000000,1791640800000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1791720000000,1791734400000,"Chạy deadline",0,"Lịch học và event"],[1791725400000,1791727200000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1791763200000,1791849600000,"Tìm việc",1,"Lịch học và event"],[1791765000000,1791779400000,"Môn: Hoá đại cương (GCHE130603)",0,"Lịch học và event"],[1791783900000,1791795600000,"Môn: Nhập môn ngành CNKT Điện - Điện tử (IEET136345)",0,"Lịch học và event"],[1791806400000,1791820800000,"Chạy deadline",0,"Lịch học và event"],[1791811800000,1791813600000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1791892800000,1791907200000,"Chạy deadline",0,"Lịch học và event"],[1791898200000,1791900000000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1791936000000,1792022400000,"Thi giữa kì pldc",1,"Lịch học và event"],[1791936000000,1792022400000,"Tìm việc",1,"Lịch học và event"],[1791937800000,1791949500000,"Môn: Giáo dục quốc phòng 1 (GDQP110131)",0,"Lịch học và event"],[1791979200000,1791993600000,"Chạy deadline",0,"Lịch học và event"],[1791984600000,1791986400000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1792065600000,1792080000000,"Chạy deadline",0,"Lịch học và event"],[1792071000000,1792072800000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1792108800000,1792195200000,"Tìm việc",1,"Lịch học và event"],[1792110600000,1792125000000,"Môn: Vật lý 1 (PHYS130902)",0,"Lịch học và event"],[1792129500000,1792143900000,"Môn: Pháp luật đại cương (GELA236939)",0,"Lịch học và event"],[1792152000000,1792166400000,"Chạy deadline",0,"Lịch học và event"],[1792157400000,1792159200000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1792238400000,1792252800000,"Chạy deadline",0,"Lịch học và event"],[1792243800000,1792245600000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1792324800000,1792339200000,"Chạy deadline",0,"Lịch học và event"],[1792330200000,1792332000000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1792368000000,1792454400000,"Tìm việc",1,"Lịch học và event"],[1792369800000,1792384200000,"Môn: Hoá đại cương (GCHE130603)",0,"Lịch học và event"],[1792411200000,1792425600000,"Chạy deadline",0,"Lịch học và event"],[1792416600000,1792418400000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1792497600000,1792512000000,"Chạy deadline",0,"Lịch học và event"],[1792503000000,1792504800000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1792540800000,1792627200000,"Tìm việc",1,"Lịch học và event"],[1792584000000,1792598400000,"Chạy deadline",0,"Lịch học và event"],[1792589400000,1792591200000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1792670400000,1792684800000,"Chạy deadline",0,"Lịch học và event"],[1792675800000,1792677600000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1792713600000,1792800000000,"Tìm việc",1,"Lịch học và event"],[1792715400000,1792729800000,"Môn: Vật lý 1 (PHYS130902)",0,"Lịch học và event"],[1792734300000,1792748700000,"Môn: Pháp luật đại cương (GELA236939)",0,"Lịch học và event"],[1792756800000,1792771200000,"Chạy deadline",0,"Lịch học và event"],[1792762200000,1792764000000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1792843200000,1792857600000,"Chạy deadline",0,"Lịch học và event"],[1792848600000,1792850400000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1792929600000,1792944000000,"Chạy deadline",0,"Lịch học và event"],[1792935000000,1792936800000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1792972800000,1793059200000,"Tìm việc",1,"Lịch học và event"],[1792982700000,1792989900000,"Thi Lí 1 A115",0,"Lịch học và event"],[1793016000000,1793030400000,"Chạy deadline",0,"Lịch học và event"],[1793021400000,1793023200000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1793080800000,1793088000000,"Thi PLDC A218",0,"Lịch học và event"],[1793102400000,1793116800000,"Chạy deadline",0,"Lịch học và event"],[1793107800000,1793109600000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1793145600000,1793232000000,"Tìm việc",1,"Lịch học và event"],[1793188800000,1793203200000,"Chạy deadline",0,"Lịch học và event"],[1793194200000,1793196000000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1793241900000,1793247300000,"Thi Hoá A218",0,"Lịch học và event"],[1793275200000,1793289600000,"Chạy deadline",0,"Lịch học và event"],[1793280600000,1793282400000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1793318400000,1793404800000,"Tìm việc",1,"Lịch học và event"],[1793361600000,1793376000000,"Chạy deadline",0,"Lịch học và event"],[1793367000000,1793368800000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1793448000000,1793462400000,"Chạy deadline",0,"Lịch học và event"],[1793453400000,1793455200000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1793534400000,1793548800000,"Chạy deadline",0,"Lịch học và event"],[1793539800000,1793541600000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1793577600000,1793664000000,"Tìm việc",1,"Lịch học và event"],[1793620800000,1793635200000,"Chạy deadline",0,"Lịch học và event"],[1793626200000,1793628000000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1793707200000,1793721600000,"Chạy deadline",0,"Lịch học và event"],[1793712600000,1793714400000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1793750400000,1793836800000,"Tìm việc",1,"Lịch học và event"],[1793793600000,1793808000000,"Chạy deadline",0,"Lịch học và event"],[1793799000000,1793800800000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1793869200000,1793874600000,"Giáo dục thể chất 1 (Điền kinh) (PHED110130)",0,"Lịch học và event"],[1793880000000,1793894400000,"Chạy deadline",0,"Lịch học và event"],[1793885400000,1793887200000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1793923200000,1794009600000,"Tìm việc",1,"Lịch học và event"],[1793925000000,1793939400000,"Giải tích nhiều biến số (MATH133601)",0,"Lịch học và event"],[1793966400000,1793980800000,"Chạy deadline",0,"Lịch học và event"],[1793971800000,1793973600000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1794011400000,1794016800000,"Giáo dục thể chất 1 (Điền kinh) (PHED110130)",0,"Lịch học và event"],[1794052800000,1794067200000,"Chạy deadline",0,"Lịch học và event"],[1794058200000,1794060000000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1794139200000,1794153600000,"Chạy deadline",0,"Lịch học và event"],[1794144600000,1794146400000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1794182400000,1794268800000,"Tìm việc",1,"Lịch học và event"],[1794225600000,1794240000000,"Chạy deadline",0,"Lịch học và event"],[1794231000000,1794232800000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1794312000000,1794326400000,"Chạy deadline",0,"Lịch học và event"],[1794317400000,1794319200000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1794355200000,1794441600000,"Tìm việc",1,"Lịch học và event"],[1794398400000,1794412800000,"Chạy deadline",0,"Lịch học và event"],[1794403800000,1794405600000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1794474000000,1794479400000,"Giáo dục thể chất 1 (Điền kinh) (PHED110130)",0,"Lịch học và event"],[1794484800000,1794499200000,"Chạy deadline",0,"Lịch học và event"],[1794490200000,1794492000000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1794528000000,1794614400000,"Tìm việc",1,"Lịch học và event"],[1794529800000,1794544200000,"Giải tích nhiều biến số (MATH133601)",0,"Lịch học và event"],[1794571200000,1794585600000,"Chạy deadline",0,"Lịch học và event"],[1794576600000,1794578400000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1794616200000,1794621600000,"Giáo dục thể chất 1 (Điền kinh) (PHED110130)",0,"Lịch học và event"],[1794657600000,1794672000000,"Chạy deadline",0,"Lịch học và event"],[1794663000000,1794664800000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1794744000000,1794758400000,"Chạy deadline",0,"Lịch học và event"],[1794749400000,1794751200000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1794787200000,1794873600000,"Tìm việc",1,"Lịch học và event"],[1794830400000,1794844800000,"Chạy deadline",0,"Lịch học và event"],[1794835800000,1794837600000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1794916800000,1794931200000,"Chạy deadline",0,"Lịch học và event"],[1794922200000,1794924000000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1794960000000,1795046400000,"Tìm việc",1,"Lịch học và event"],[1795003200000,1795017600000,"Chạy deadline",0,"Lịch học và event"],[1795008600000,1795010400000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1795078800000,1795084200000,"Giáo dục thể chất 1 (Điền kinh) (PHED110130)",0,"Lịch học và event"],[1795089600000,1795104000000,"Chạy deadline",0,"Lịch học và event"],[1795095000000,1795096800000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1795132800000,1795219200000,"Tìm việc",1,"Lịch học và event"],[1795134600000,1795149000000,"Giải tích nhiều biến số (MATH133601)",0,"Lịch học và event"],[1795176000000,1795190400000,"Chạy deadline",0,"Lịch học và event"],[1795181400000,1795183200000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1795221000000,1795226400000,"Giáo dục thể chất 1 (Điền kinh) (PHED110130)",0,"Lịch học và event"],[1795262400000,1795276800000,"Chạy deadline",0,"Lịch học và event"],[1795267800000,1795269600000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1795348800000,1795363200000,"Chạy deadline",0,"Lịch học và event"],[1795354200000,1795356000000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1795392000000,1795478400000,"Tìm việc",1,"Lịch học và event"],[1795435200000,1795449600000,"Chạy deadline",0,"Lịch học và event"],[1795440600000,1795442400000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1795521600000,1795536000000,"Chạy deadline",0,"Lịch học và event"],[1795527000000,1795528800000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1795564800000,1795651200000,"Tìm việc",1,"Lịch học và event"],[1795566600000,1795578300000,"Giáo dục quốc phòng 2 (GDQP110231)",0,"Lịch học và event"],[1795588200000,1795599900000,"Giáo dục quốc phòng 2 (GDQP110231)",0,"Lịch học và event"],[1795608000000,1795622400000,"Chạy deadline",0,"Lịch học và event"],[1795613400000,1795615200000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1795683600000,1795689000000,"Giáo dục thể chất 1 (Điền kinh) (PHED110130)",0,"Lịch học và event"],[1795694400000,1795708800000,"Chạy deadline",0,"Lịch học và event"],[1795699800000,1795701600000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1795737600000,1795824000000,"Tìm việc",1,"Lịch học và event"],[1795739400000,1795753800000,"Giải tích nhiều biến số (MATH133601)",0,"Lịch học và event"],[1795780800000,1795795200000,"Chạy deadline",0,"Lịch học và event"],[1795786200000,1795788000000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1795825800000,1795831200000,"Giáo dục thể chất 1 (Điền kinh) (PHED110130)",0,"Lịch học và event"],[1795867200000,1795881600000,"Chạy deadline",0,"Lịch học và event"],[1795872600000,1795874400000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1795953600000,1795968000000,"Chạy deadline",0,"Lịch học và event"],[1795959000000,1795960800000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1795996800000,1796083200000,"Tìm việc",1,"Lịch học và event"],[1796040000000,1796054400000,"Chạy deadline",0,"Lịch học và event"],[1796045400000,1796047200000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1796126400000,1796140800000,"Chạy deadline",0,"Lịch học và event"],[1796131800000,1796133600000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1796169600000,1796256000000,"Tìm việc",1,"Lịch học và event"],[1796171400000,1796183100000,"Giáo dục quốc phòng 2 (GDQP110231)",0,"Lịch học và event"],[1796193000000,1796204700000,"Giáo dục quốc phòng 2 (GDQP110231)",0,"Lịch học và event"],[1796212800000,1796227200000,"Chạy deadline",0,"Lịch học và event"],[1796218200000,1796220000000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1796288400000,1796293800000,"Giáo dục thể chất 1 (Điền kinh) (PHED110130)",0,"Lịch học và event"],[1796299200000,1796313600000,"Chạy deadline",0,"Lịch học và event"],[1796304600000,1796306400000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1796342400000,1796428800000,"Tìm việc",1,"Lịch học và event"],[1796344200000,1796358600000,"Giải tích nhiều biến số (MATH133601)",0,"Lịch học và event"],[1796385600000,1796400000000,"Chạy deadline",0,"Lịch học và event"],[1796391000000,1796392800000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1796430600000,1796436000000,"Giáo dục thể chất 1 (Điền kinh) (PHED110130)",0,"Lịch học và event"],[1796472000000,1796486400000,"Chạy deadline",0,"Lịch học và event"],[1796477400000,1796479200000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1796558400000,1796572800000,"Chạy deadline",0,"Lịch học và event"],[1796563800000,1796565600000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1796601600000,1796688000000,"Tìm việc",1,"Lịch học và event"],[1796644800000,1796659200000,"Chạy deadline",0,"Lịch học và event"],[1796650200000,1796652000000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1796731200000,1796745600000,"Chạy deadline",0,"Lịch học và event"],[1796736600000,1796738400000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1796774400000,1796860800000,"Tìm việc",1,"Lịch học và event"],[1796776200000,1796787900000,"Giáo dục quốc phòng 2 (GDQP110231)",0,"Lịch học và event"],[1796797800000,1796809500000,"Giáo dục quốc phòng 2 (GDQP110231)",0,"Lịch học và event"],[1796817600000,1796832000000,"Chạy deadline",0,"Lịch học và event"],[1796823000000,1796824800000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1796893200000,1796898600000,"Giáo dục thể chất 1 (Điền kinh) (PHED110130)",0,"Lịch học và event"],[1796904000000,1796918400000,"Chạy deadline",0,"Lịch học và event"],[1796909400000,1796911200000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1796947200000,1797033600000,"Tìm việc",1,"Lịch học và event"],[1796949000000,1796963400000,"Giải tích nhiều biến số (MATH133601)",0,"Lịch học và event"],[1796990400000,1797004800000,"Chạy deadline",0,"Lịch học và event"],[1796995800000,1796997600000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1797035400000,1797040800000,"Giáo dục thể chất 1 (Điền kinh) (PHED110130)",0,"Lịch học và event"],[1797076800000,1797091200000,"Chạy deadline",0,"Lịch học và event"],[1797082200000,1797084000000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1797163200000,1797177600000,"Chạy deadline",0,"Lịch học và event"],[1797168600000,1797170400000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1797206400000,1797292800000,"Tìm việc",1,"Lịch học và event"],[1797249600000,1797264000000,"Chạy deadline",0,"Lịch học và event"],[1797255000000,1797256800000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1797336000000,1797350400000,"Chạy deadline",0,"Lịch học và event"],[1797341400000,1797343200000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1797379200000,1797465600000,"Tìm việc",1,"Lịch học và event"],[1797381000000,1797392700000,"Giáo dục quốc phòng 2 (GDQP110231)",0,"Lịch học và event"],[1797402600000,1797414300000,"Giáo dục quốc phòng 2 (GDQP110231)",0,"Lịch học và event"],[1797422400000,1797436800000,"Chạy deadline",0,"Lịch học và event"],[1797427800000,1797429600000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1797498000000,1797503400000,"Giáo dục thể chất 1 (Điền kinh) (PHED110130)",0,"Lịch học và event"],[1797508800000,1797523200000,"Chạy deadline",0,"Lịch học và event"],[1797514200000,1797516000000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1797552000000,1797638400000,"Tìm việc",1,"Lịch học và event"],[1797553800000,1797568200000,"Giải tích nhiều biến số (MATH133601)",0,"Lịch học và event"],[1797595200000,1797609600000,"Chạy deadline",0,"Lịch học và event"],[1797600600000,1797602400000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1797640200000,1797645600000,"Giáo dục thể chất 1 (Điền kinh) (PHED110130)",0,"Lịch học và event"],[1797681600000,1797696000000,"Chạy deadline",0,"Lịch học và event"],[1797687000000,1797688800000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1797768000000,1797782400000,"Chạy deadline",0,"Lịch học và event"],[1797773400000,1797775200000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1797811200000,1797897600000,"Tìm việc",1,"Lịch học và event"],[1797854400000,1797868800000,"Chạy deadline",0,"Lịch học và event"],[1797859800000,1797861600000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1797940800000,1797955200000,"Chạy deadline",0,"Lịch học và event"],[1797946200000,1797948000000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1797984000000,1798070400000,"Tìm việc",1,"Lịch học và event"],[1798027200000,1798041600000,"Chạy deadline",0,"Lịch học và event"],[1798032600000,1798034400000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1798102800000,1798108200000,"Giáo dục thể chất 1 (Điền kinh) (PHED110130)",0,"Lịch học và event"],[1798113600000,1798128000000,"Chạy deadline",0,"Lịch học và event"],[1798119000000,1798120800000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1798156800000,1798243200000,"Tìm việc",1,"Lịch học và event"],[1798158600000,1798173000000,"Giải tích nhiều biến số (MATH133601)",0,"Lịch học và event"],[1798200000000,1798214400000,"Chạy deadline",0,"Lịch học và event"],[1798205400000,1798207200000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1798286400000,1798300800000,"Chạy deadline",0,"Lịch học và event"],[1798291800000,1798293600000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1798372800000,1798387200000,"Chạy deadline",0,"Lịch học và event"],[1798378200000,1798380000000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1798416000000,1798502400000,"Tìm việc",1,"Lịch học và event"],[1798459200000,1798473600000,"Chạy deadline",0,"Lịch học và event"],[1798464600000,1798466400000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1798545600000,1798560000000,"Chạy deadline",0,"Lịch học và event"],[1798551000000,1798552800000,"Free time nghỉ giữa giờ",0,"Lịch học và event"],[1798588800000,1798675200000,"Tìm việc",1,"Lịch học và event"],[1798632000000,1798646400000,"Chạy deadline",0,"Lịch học và event"],[1798637400000,1798639200000,"Free time nghỉ giữa giờ",0,"Lịch học và event"]];
+
+/* ---------- tính thống kê ---------- */
+function rangeOf(anchor,mode){
+  if(mode==='week'){var a=wStart(anchor);return [a,addDays(a,7)]}
+  var f=new Date(anchor.getFullYear(),anchor.getMonth(),1);
+  return [f,new Date(anchor.getFullYear(),anchor.getMonth()+1,1)];
+}
+function shift(anchor,mode,n){return mode==='week'?addDays(anchor,7*n):new Date(anchor.getFullYear(),anchor.getMonth()+n,1)}
+function compute(from,to){
+  var days=[],starts=[],d;
+  for(d=from;d<to;d=addDays(d,1)){starts.push(d.getTime());days.push(0)}
+  starts.push(to.getTime());
+  var tasks={},total=0,count=0,f=from.getTime(),t=to.getTime();
+  state.events.forEach(function(e){
+    if(e[0]>=t||e[1]<=f)return;
+    if(e[3]&&!state.allday)return;
+    var os=Math.max(e[0],f),oe=Math.min(e[1],t);
+    if(oe<=os)return;
+    for(var i=0;i<days.length;i++){
+      var a=Math.max(os,starts[i]),b=Math.min(oe,starts[i+1]);
+      if(b>a)days[i]+=b-a;
+    }
+    var key=e[2],o=tasks[key]||(tasks[key]={name:key,ms:0,n:0});
+    o.ms+=oe-os;o.n++;total+=oe-os;count++;
+  });
+  var list=Object.keys(tasks).map(function(k){return tasks[k]}).sort(function(a,b){return b.ms-a.ms});
+  return {days:days,total:total,count:count,tasks:list};
+}
+
+/* ---------- vẽ giao diện ---------- */
+function niceMax(v){var h=v/36e5;if(h<=0)return 1;var steps=[1,2,4,6,8,10,12,16,20,24,32,40,60,80,100,150,200];for(var i=0;i<steps.length;i++)if(h<=steps[i])return steps[i];return Math.ceil(h/50)*50}
+function barChart(vals,labels,opts){
+  var max=niceMax(Math.max.apply(null,vals));
+  var grid='';[1,.5,0].forEach(function(f){grid+='<i style="top:'+((1-f)*100)+'%"></i><b style="top:'+((1-f)*100)+'%">'+(max*f).toLocaleString('vi-VN',{maximumFractionDigits:1})+'</b>'});
+  var topIdx=opts.top>=0?opts.top:-1;
+  var cols=vals.map(function(v,i){
+    var cls='col'+(opts.dim&&opts.dim(i)?' dim':'')+(i===topIdx?' top':'');
+    return '<div class="'+cls+'" title="'+esc(opts.tip(i))+'"><span style="height:'+(v/36e5/max*100)+'%"></span></div>'}).join('');
+  var axis=labels.map(function(l){return '<span>'+l+'</span>'}).join('');
+  return '<div class="plot" style="--gap:'+opts.gap+'px"><div class="grid">'+grid+'</div><div class="cols">'+cols+'</div></div><div class="axis" style="--gap:'+opts.gap+'px">'+axis+'</div>';
+}
+function render(){
+  var mode=state.mode,r=rangeOf(state.anchor,mode),from=r[0],to=r[1];
+  var cur=compute(from,to);
+  var prevR=rangeOf(shift(state.anchor,mode,-1),mode),prev=compute(prevR[0],prevR[1]);
+  var nd=cur.days.length,last=addDays(to,-1),unit=mode==='week'?'tuần':'tháng';
+
+  $('#m-week').setAttribute('aria-pressed',mode==='week');
+  $('#m-month').setAttribute('aria-pressed',mode==='month');
+  $('#range').textContent=mode==='week'?'Tuần '+isoWeek(from)+' · '+dm(from)+' – '+dm(last)+'/'+last.getFullYear():'Tháng '+(from.getMonth()+1)+'/'+from.getFullYear();
+  $('#banner').innerHTML=state.sample?'<div class="note info">Dữ liệu lấy từ Google Calendar lúc 21:12 ngày 07/10/2026, gồm cả sự kiện đã lên lịch cho các ngày sắp tới. Bấm "Đăng nhập Google" để tải dữ liệu thật của bạn.</div>':'';
+
+  /* ô tóm tắt */
+  var tdays=0,today=sod(new Date()).getTime(),i;
+  for(i=0;i<nd;i++){if(addDays(from,i).getTime()<=today)tdays++}
+  var denom=nd;
+  var busy=0;for(i=1;i<nd;i++)if(cur.days[i]>cur.days[busy])busy=i;
+  var delta='';
+  if(prev.total>0){var p=Math.round((cur.total-prev.total)/prev.total*100);delta=(p>=0?'↑ ':'↓ ')+Math.abs(p)+'% so với '+unit+' trước'}
+  else delta='Chưa có dữ liệu '+unit+' trước';
+  var busyD=addDays(from,busy);
+  $('#tiles').innerHTML=
+    '<div class="tile"><div class="k">Tổng thời gian lên lịch</div><div class="v">'+fh(cur.total)+'<small>giờ</small></div><div class="d">'+delta+'</div></div>'+
+    '<div class="tile"><div class="k">Số sự kiện</div><div class="v">'+cur.count+'<small>sự kiện</small></div><div class="d">'+cur.tasks.length+' đầu việc khác nhau</div></div>'+
+    '<div class="tile"><div class="k">Trung bình mỗi ngày</div><div class="v">'+fh(cur.total/denom)+'<small>giờ</small></div><div class="d">Tính trên '+denom+' ngày</div></div>'+
+    '<div class="tile"><div class="k">Ngày bận nhất</div><div class="v">'+(cur.total?DOW[(busyD.getDay()+6)%7]+' '+dm(busyD):'—')+'</div><div class="d">'+(cur.total?fh(cur.days[busy])+' giờ':'Không có sự kiện')+'</div></div>';
+
+  /* biểu đồ theo ngày */
+  var labels=[],isMonth=mode==='month';
+  for(i=0;i<nd;i++){var dd=addDays(from,i);labels.push(isMonth?((i===0||(i+1)%5===0)?(i+1):''):DOW[i]+'<br>'+pad(dd.getDate()))}
+  var topI=cur.total?busy:-1;
+  $('#chart-days').innerHTML='<div class="chart-h"><h2>Giờ làm theo ngày</h2><span>Cột cam: ngày bận nhất. Cột xám: ngày chưa tới</span></div>'+
+    barChart(cur.days,labels,{gap:isMonth?3:8,top:topI,
+      dim:function(i){return addDays(from,i).getTime()>today},
+      tip:function(i){var x=addDays(from,i);return DOW[(x.getDay()+6)%7]+' '+dm(x)+': '+fh(cur.days[i])+' giờ'}});
+
+  /* xu hướng */
+  var tv=[],tl=[],n=mode==='week'?8:6;
+  for(i=n-1;i>=0;i--){
+    var a=shift(state.anchor,mode,-i),rr=rangeOf(a,mode),c=compute(rr[0],rr[1]);
+    tv.push(c.total);
+    tl.push(mode==='week'?'T'+isoWeek(rr[0]):'Th'+(rr[0].getMonth()+1));
+  }
+  $('#chart-trend').innerHTML='<div class="chart-h"><h2>Xu hướng '+n+' '+unit+' gần nhất</h2><span>Giờ mỗi '+unit+'</span></div>'+
+    barChart(tv,tl,{gap:8,top:-1,dim:function(i){return i!==n-1},tip:function(i){return tl[i]+': '+fh(tv[i])+' giờ'}});
+
+  /* danh sách task */
+  var maxT=8,shown=cur.tasks.slice(0,maxT),rest=cur.tasks.slice(maxT);
+  if(rest.length){shown.push({name:'Khác ('+rest.length+' đầu việc)',ms:rest.reduce(function(s,x){return s+x.ms},0),n:rest.reduce(function(s,x){return s+x.n},0),other:true})}
+  var maxMs=shown.length?Math.max.apply(null,shown.map(function(x){return x.ms})):1;
+  var rows=shown.map(function(t,k){
+    var col='var(--c'+(t.other?9:k+1)+')';
+    return '<div class="row"><div class="n"><i style="background:'+col+'"></i><span>'+esc(t.name)+'</span></div>'+
+      '<div class="h">'+fh(t.ms)+' giờ</div><div class="c">'+t.n+' buổi · '+Math.round(t.ms/cur.total*100)+'%</div>'+
+      '<div class="t"><b style="width:'+(t.ms/maxT_(maxMs)*100)+'%;background:'+col+'"></b></div></div>'}).join('');
+  $('#task-panel').innerHTML='<div class="chart-h"><h2>Thời gian theo đầu việc</h2><span>Nhóm theo tên sự kiện</span></div>'+
+    (rows?'<div class="tasks">'+rows+'</div>':'<div class="empty">Không có sự kiện nào trong '+unit+' này.</div>');
+}
+/* ---------- đăng nhập Google: event + task + chuỗi ---------- */
+var SCOPE='https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/tasks.readonly';
+var CID0='425760458480-j4aki3l5p9sad12o6mhob45jsu4766eg.apps.googleusercontent.com';
+var GL='gtask-streak-v1',tok=null,tc=null,tmr=null,pol=null,TK=[],RT=null,G={seen:{},broke:{},ok:false};
+try{var g0=JSON.parse(localStorage.getItem(GL));if(g0&&g0.seen)G=g0}catch(e){}
+function gsave(){try{localStorage.setItem(GL,JSON.stringify(G))}catch(e){}}
+function cid(){try{return localStorage.getItem('gcid')||CID0}catch(e){return CID0}}
+function setAcct(t,err){var a=$('#acct');a.textContent=t;a.style.color=err?'var(--c4)':''}
+function gInit(){
+  if(!window.google||!google.accounts){return setTimeout(gInit,300)}
+  tc=google.accounts.oauth2.initTokenClient({client_id:cid(),scope:SCOPE,callback:onTok,
+    error_callback:function(e){setAcct('Chưa đăng nhập ('+((e&&e.type)||'lỗi')+'). Bấm "Đăng nhập Google".',1)}});
+  if(G.ok)tc.requestAccessToken({prompt:''});
+}
+function onTok(r){
+  if(r.error){setAcct('Đăng nhập lỗi: '+r.error+(r.error_description?' - '+r.error_description:''),1);return}
+  tok=r.access_token;G.ok=true;gsave();
+  $('#btn-gcal').textContent='Làm mới từ Google';
+  clearTimeout(tmr);tmr=setTimeout(function(){tc.requestAccessToken({prompt:''})},Math.max(60,(r.expires_in||3600)-120)*1000);
+  syncAll();
+}
+async function gapi(url){
+  var r=await fetch(url,{headers:{Authorization:'Bearer '+tok}});
+  if(r.status===401){tok=null;throw new Error('Phiên đăng nhập hết hạn, bấm Đăng nhập Google lại.')}
+  if(!r.ok){var m='';try{m=(await r.json()).error.message}catch(e){}throw new Error('Google trả lỗi '+r.status+(m?': '+m:''))}
   return r.json();
 }
-async function fetchAll(){
-  var ls=(await api('users/@me/lists?maxResults=100')).items||[],all=[];
+async function fetchEvents(){
+  var B='https://www.googleapis.com/calendar/v3/',cals=(await gapi(B+'users/me/calendarList?maxResults=250')).items||[],out=[];
+  var tmin=encodeURIComponent(new Date(Date.now()-180*DAY).toISOString()),tmax=encodeURIComponent(new Date(Date.now()+90*DAY).toISOString());
+  for(var i=0;i<cals.length;i++){
+    var c=cals[i],cn=c.summaryOverride||c.summary||c.id,pt='';
+    if(!c.selected||String(c.id).indexOf('#contacts')>=0)continue;
+    do{
+      var d=await gapi(B+'calendars/'+encodeURIComponent(c.id)+'/events?singleEvents=true&maxResults=2500&timeMin='+tmin+'&timeMax='+tmax+(pt?'&pageToken='+pt:''));
+      (d.items||[]).forEach(function(v){
+        if(v.status==='cancelled'||!v.start||!v.end)return;
+        var ad=!!v.start.date,s=ad?new Date(v.start.date+'T00:00:00').getTime():Date.parse(v.start.dateTime),e=ad?new Date(v.end.date+'T00:00:00').getTime():Date.parse(v.end.dateTime);
+        out.push([s,e,v.summary||'(không tiêu đề)',ad,cn]);
+      });
+      pt=d.nextPageToken;
+    }while(pt);
+  }
+  return out;
+}
+async function fetchTasks(){
+  var B='https://tasks.googleapis.com/tasks/v1/',ls=(await gapi(B+'users/@me/lists?maxResults=100')).items||[],all=[];
   for(var i=0;i<ls.length;i++){
     var pt='';
     do{
-      var d=await api('lists/'+ls[i].id+'/tasks?showCompleted=true&showHidden=true&maxResults=100'+(pt?'&pageToken='+pt:''));
-      (d.items||[]).forEach(function(t){all.push({id:t.id,list:ls[i].title,title:(t.title||'').trim(),due:t.due,done:t.status==='completed'&&t.completed?Date.parse(t.completed):null})});
+      var d=await gapi(B+'lists/'+ls[i].id+'/tasks?showCompleted=true&showHidden=true&maxResults=100'+(pt?'&pageToken='+pt:''));
+      (d.items||[]).forEach(function(t){all.push({id:t.id,list:ls[i].title,title:(t.title||'').trim(),due:t.due||'',done:t.status==='completed'&&t.completed?Date.parse(t.completed):null})});
       pt=d.nextPageToken;
     }while(pt);
   }
   return all;
 }
-function key(t){return t.list+'|'+t.title.toLowerCase()}
-function build(all){
-  var now=Date.now(),cur={},g={};
-  all.forEach(function(t){cur[t.id]=1});
-  // task chưa xong từng thấy mà nay biến mất = đã bị xóa → mất chuỗi
-  Object.keys(S.seen).forEach(function(id){if(!cur[id]){S.broke[S.seen[id]]=sod(now);delete S.seen[id]}});
-  all.forEach(function(t){if(t.done)delete S.seen[t.id];else S.seen[t.id]=key(t)});
-  all.forEach(function(t){
+async function syncAll(){
+  setAcct('Đang đọc dữ liệu từ Google…');var errs=[];
+  try{state.events=dedupe(await fetchEvents());state.sample=false;save();setStatus('Google Calendar: '+state.events.length+' sự kiện (180 ngày trước đến 90 ngày tới).')}catch(e){errs.push('Calendar: '+e.message)}
+  try{TK=await fetchTasks();buildTasks()}catch(e){errs.push('Tasks: '+e.message)}
+  render();renderTasks();
+  setAcct(errs.length?errs.join(' | '):'Đã đăng nhập Google. Cập nhật lúc '+new Date().toLocaleTimeString('vi-VN')+'. Giữ tab mở để tự làm mới mỗi 5 phút.',errs.length);
+  clearTimeout(pol);pol=setTimeout(function(){if(tok)syncAll()},3e5);
+}
+/* luật chuỗi: xong đúng ngày hạn thì +1. Bỏ lỡ, xong muộn, dời lịch, xóa task = mất chuỗi */
+function tkey(t){return t.list+'|'+t.title.toLowerCase()}
+function buildTasks(){
+  var now=Date.now(),t0=sod(new Date(now)).getTime(),cur={},g={},st={ok:0,late:0,miss:0,pend:0},today=[];
+  TK.forEach(function(t){cur[t.id]=t});
+  Object.keys(G.seen).forEach(function(id){
+    var p=G.seen[id],c=cur[id];
+    if(!c){G.broke[p.k]={at:t0,why:'đã xóa một nhiệm vụ trong chuỗi'};delete G.seen[id]}
+    else if(!c.done&&c.due!==p.due)G.broke[p.k]={at:t0,why:'đã dời lịch một nhiệm vụ'};
+  });
+  TK.forEach(function(t){if(t.done)delete G.seen[t.id];else G.seen[t.id]={k:tkey(t),due:t.due}});
+  TK.forEach(function(t){
     if(!t.title||!t.due)return;
     var m=t.due.match(/^(\d+)-(\d+)-(\d+)/);if(!m)return;
     var ds=new Date(+m[1],m[2]-1,+m[3]).getTime(),de=new Date(+m[1],m[2]-1,+m[3]+1).getTime();
     var s=t.done?(t.done<=de?'ok':'late'):(de<=now?'miss':'pend');
-    (g[key(t)]=g[key(t)]||{name:t.title,list:t.list,o:[]}).o.push({ds:ds,s:s});
+    st[s]++;if(s==='pend'&&ds<=now)today.push(t);
+    var k=tkey(t);(g[k]=g[k]||{name:t.title,list:t.list,o:[]}).o.push({ds:ds,s:s});
   });
   var res=[],days={};
   Object.keys(g).forEach(function(k){
-    var x=g[k];if(x.o.length<3)return;
-    var b=S.broke[k]||0,run=0,best=0,o=x.o.filter(function(q){return q.ds>=b}).sort(function(a,c){return a.ds-c.ds});
+    var x=g[k];if(x.o.length<2)return;
+    var bk=G.broke[k],b=bk?bk.at:0,run=0,best=0,nx=null;
+    var o=x.o.filter(function(q){return q.ds>=b}).sort(function(p,q){return p.ds-q.ds});
     o.forEach(function(q){
       if(q.s==='ok'){run++;best=Math.max(best,run)}else if(q.s!=='pend')run=0;
+      if(q.s==='pend'&&nx===null)nx=q.ds;
       var d=days[q.ds]||(days[q.ds]={ok:0,bad:0,pend:0});
       if(q.s==='ok')d.ok++;else if(q.s==='pend')d.pend++;else d.bad++;
     });
-    res.push({name:x.name,list:x.list,run:run,best:best,dots:o.slice(-14).map(function(q){return q.s}),n:x.o.length,broke:b});
+    res.push({name:x.name,list:x.list,run:run,best:best,dots:o.slice(-14).map(function(q){return q.s}),n:x.o.length,bk:bk,nx:nx});
   });
   var dr=0,db=0;
-  Object.keys(days).sort(function(a,b){return a-b}).forEach(function(t){var d=days[t];if(d.bad)dr=0;else if(!d.pend&&d.ok){dr++;db=Math.max(db,dr)}});
-  save();
-  return {res:res.sort(function(a,b){return b.run-a.run}),dr:dr,db:db};
+  Object.keys(days).sort(function(p,q){return p-q}).forEach(function(t){var d=days[t];if(d.bad)dr=0;else if(!d.pend&&d.ok){dr++;db=Math.max(db,dr)}});
+  RT={res:res.sort(function(p,q){return q.run-p.run}),dr:dr,db:db,st:st,today:today};
+  gsave();
 }
-var NAMES={ok:'Đúng hạn',late:'Hoàn thành muộn',miss:'Bỏ lỡ',pend:'Chưa tới hạn'};
-async function run(){
-  if(!tok)return;
-  say('Đang đọc Google Tasks…');
-  try{
-    var r=build(await fetchAll());
-    var h='<div class="hero"><b>🔥 '+r.dr+'</b> <span>ngày liên tiếp hoàn thành đúng hạn · tốt nhất '+r.db+' ngày</span></div>';
-    if(!r.res.length)h+='<p class="sub">Chưa thấy task lặp lại nào (cùng tên, có ngày hạn, từ 3 lần trở lên).</p>';
-    h+=r.res.map(function(x){
-      return '<div class="row"><div class="top"><strong>'+esc(x.name)+'</strong><em>🔥 '+x.run+'</em></div>'
-      +'<div class="meta">'+esc(x.list)+' · tốt nhất '+x.best+' · '+x.n+' lần'+(x.broke?' · <span class="lost">mất chuỗi do xóa task ngày '+new Date(x.broke).toLocaleDateString('vi-VN')+'</span>':'')+'</div>'
-      +'<div class="dots">'+x.dots.map(function(s){return '<i class="dt '+s+'" title="'+NAMES[s]+'"></i>'}).join('')+'</div></div>';
-    }).join('');
-    $('out').innerHTML=h;
-    say('Cập nhật lúc '+new Date().toLocaleTimeString('vi-VN')+'. Giữ tab mở để tự làm mới mỗi 5 phút.');
-    clearTimeout(run.t);run.t=setTimeout(run,300000);
-  }catch(e){say(e.message,1)}
+function tile(k,v,u,d){return '<div class="tile"><div class="k">'+k+'</div><div class="v">'+v+'<small>'+u+'</small></div><div class="d">'+d+'</div></div>'}
+var SN={ok:'Đúng hạn',late:'Hoàn thành muộn',miss:'Bỏ lỡ',pend:'Chưa tới hạn'};
+function renderTasks(){
+  var el=$('#tk');
+  if(!RT){$('#tk-tiles').innerHTML='';el.innerHTML='<div class="empty">Đăng nhập Google để tải task và tính chuỗi.</div>';return}
+  var r=RT,st=r.st,tot=st.ok+st.late+st.miss;
+  $('#tk-tiles').innerHTML=tile('Chuỗi ngày','🔥 '+r.dr,'ngày','Tốt nhất '+r.db+' ngày')+tile('Đúng hạn',tot?Math.round(st.ok/tot*100):0,'%',st.ok+'/'+tot+' task đã tới hạn')+tile('Bỏ lỡ',st.miss,'task','Quá hạn, chưa xong')+tile('Hoàn thành muộn',st.late,'task','Không được tính chuỗi');
+  var h='';
+  if(r.today.length)h+='<h2 class="sec-h">Cần xong hôm nay</h2><div class="tasks">'+r.today.map(function(t){return '<div class="row"><div class="n"><span>'+esc(t.title)+'</span><small>'+esc(t.list)+'</small></div></div>'}).join('')+'</div>';
+  h+='<div class="chart-h"><h2>Chuỗi từng nhiệm vụ lặp lại</h2><span>Hoàn thành trong ngày hạn để giữ chuỗi</span></div>';
+  if(!r.res.length)h+='<div class="empty">Chưa thấy nhiệm vụ lặp lại nào (cùng tên, cùng danh sách, có ngày hạn, từ 2 lần trở lên).</div>';
+  h+='<div class="tasks">'+r.res.map(function(x){
+    return '<div class="row"><div class="n"><span>'+esc(x.name)+'</span><small>'+esc(x.list)+' · '+x.n+' lần'+(x.nx?' · hạn kế tiếp '+dm(new Date(x.nx)):'')+'</small></div><div class="h">🔥 '+x.run+'</div><div class="c">tốt nhất '+x.best+'</div>'
+      +'<div class="dots">'+x.dots.map(function(s){return '<i class="dt '+s+'" title="'+SN[s]+'"></i>'}).join('')+'</div>'
+      +(x.bk?'<div class="why">Mất chuỗi ngày '+dm(new Date(x.bk.at))+': '+esc(x.bk.why)+'</div>':'')+'</div>'}).join('')+'</div>';
+  el.innerHTML=h;
 }
-init();
+function tab(n){
+  $('#pg-stat').hidden=n!=='stat';$('#pg-task').hidden=n!=='task';
+  $('#t-stat').setAttribute('aria-pressed',n==='stat');$('#t-task').setAttribute('aria-pressed',n==='task');
+}
+$('#t-stat').addEventListener('click',function(){tab('stat')});
+$('#t-task').addEventListener('click',function(){tab('task')});
+function maxT_(v){return v||1}
+function $(s){return document.querySelector(s)}
+
+/* ---------- lưu trữ ---------- */
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state.events))}catch(e){}}
+function load(){try{var v=localStorage.getItem(KEY);if(v){var a=JSON.parse(v);if(Array.isArray(a)&&a.length)return a}}catch(e){}return null}
+function setStatus(t){$('#status').textContent=t}
+function useSnapshot(){state.events=SNAP.slice();state.sample=true;state.anchor=new Date();setStatus('Google Calendar "Lịch học và event": '+state.events.length+' sự kiện, lấy lúc 21:12 ngày 07/10/2026.');render()}
+
+/* ---------- nhập file ---------- */
+async function importFiles(files){
+  var all=state.sample?[]:state.events.slice(),ok=0,bad=[];
+  for(var i=0;i<files.length;i++){
+    var f=files[i];
+    if(/\.zip$/i.test(f.name)){bad.push(f.name+' (hãy giải nén trước)');continue}
+    try{
+      var txt=await f.text();
+      if(txt.indexOf('BEGIN:VCALENDAR')<0){bad.push(f.name+' (không phải file lịch)');continue}
+      all=all.concat(parseICS(txt,f.name.replace(/\.ics$/i,'')));ok++;
+    }catch(e){bad.push(f.name)}
+  }
+  if(ok){
+    state.events=dedupe(all);state.sample=false;save();
+    var mx=Math.max.apply(null,state.events.map(function(e){return e[0]}).concat([0]));
+    var now=Date.now();
+    state.anchor=new Date(mx&&mx<now?mx:now);
+    setStatus('Đã nạp '+state.events.length+' sự kiện từ '+ok+' file.'+(bad.length?' Bỏ qua: '+bad.join(', ')+'.':''));
+  }else setStatus('Không đọc được file nào.'+(bad.length?' '+bad.join(', ')+'.':''));
+  render();
+}
+
+/* ---------- sự kiện giao diện ---------- */
+$('#file').addEventListener('change',function(e){importFiles(Array.prototype.slice.call(e.target.files));e.target.value=''});
+var drop=$('#drop');
+['dragenter','dragover'].forEach(function(n){drop.addEventListener(n,function(e){e.preventDefault();drop.classList.add('over')})});
+['dragleave','drop'].forEach(function(n){drop.addEventListener(n,function(e){e.preventDefault();drop.classList.remove('over')})});
+drop.addEventListener('drop',function(e){importFiles(Array.prototype.slice.call(e.dataTransfer.files))});
+$('#btn-gcal').addEventListener('click',function(){if(tok)syncAll();else if(tc)tc.requestAccessToken({prompt:G.ok?'':'consent'});else gInit()});
+$('#btn-cid').addEventListener('click',function(){var v=prompt('Dán Client ID của bạn (dạng ...apps.googleusercontent.com):',cid());if(v&&v.trim()){try{localStorage.setItem('gcid',v.trim())}catch(e){}location.reload()}});
+$('#btn-clear').addEventListener('click',function(){try{localStorage.removeItem(KEY)}catch(e){}state.events=[];state.sample=false;setStatus('Đã xóa dữ liệu. Chọn file .ics để bắt đầu.');render()});
+$('#m-week').addEventListener('click',function(){state.mode='week';render()});
+$('#m-month').addEventListener('click',function(){state.mode='month';render()});
+$('#prev').addEventListener('click',function(){state.anchor=shift(state.anchor,state.mode,-1);render()});
+$('#next').addEventListener('click',function(){state.anchor=shift(state.anchor,state.mode,1);render()});
+$('#today').addEventListener('click',function(){state.anchor=new Date();render()});
+$('#allday').addEventListener('change',function(e){state.allday=e.target.checked;render()});
+
+/* ---------- khởi động ---------- */
+var saved=load();
+if(saved){state.events=saved;state.sample=false;setStatus('Đã nạp lại '+saved.length+' sự kiện từ file .ics bạn đã nhập trước đó.');render()}
+else useSnapshot();
+gInit();renderTasks();
+})();
 </script>
-</body>
-</html>
+
+</body></html>
