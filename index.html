@@ -125,8 +125,8 @@ footer{color:var(--mut);font-size:12px;display:flex;gap:10px;flex-wrap:wrap;alig
 (function(){
 var DAY=864e5,CID0='425760458480-j4aki3l5p9sad12o6mhob45jsu4766eg.apps.googleusercontent.com';
 var SCOPE='https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/tasks.readonly',GL='gtask-streak-v1';
-var tok=null,tc=null,tmr=null,pol=null,last=0,TK=[],EV=[],RT=null,curTab='today',first=true,G={seen:{},broke:{},ok:false};
-try{var g0=JSON.parse(localStorage.getItem(GL));if(g0&&g0.seen)G=g0}catch(e){}
+var tok=null,tc=null,tmr=null,pol=null,last=0,TK=[],EV=[],RT=null,curTab='today',first=true,G={seen:{},broke:{},ok:false,syn:{},cyc:{},log:{},cache:null};
+try{var g0=JSON.parse(localStorage.getItem(GL));if(g0&&g0.seen){for(var kk in g0)G[kk]=g0[kk]}}catch(e){}
 function $(i){return document.getElementById(i)}
 function gsave(){try{localStorage.setItem(GL,JSON.stringify(G))}catch(e){}}
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -140,25 +140,26 @@ function cid(){try{return localStorage.getItem('gcid')||CID0}catch(e){return CID
 function msg(t,err){var m=$('msg');m.hidden=!t;m.textContent=t||'';m.className='msg'+(err?' err':'')}
 
 /* ---------- đăng nhập Google ---------- */
+function syncLabel(){$('btn-sync').textContent=tok?'Làm mới':'Đăng nhập lại'}
 function showApp(on){
-  $('login').hidden=on;$('tabs').hidden=!on;$('btn-sync').hidden=!on;
+  $('login').hidden=on;$('tabs').hidden=!on;$('btn-sync').hidden=!on;syncLabel();
   if(!on){$('pg-today').hidden=true;$('pg-streak').hidden=true}else tab(curTab);
 }
 function gInit(){
   if(!window.google||!google.accounts){return setTimeout(gInit,300)}
   tc=google.accounts.oauth2.initTokenClient({client_id:cid(),scope:SCOPE,callback:onTok,
-    error_callback:function(e){showApp(false);$('login-t').textContent='Chưa đăng nhập được ('+((e&&e.type)||'lỗi')+'). Bấm nút bên dưới để thử lại.'}});
+    error_callback:function(e){if(G.cache){msg('Chưa tự kết nối lại được với Google. Đang hiển thị dữ liệu đã lưu. Bấm "Đăng nhập lại" ở góc trên.',1);syncLabel()}else{showApp(false);$('login-t').textContent='Chưa đăng nhập được ('+((e&&e.type)||'lỗi')+'). Bấm nút bên dưới để thử lại.'}}});
   if(G.ok){$('login-t').textContent='Đang đăng nhập bằng tài khoản đã cấp quyền…';tc.requestAccessToken({prompt:''})}
 }
 function onTok(r){
-  if(r.error){showApp(false);msg('Đăng nhập lỗi: '+r.error+(r.error_description?' - '+r.error_description:''),1);return}
+  if(r.error){if(!G.cache)showApp(false);syncLabel();msg('Đăng nhập lỗi: '+r.error+(r.error_description?' - '+r.error_description:''),1);return}
   tok=r.access_token;G.ok=true;gsave();showApp(true);
   clearTimeout(tmr);tmr=setTimeout(function(){tc.requestAccessToken({prompt:''})},Math.max(60,(r.expires_in||3600)-120)*1000);
   syncAll();
 }
 async function gapi(url){
   var r=await fetch(url,{headers:{Authorization:'Bearer '+tok}});
-  if(r.status===401){tok=null;showApp(false);throw new Error('Phiên đăng nhập hết hạn, bấm Đăng nhập Google lại.')}
+  if(r.status===401){tok=null;if(!G.cache)showApp(false);syncLabel();throw new Error('Phiên đăng nhập hết hạn, bấm Đăng nhập Google lại.')}
   if(!r.ok){var m='';try{m=(await r.json()).error.message}catch(e){}throw new Error('Google trả lỗi '+r.status+(m?': '+m:''))}
   return r.json();
 }
@@ -195,6 +196,7 @@ async function syncAll(){
   msg('Đang cập nhật từ Google…');var errs=[];
   try{EV=await fetchToday()}catch(e){errs.push('Lịch: '+e.message)}
   try{TK=await fetchTasks();buildTasks()}catch(e){errs.push('Tasks: '+e.message)}
+  if(!errs.length||TK.length)syncLabel();
   renderToday();renderStreak();last=Date.now();
   msg(errs.join(' | '),errs.length);
   $('stamp').textContent='Cập nhật lúc '+hm(last)+'. Giữ tab mở để tự làm mới mỗi 5 phút.';
@@ -202,38 +204,72 @@ async function syncAll(){
 }
 
 /* ---------- luật chuỗi ----------
-   Xong trong ngày hạn thì +1 ngày. Bỏ lỡ, xong muộn, dời lịch hoặc xóa task = mất chuỗi.
-   Nhiệm vụ lặp nhiều lần/ngày: mọi lần trong ngày đều phải đúng hạn. Việc làm một lần không tính. */
-function buildTasks(){
-  var now=Date.now(),n=new Date(now),t0=new Date(n.getFullYear(),n.getMonth(),n.getDate()).getTime(),cur={},g={},st={ok:0,late:0,miss:0,pend:0},days={};
-  TK.forEach(function(t){cur[t.id]=t});
+   Mỗi lần xuất hiện của một nhiệm vụ (cùng tên, cùng danh sách) là một "lần". Xong trong ngày hạn thì +1 lần.
+   Bỏ lỡ, xong muộn, dời lịch hoặc xóa task = mất chuỗi. Chu kỳ bất kỳ (hằng ngày, 2 ngày/lần...) đều được.
+   Task lặp lại do Google tạo: Google chỉ trả lần hiện tại, nên app tự ghi nhận lần vừa xong khi thấy hạn nhảy sang chu kỳ kế tiếp. */
+function addD(ms,n){var d=new Date(ms);return new Date(d.getFullYear(),d.getMonth(),d.getDate()+n).getTime()}
+function detect(){
+  var now=Date.now(),n=new Date(now),t0=new Date(n.getFullYear(),n.getMonth(),n.getDate()).getTime(),cur={},pend={},used={};
+  TK.forEach(function(t){cur[t.id]=t;if(!t.done&&t.title&&dp(t)){var k=tkey(t);(pend[k]=pend[k]||[]).push(t)}});
+  function brk(k,at,why){var b=G.broke[k];if(!b||at>b.at)G.broke[k]={at:at,why:why}}
+  function syn(k,ds,done){var a=G.syn[k]||(G.syn[k]=[]);if(a.some(function(q){return q.ds===ds}))return;a.push({ds:ds,done:done,s:done<=addD(ds,1)?'ok':'late'});if(a.length>400)a.shift()}
   Object.keys(G.seen).forEach(function(id){
-    var p=G.seen[id],c=cur[id];
-    if(!c){G.broke[p.k]={at:t0,why:'đã xóa một nhiệm vụ trong chuỗi'};delete G.seen[id]}
-    else if(!c.done&&c.due!==p.due)G.broke[p.k]={at:t0,why:'đã dời lịch một nhiệm vụ'};
+    var p=G.seen[id],c=cur[id],k=p.k,a=dp({due:p.due});
+    if(c&&(c.done||c.due===p.due))return;
+    var succ=null;
+    if(c&&c.due>p.due)succ=c;
+    else if(!c)succ=(pend[k]||[]).filter(function(x){return!G.seen[x.id]&&!used[x.id]&&x.due>p.due}).sort(function(u,v){return u.due.localeCompare(v.due)})[0]||null;
+    if(succ&&a){
+      used[succ.id]=1;
+      var d2=dp(succ)[0],gap=Math.round((d2-a[0])/DAY),cy=G.cyc[k],same=!!c&&c.id===succ.id,at=Date.parse(succ.upd)||now;
+      if(same&&cy&&gap%cy!==0){brk(k,t0,'đã dời lịch một nhiệm vụ');return}
+      if(!cy)G.cyc[k]=gap;
+      for(var s=a[0];s<d2;s=addD(s,cy||gap))syn(k,s,at);
+    }else if(c&&c.due<p.due)brk(k,t0,'đã dời lịch một nhiệm vụ');
+    else if(!c)brk(k,t0,'đã xóa một nhiệm vụ trong chuỗi');
   });
-  TK.forEach(function(t){if(t.done)delete G.seen[t.id];else G.seen[t.id]={k:tkey(t),due:t.due}});
   TK.forEach(function(t){
     var p=dp(t);if(!t.title||!p)return;
-    var s=t.done?(t.done<=p[1]?'ok':'late'):(p[1]<=now?'miss':'pend');
-    st[s]++;var k=tkey(t);(g[k]=g[k]||{name:t.title,list:t.list,o:[]}).o.push({ds:p[0],s:s});
+    if(t.done){delete G.seen[t.id];G.log[t.id]={k:tkey(t),ds:p[0],done:t.done}}
+    else G.seen[t.id]={k:tkey(t),due:t.due,upd:t.upd};
   });
-  var res=[],by={};
+  /* các ngày đã xong từng thấy mà nay không còn: gần thì giữ lại, quá 14 ngày thì chuỗi bị xóa */
+  Object.keys(G.log).forEach(function(id){
+    if(cur[id])return;var q=G.log[id];delete G.log[id];
+    if(now-q.ds<=14*DAY)(G.syn[q.k]=G.syn[q.k]||[]).push({ds:q.ds,done:q.done,s:q.done<=addD(q.ds,1)?'ok':'late'});
+    else brk(q.k,addD(q.ds,1),'các ngày trước đó không còn thấy trong Google Tasks');
+  });
+}
+function compute(){
+  var now=Date.now(),n=new Date(now),t0=new Date(n.getFullYear(),n.getMonth(),n.getDate()).getTime(),g={},st={ok:0,late:0,miss:0,pend:0},days={},res=[],by={};
+  TK.forEach(function(t){
+    var p=dp(t);if(!t.title||!p)return;
+    var s=t.done?(t.done<=p[1]?'ok':'late'):(p[1]<=now?'miss':'pend'),k=tkey(t);
+    st[s]++;(g[k]=g[k]||{name:t.title,list:t.list,o:[],syn:0}).o.push({ds:p[0],s:s});
+  });
+  Object.keys(g).forEach(function(k){(G.syn[k]||[]).forEach(function(q){
+    var x=g[k];if(x.o.some(function(o){return o.ds===q.ds}))return;
+    x.o.push({ds:q.ds,s:q.s});x.syn++;st[q.s]++;
+  })});
   Object.keys(g).forEach(function(k){
     var x=g[k];if(x.o.length<2)return;
-    var bk=G.broke[k],b=bk?bk.at:0,run=0,best=0,sd={},dd=[];
+    var bk=G.broke[k],b=bk?bk.at:0,run=0,best=0,nx=null,sd={},dd=[];
     x.o.filter(function(q){return q.ds>=b}).forEach(function(q){
+      if(q.s==='pend'&&(nx===null||q.ds<nx))nx=q.ds;
       var u=sd[q.ds]||(sd[q.ds]={ok:0,late:0,miss:0,pend:0});u[q.s]++;
       var d=days[q.ds]||(days[q.ds]={ok:0,bad:0,pend:0});
       if(q.s==='ok')d.ok++;else if(q.s==='pend')d.pend++;else d.bad++;
     });
-    Object.keys(sd).sort(function(p,q){return p-q}).forEach(function(t){
+    var ks=Object.keys(sd).map(Number).sort(function(p,q){return p-q}),gaps=[];
+    ks.forEach(function(t,i){
       var u=sd[t],s=u.miss?'miss':u.late?'late':u.pend?'pend':'ok';
       if(s==='ok'){run++;best=Math.max(best,run)}else if(s!=='pend')run=0;
-      dd.push(s);
+      dd.push(s);if(i)gaps.push(Math.round((t-ks[i-1])/DAY));
     });
+    gaps.sort(function(p,q){return p-q});
+    var cy=G.cyc[k]||(gaps.length?gaps[Math.floor(gaps.length/2)]:1);
     var u0=sd[t0],td=u0?(u0.miss?'miss':u0.late?'late':u0.pend?'pend':'ok'):'';
-    res.push({k:k,name:x.name,list:x.list,run:run,best:best,dots:dd.slice(-14),n:x.o.length,bk:bk,td:td});
+    res.push({k:k,name:x.name,list:x.list,run:run,best:best,dots:dd.slice(-14),n:x.o.length,bk:bk,td:td,nx:nx,cy:cy,syn:x.syn});
     by[k]={run:run,td:td};
   });
   var dr=0,db=0;
@@ -241,8 +277,8 @@ function buildTasks(){
   var wk=[];
   for(var i=6;i>=0;i--){var t=new Date(n.getFullYear(),n.getMonth(),n.getDate()-i).getTime(),d=days[t];wk.push({t:t,s:d?(d.bad?'miss':d.pend?'pend':'ok'):'none'})}
   RT={res:res.sort(function(p,q){return q.run-p.run}),by:by,dr:dr,db:db,st:st,wk:wk};
-  gsave();
 }
+function buildTasks(){detect();compute();G.cache={t:Date.now(),day:ymd(new Date()),TK:TK,EV:EV};gsave()}
 
 /* ---------- tab Hôm nay ---------- */
 function trow(t,kind){
@@ -272,7 +308,7 @@ function renderToday(){
   if(over.length)th+='<p class="sub red">Quá hạn, chưa xong</p>'+over.map(function(t){return trow(t,'over')}).join('');
   if(!th)th='<div class="empty">Không có task nào hạn hôm nay.</div>';
   $('pg-today').innerHTML=h+'<div class="cols"><section class="card"><h2>Lịch hôm nay</h2>'+eh+'</section><section class="card"><h2>Task hôm nay</h2>'+th+'</section></div>';
-  if(first&&tok){first=false;setTimeout(function(){var a=$('arc');if(a)a.style.strokeDashoffset=C*(1-pc)},60)}
+  if(first){first=false;setTimeout(function(){var a=$('arc');if(a)a.style.strokeDashoffset=C*(1-pc)},60)}
 }
 
 /* ---------- tab Chuỗi task ---------- */
@@ -286,17 +322,18 @@ function renderStreak(){
   h+='<section class="tl"><div><b>'+(tot?Math.round(st.ok/tot*100):0)+'%</b><span>đúng hạn ('+st.ok+'/'+tot+')</span></div><div><b>'+st.miss+'</b><span>bỏ lỡ: quá hạn, chưa xong</span></div><div><b>'+st.late+'</b><span>hoàn thành muộn, không tính chuỗi</span></div></section>';
   h+='<h2 class="h2">Chuỗi từng nhiệm vụ lặp lại</h2>';
   h+=r.res.length?'<div class="grid">'+r.res.map(function(x){
-    return '<article class="sc'+(x.run?'':' cold')+'"><header><b>'+esc(x.name)+'</b><small>'+esc(x.list)+' · '+x.n+' lần</small></header>'
-      +'<div class="big"><span class="n">'+x.run+'</span><span>ngày '+(x.run?'🔥':'🧊')+'</span><em>tốt nhất '+x.best+'</em></div>'
+    return '<article class="sc'+(x.run?'':' cold')+'"><header><b>'+esc(x.name)+'</b><small>'+esc(x.list)+' · '+(x.cy>1?'mỗi '+x.cy+' ngày':'hằng ngày')+' · '+x.n+' lần</small></header>'
+      +'<div class="big"><span class="n">'+x.run+'</span><span>'+(x.cy>1?'lần':'ngày')+' liên tiếp '+(x.run?'🔥':'🧊')+'</span><em>tốt nhất '+x.best+'</em></div>'
       +'<div class="dots">'+x.dots.map(function(s){return '<i class="dt '+s+'" title="'+({ok:'Đúng hạn',late:'Hoàn thành muộn',miss:'Bỏ lỡ',pend:'Chưa tới hạn'})[s]+'"></i>'}).join('')+'</div>'
-      +'<p class="td '+(x.td||'pend')+'">'+TXT[x.td]+'</p>'
+      +'<p class="td '+(x.td||'pend')+'">'+(x.td?TXT[x.td]:(x.nx?'Hạn kế tiếp: '+dm(new Date(x.nx)):'Không có lịch sắp tới'))+'</p>'
+      +(x.syn?'<p class="td pend" style="font-weight:400;font-size:12px">'+x.syn+' lần do app tự ghi nhận khi thấy hạn nhảy sang chu kỳ mới.</p>':'')
       +(x.bk?'<p class="why">Mất chuỗi ngày '+dm(new Date(x.bk.at))+': '+esc(x.bk.why)+'</p>':'')+'</article>'}).join('')+'</div>'
     :'<div class="card empty">Chưa thấy nhiệm vụ lặp lại nào (cùng tên, cùng danh sách, có ngày hạn, từ 2 lần trở lên).</div>';
   var ls={},nodue=0,was=!!el.querySelector('details[open]'),fv=(el.querySelector('#tf')||{}).value||'';
   TK.forEach(function(t){ls[t.list]=1;if(!t.due)nodue++});
   var tr=TK.slice().sort(function(a,b){return a.title.localeCompare(b.title)||(a.due||'').localeCompare(b.due||'')}).slice(0,900).map(function(t){
-    return '<tr class="tr"><td>'+esc(t.title||'(trống)')+'</td><td>'+(t.due?t.due.slice(0,10):'không có hạn')+'</td><td>'+(t.done?'xong '+new Date(t.done).toLocaleString('vi-VN'):'chưa xong')+'</td><td>'+esc(t.list)+'</td></tr>'}).join('');
-  h+='<details'+(was?' open':'')+'><summary>Dữ liệu đọc từ Google: '+Object.keys(ls).length+' danh sách, '+TK.length+' task ('+nodue+' không có ngày hạn)</summary><input id="tf" value="'+esc(fv)+'" placeholder="Lọc theo tên, ví dụ: đề lí"><div style="overflow-x:auto"><table><tr><th>Tên</th><th>Hạn</th><th>Trạng thái</th><th>Danh sách</th></tr>'+tr+'</table></div></details>';
+    return '<tr class="tr"><td>'+esc(t.title||'(trống)')+'</td><td>'+(t.due?t.due.slice(0,10):'không có hạn')+'</td><td>'+(t.done?'xong '+new Date(t.done).toLocaleString('vi-VN'):'chưa xong')+'</td><td>'+esc(t.list)+'</td><td>'+esc(t.id.slice(-5))+'</td></tr>'}).join('');
+  h+='<details'+(was?' open':'')+'><summary>Dữ liệu đọc từ Google: '+Object.keys(ls).length+' danh sách, '+TK.length+' task ('+nodue+' không có ngày hạn)</summary><input id="tf" value="'+esc(fv)+'" placeholder="Lọc theo tên, ví dụ: đề lí"><div style="overflow-x:auto"><table><tr><th>Tên</th><th>Hạn</th><th>Trạng thái</th><th>Danh sách</th><th>Mã</th></tr>'+tr+'</table></div></details>';
   el.innerHTML=h;tfilter();
 }
 function tfilter(){var q=(($('tf')||{}).value||'').toLowerCase();document.querySelectorAll('#pg-streak tr.tr').forEach(function(r){r.hidden=!!q&&r.textContent.toLowerCase().indexOf(q)<0})}
@@ -310,7 +347,7 @@ $('t-today').addEventListener('click',function(){tab('today')});
 $('t-streak').addEventListener('click',function(){tab('streak')});
 $('pg-streak').addEventListener('input',function(e){if(e.target.id==='tf')tfilter()});
 $('btn-login').addEventListener('click',function(){if(tc)tc.requestAccessToken({prompt:G.ok?'':'consent'});else gInit()});
-$('btn-sync').addEventListener('click',function(){if(tok)syncAll();else if(tc)tc.requestAccessToken({prompt:''})});
+$('btn-sync').addEventListener('click',function(){if(tok)syncAll();else if(tc)tc.requestAccessToken({prompt:''});else gInit()});
 $('btn-cid').addEventListener('click',function(){var v=prompt('Dán Client ID của bạn (dạng ...apps.googleusercontent.com):',cid());if(v&&v.trim()){try{localStorage.setItem('gcid',v.trim())}catch(e){}location.reload()}});
 document.addEventListener('visibilitychange',function(){
   if(document.hidden)return;
@@ -318,6 +355,12 @@ document.addEventListener('visibilitychange',function(){
   else if(tok&&Date.now()-last>12e4)syncAll();
 });
 setInterval(function(){if(tok&&!first)renderToday()},6e4);
+if(G.ok&&G.cache&&G.cache.TK){
+  TK=G.cache.TK;EV=G.cache.day===ymd(new Date())?(G.cache.EV||[]):[];compute();showApp(true);renderToday();renderStreak();
+  $('stamp').textContent='Dữ liệu đã lưu lúc '+hm(G.cache.t)+'.';
+  msg('Đang kết nối lại với Google… Nếu chưa tự kết nối, chạm vào bất kỳ đâu trên trang.');
+  document.addEventListener('pointerdown',function f(){document.removeEventListener('pointerdown',f);if(!tok&&tc)tc.requestAccessToken({prompt:''})});
+}
 gInit();
 })();
 </script>
